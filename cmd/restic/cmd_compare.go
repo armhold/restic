@@ -62,8 +62,10 @@ func printTreeCompare(repo *repository.Repository, id *restic.ID, prefix string)
 				return 0, err
 			}
 
+			fullPath := filepath.Join(prefix, entry.Name)
+
 			size += subdirSize
-			Verbosef("size of subdir %s: %s\n", entry.Name, formatBytes(subdirSize))
+			Verbosef("size of subdir %s: %s\n", fullPath, formatBytes(subdirSize))
 		} else if entry.Type == "file" {
 			size += entry.Size
 		}

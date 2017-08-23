@@ -47,7 +47,9 @@ func init() {
 }
 
 // returns the size of the given tree and all its children
-func printTreeCompare(repo *repository.Repository, id *restic.ID, prefix string, pathMap map[string]uint64) (size uint64, err error) {
+func printTreeCompare(repo *repository.Repository, id *restic.ID, prefix string, pathMap map[string]uint64) (uint64, error) {
+	var size uint64
+
 	tree, err := repo.LoadTree(context.TODO(), *id)
 	if err != nil {
 		return 0, err
@@ -66,7 +68,7 @@ func printTreeCompare(repo *repository.Repository, id *restic.ID, prefix string,
 			size += subdirSize
 			pathMap[fullPath] = size
 
-			//Verbosef("size of subdir %s: %s\n", fullPath, formatBytes(subdirSize))
+			Verbosef("size of subdir %s: %s\n", fullPath, formatBytes(subdirSize))
 		} else if entry.Type == "file" {
 			size += entry.Size
 		}
@@ -127,14 +129,26 @@ func runCompare(opts CompareOptions, gopts GlobalOptions, args []string) error {
 }
 
 func compareTrees(map1, map2 map[string]uint64) {
-	// map1 should be the more recent snapshot
+	// map2 should be the more recent snapshot
 
-	for path, size1 := range map1 {
-		size2, ok := map2[path]
+	// iterate over more recent snapshot
+	for path, size2 := range map2 {
+		size1, ok := map1[path]
 		if ok {
-			change := size1 - size2
+			var change uint64
+			var sign string
+			if size1 < size2 {
+				change = size2 - size1
+				sign = "+"
+			} else if size2 > size1 {
+				change = size1 - size2
+				sign = "-"
+			} else {
+				change = 0
+			}
+
 			if change != 0 {
-				Verbosef("%s: %s\n", path, formatBytes(change))
+				Verbosef("%s: size1: %d, size2: %d, change: %s%s (%d)\n", path, size1, size2, sign, formatBytes(change), change)
 			}
 		} else {
 			Verbosef("%s: [missing]\n", path)

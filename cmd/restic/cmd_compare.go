@@ -47,7 +47,7 @@ func init() {
 }
 
 // returns the size of the given tree and all its children
-func printTreeCompare(repo *repository.Repository, id *restic.ID, prefix string) (size uint64, err error) {
+func printTreeCompare(repo *repository.Repository, id *restic.ID, prefix string, pathMap map[string]uint64) (size uint64, err error) {
 	tree, err := repo.LoadTree(context.TODO(), *id)
 	if err != nil {
 		return 0, err
@@ -57,15 +57,16 @@ func printTreeCompare(repo *repository.Repository, id *restic.ID, prefix string)
 		//Printf("%s\n", formatNode(prefix, entry, compareOptions.ListLong))
 
 		if entry.Type == "dir" && entry.Subtree != nil {
-			subdirSize, err := printTreeCompare(repo, entry.Subtree, filepath.Join(prefix, entry.Name))
+			subdirSize, err := printTreeCompare(repo, entry.Subtree, filepath.Join(prefix, entry.Name), pathMap)
 			if err != nil {
 				return 0, err
 			}
 
 			fullPath := filepath.Join(prefix, entry.Name)
-
 			size += subdirSize
-			Verbosef("size of subdir %s: %s\n", fullPath, formatBytes(subdirSize))
+			pathMap[fullPath] = size
+
+			//Verbosef("size of subdir %s: %s\n", fullPath, formatBytes(subdirSize))
 		} else if entry.Type == "file" {
 			size += entry.Size
 		}
@@ -94,7 +95,6 @@ func runCompare(opts CompareOptions, gopts GlobalOptions, args []string) error {
 	defer cancel()
 	for sn := range FindFilteredSnapshots(ctx, repo, opts.Host, opts.Tags, opts.Paths, args) {
 		Verbosef("snapshot %s of %v at %s):\n", sn.ID().Str(), sn.Paths, sn.Time)
-
 		snapshots = append(snapshots, sn)
 	}
 
@@ -105,14 +105,39 @@ func runCompare(opts CompareOptions, gopts GlobalOptions, args []string) error {
 		return nil
 	}
 
-	sn1 := snapshots[0]
+	sn1, sn2 := snapshots[0], snapshots[1]
 
-	treeSize, err := printTreeCompare(repo, sn1.Tree, string(filepath.Separator))
+	var map1, map2 = make(map[string]uint64), make(map[string]uint64)
+
+	treeSize, err := printTreeCompare(repo, sn1.Tree, string(filepath.Separator), map1)
 	if err != nil {
 		return err
 	}
+	Verbosef("total size: of %s: %s\n", sn1.ID(), formatBytes(treeSize))
 
-	Verbosef("total size: %s\n", formatBytes(treeSize))
+	treeSize, err = printTreeCompare(repo, sn2.Tree, string(filepath.Separator), map2)
+	if err != nil {
+		return err
+	}
+	Verbosef("total size: of %s: %s\n", sn2.ID(), formatBytes(treeSize))
+
+	compareTrees(map1, map2)
 
 	return nil
+}
+
+func compareTrees(map1, map2 map[string]uint64) {
+	// map1 should be the more recent snapshot
+
+	for path, size1 := range map1 {
+		size2, ok := map2[path]
+		if ok {
+			change := size1 - size2
+			if change != 0 {
+				Verbosef("%s: %s\n", path, formatBytes(change))
+			}
+		} else {
+			Verbosef("%s: [missing]\n", path)
+		}
+	}
 }

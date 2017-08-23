@@ -59,14 +59,15 @@ func printTreeCompare(repo *repository.Repository, id *restic.ID, prefix string,
 		//Printf("%s\n", formatNode(prefix, entry, compareOptions.ListLong))
 
 		if entry.Type == "dir" && entry.Subtree != nil {
-			subdirSize, err := printTreeCompare(repo, entry.Subtree, filepath.Join(prefix, entry.Name), pathMap)
+			fullPath := filepath.Join(prefix, entry.Name)
+
+			subdirSize, err := printTreeCompare(repo, entry.Subtree, fullPath, pathMap)
 			if err != nil {
 				return 0, err
 			}
 
-			fullPath := filepath.Join(prefix, entry.Name)
+			pathMap[fullPath] = subdirSize
 			size += subdirSize
-			pathMap[fullPath] = size
 
 			Verbosef("size of subdir %s: %s\n", fullPath, formatBytes(subdirSize))
 		} else if entry.Type == "file" {

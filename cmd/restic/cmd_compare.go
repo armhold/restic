@@ -46,8 +46,8 @@ func init() {
 	flags.StringArrayVar(&compareOptions.Paths, "path", nil, "only consider snapshots which include this (absolute) `path`, when no snapshot ID is given")
 }
 
-// returns the size of the given tree and all its children
-func printTreeCompare(repo *repository.Repository, id *restic.ID, prefix string, pathMap map[string]uint64) (uint64, error) {
+// for every subdir under id, add an entry to the pathMap with its aggregate size
+func sumAllSubdirs(repo *repository.Repository, id *restic.ID, prefix string, pathMap map[string]uint64) (uint64, error) {
 	var size uint64
 
 	tree, err := repo.LoadTree(context.TODO(), *id)
@@ -61,7 +61,7 @@ func printTreeCompare(repo *repository.Repository, id *restic.ID, prefix string,
 		if entry.Type == "dir" && entry.Subtree != nil {
 			fullPath := filepath.Join(prefix, entry.Name)
 
-			subdirSize, err := printTreeCompare(repo, entry.Subtree, fullPath, pathMap)
+			subdirSize, err := sumAllSubdirs(repo, entry.Subtree, fullPath, pathMap)
 			if err != nil {
 				return 0, err
 			}
@@ -69,7 +69,7 @@ func printTreeCompare(repo *repository.Repository, id *restic.ID, prefix string,
 			pathMap[fullPath] = subdirSize
 			size += subdirSize
 
-			Verbosef("size of subdir %s: %s\n", fullPath, formatBytes(subdirSize))
+			//Verbosef("size of subdir %s: %s\n", fullPath, formatBytes(subdirSize))
 		} else if entry.Type == "file" {
 			size += entry.Size
 		}
@@ -110,15 +110,17 @@ func runCompare(opts CompareOptions, gopts GlobalOptions, args []string) error {
 
 	sn1, sn2 := snapshots[0], snapshots[1]
 
+	//[0:09] 9337 directories, 64573 files, 16.228 GiB
+
 	var map1, map2 = make(map[string]uint64), make(map[string]uint64)
 
-	treeSize, err := printTreeCompare(repo, sn1.Tree, string(filepath.Separator), map1)
+	treeSize, err := sumAllSubdirs(repo, sn1.Tree, string(filepath.Separator), map1)
 	if err != nil {
 		return err
 	}
 	Verbosef("total size: of %s: %s\n", sn1.ID(), formatBytes(treeSize))
 
-	treeSize, err = printTreeCompare(repo, sn2.Tree, string(filepath.Separator), map2)
+	treeSize, err = sumAllSubdirs(repo, sn2.Tree, string(filepath.Separator), map2)
 	if err != nil {
 		return err
 	}

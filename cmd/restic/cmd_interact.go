@@ -171,6 +171,9 @@ func readCommands(ctx context.Context, opts InteractOptions, repo *repository.Re
 		case "del":
 			delFiles(args)
 
+		case "compare":
+			compareToSnapshot(args)
+
 		case "cd":
 			if args == ".." {
 				popDir()
@@ -199,6 +202,12 @@ func readCommands(ctx context.Context, opts InteractOptions, repo *repository.Re
 		case "":
 			// nothing
 
+		case "snapshots":
+			snapshots()
+
+		case "load":
+			loadSnapshot(args)
+
 		default:
 			screenPrintf("unrecognized command: %s", cmd)
 		}
@@ -213,15 +222,36 @@ func readCommands(ctx context.Context, opts InteractOptions, repo *repository.Re
 	return err
 }
 
+func snapshots() {
+	screenPrintf("list snapshots")
+}
+
+func loadSnapshot(args string) {
+	snapId := args
+	screenPrintf("load snapshot id: %s", snapId)
+}
+
+func compareToSnapshot(args string) {
+	compareToSnapId := args
+	screenPrintf("compare current snapshot to %s", compareToSnapId)
+}
+
 func pwd() {
 	screenPrintf(currPath())
 }
 
 func parseCmd(line string) (cmd, args string, err error) {
-	cmdsWithArgs := []string{"add", "cd", "del", "ls"}
-	cmdsWithoutArgs := []string{"", "done", "exit", "extract", "ls", "pwd"} // NB: "ls" appears in both
+	cmdsWithArgs := []string{"add", "cd", "compare", "del", "load"}
+	cmdsWithoutArgs := []string{"", "done", "exit", "extract", "ls", "pwd", "snapshots"}
+
+	// TODO: ls should handle optional arg
 
 	for _, c := range cmdsWithArgs {
+		if line == c {
+			err = errors.Errorf("%s: arguent missing", line)
+			return
+		}
+
 		if strings.HasPrefix(line, c+" ") {
 			cmd = c
 			args = strings.TrimSpace(line[len(c)+1:])

@@ -172,7 +172,11 @@ func readCommands(ctx context.Context, opts InteractOptions, repo *repository.Re
 			delFiles(args)
 
 		case "compare":
-			compareToSnapshot(args)
+			compareToSnapshotId := args
+			err := compareToSnapshot(repo, compareToSnapshotId)
+			if err != nil {
+				screenPrintf("%s\r\n", err.Error())
+			}
 
 		case "cd":
 			if args == ".." {
@@ -231,9 +235,17 @@ func loadSnapshot(args string) {
 	screenPrintf("load snapshot id: %s", snapId)
 }
 
-func compareToSnapshot(args string) {
-	compareToSnapId := args
-	screenPrintf("compare current snapshot to %s", compareToSnapId)
+func compareToSnapshot(repo *repository.Repository, compareToSnapshotId string) (error) {
+	screenPrintf("compare current snapshot to %s", compareToSnapshotId)
+
+	snapID, err := restic.FindSnapshot(repo, compareToSnapshotId)
+	if err != nil {
+		return errors.Errorf("invalid id %q: %v", compareToSnapshotId, err)
+	}
+
+	Verbosef("found snapshot: %v\r\n", snapID)
+
+	return nil
 }
 
 func pwd() {

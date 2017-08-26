@@ -61,6 +61,8 @@ var term *terminal.Terminal
 
 var currSnapshot *restic.Snapshot
 
+var comp *comparison
+
 func init() {
 	cmdRoot.AddCommand(cmdInteract)
 
@@ -127,7 +129,7 @@ func runInteract(opts InteractOptions, gopts GlobalOptions, args []string) error
 		return err
 	}
 
-	printDirectory(currDir())
+	printDirectory(currPath(), currDir())
 
 	err = readCommands(ctx, opts, repo, snapshotID)
 
@@ -196,7 +198,7 @@ func readCommands(ctx context.Context, opts InteractOptions, repo *repository.Re
 
 		case "ls":
 			// TODO: check if args != nil, and ls the given dir
-			printDirectory(currDir())
+			printDirectory(currPath(), currDir())
 
 		case "extract":
 			screenPrintf("extract files")
@@ -254,13 +256,11 @@ func compareToSnapshot(repo *repository.Repository, compareToSnapshotId string) 
 		return fmt.Errorf("could not load snapshot %q: %v\n", snapID, err)
 	}
 
-	c := &comparison{snap1: compareToSnapshot, snap2: currSnapshot}
+	comp = &comparison{snap1: compareToSnapshot, snap2: currSnapshot}
 
-	if err = c.doCompare(repo); err != nil {
+	if err = comp.BuildComparison(repo); err != nil {
 		return err
 	}
-
-	c.compareTrees()
 
 	return nil
 }
@@ -437,8 +437,7 @@ func screenPrintf(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stdout, format+"\r\n", args...)
 }
 
-func printDirectory(dir directory) {
-	prefix := ""
+func printDirectory(prefix string, dir directory) {
 
 	for _, entry := range dir.Tree.Nodes {
 		screenPrintf("%s", formatNodeInteractive(prefix, entry, lsOptions.ListLong))
@@ -446,11 +445,27 @@ func printDirectory(dir directory) {
 }
 
 func formatNodeInteractive(prefix string, n *restic.Node, long bool) string {
+	changeString := ""
+
+	if n.Type == "dir" && comp != nil {
+		path := filepath.Join(prefix, n.Name)
+
+		change, sign, present := comp.ComparePath(path)
+		if present {
+			if change != 0 {
+				changeString = fmt.Sprintf(" (%s%s)", sign, formatBytes(change))
+			}
+		} else {
+			changeString = " [new]"
+		}
+	}
+
+
 	if !long {
 		result := filepath.Join(prefix, n.Name)
 
 		if n.Type == "dir" {
-			result += string(filepath.Separator)
+			result += string(filepath.Separator) + changeString
 		}
 		return result
 	}
@@ -461,7 +476,8 @@ func formatNodeInteractive(prefix string, n *restic.Node, long bool) string {
 			n.Mode, n.UID, n.GID, n.Size, n.ModTime.Format(TimeFormat), filepath.Join(prefix, n.Name))
 	case "dir":
 		return fmt.Sprintf("%s %5d %5d %6d %s %s",
-			n.Mode|os.ModeDir, n.UID, n.GID, n.Size, n.ModTime.Format(TimeFormat), filepath.Join(prefix, n.Name))
+			n.Mode|os.ModeDir, n.UID, n.GID, n.Size, n.ModTime.Format(TimeFormat), filepath.Join(prefix, n.Name) + changeString)
+
 	case "symlink":
 		return fmt.Sprintf("%s %5d %5d %6d %s %s -> %s",
 			n.Mode|os.ModeSymlink, n.UID, n.GID, n.Size, n.ModTime.Format(TimeFormat), filepath.Join(prefix, n.Name), n.LinkTarget)

@@ -119,16 +119,16 @@ func runCompare(opts CompareOptions, gopts GlobalOptions, args []string) error {
 
 	c := &comparison{snap1: snapshots[0], snap2: snapshots[1]}
 
-	if err = c.doCompare(repo); err != nil {
+	if err = c.BuildComparison(repo); err != nil {
 		return err
 	}
 
-	c.compareTrees()
+	c.printTrees()
 
 	return nil
 }
 
-func (c *comparison) doCompare(repo *repository.Repository) (error) {
+func (c *comparison) BuildComparison(repo *repository.Repository) (error) {
 	c.map1 = make(map[string]uint64)
 	c.map2 = make(map[string]uint64)
 
@@ -149,12 +149,12 @@ func (c *comparison) doCompare(repo *repository.Repository) (error) {
 	return nil
 }
 
-func (c *comparison) compareTrees() {
+func (c *comparison) printTrees() {
 	// map2 should be the more recent snapshot
 
 	// iterate over more recent snapshot
 	for path, _ := range c.map2 {
-		change, sign, present := c.comparePath(path)
+		change, sign, present := c.ComparePath(path)
 		if present {
 			if change != 0 {
 				Verbosef("%s: change: %s%s (%d)\r\n", path, sign, formatBytes(change), change)
@@ -165,7 +165,7 @@ func (c *comparison) compareTrees() {
 	}
 }
 
-func (c* comparison) comparePath(path string) (change uint64, sign string, present bool) {
+func (c* comparison) ComparePath(path string) (change uint64, sign string, present bool) {
 	size1, ok1 := c.map1[path]
 	size2, ok2 := c.map2[path]
 
@@ -188,4 +188,3 @@ func (c* comparison) comparePath(path string) (change uint64, sign string, prese
 
 	return
 }
-

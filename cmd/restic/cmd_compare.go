@@ -35,6 +35,15 @@ type CompareOptions struct {
 
 var compareOptions CompareOptions
 
+
+// comparison between two snapshots
+type comparison struct {
+	snap1, snap2 *restic.Snapshot
+
+	// map of paths to their size in bytes
+	map1, map2 map[string]uint64
+}
+
 func init() {
 	cmdRoot.AddCommand(cmdCompare)
 
@@ -97,64 +106,86 @@ func runCompare(opts CompareOptions, gopts GlobalOptions, args []string) error {
 	ctx, cancel := context.WithCancel(gopts.ctx)
 	defer cancel()
 	for sn := range FindFilteredSnapshots(ctx, repo, opts.Host, opts.Tags, opts.Paths, args) {
-		Verbosef("snapshot %s of %v at %s):\n", sn.ID().Str(), sn.Paths, sn.Time)
+		Verbosef("snapshot %s of %v at %s):\r\n", sn.ID().Str(), sn.Paths, sn.Time)
 		snapshots = append(snapshots, sn)
 	}
 
-	Verbosef("found %d snapshots\n", len(snapshots))
+	Verbosef("found %d snapshots\r\n", len(snapshots))
 
 	if len(snapshots) != 2 {
-		Verbosef("need to specify 2 snapshots\n")
+		Verbosef("need to specify 2 snapshots\r\n")
 		return nil
 	}
 
-	sn1, sn2 := snapshots[0], snapshots[1]
+	c := &comparison{snap1: snapshots[0], snap2: snapshots[1]}
 
-	//[0:09] 9337 directories, 64573 files, 16.228 GiB
-
-	var map1, map2 = make(map[string]uint64), make(map[string]uint64)
-
-	treeSize, err := sumAllSubdirs(repo, sn1.Tree, string(filepath.Separator), map1)
-	if err != nil {
+	if err = c.doCompare(repo); err != nil {
 		return err
 	}
-	Verbosef("total size: of %s: %s\n", sn1.ID(), formatBytes(treeSize))
 
-	treeSize, err = sumAllSubdirs(repo, sn2.Tree, string(filepath.Separator), map2)
-	if err != nil {
-		return err
-	}
-	Verbosef("total size: of %s: %s\n", sn2.ID(), formatBytes(treeSize))
-
-	compareTrees(map1, map2)
+	c.compareTrees()
 
 	return nil
 }
 
-func compareTrees(map1, map2 map[string]uint64) {
+func (c *comparison) doCompare(repo *repository.Repository) (error) {
+	c.map1 = make(map[string]uint64)
+	c.map2 = make(map[string]uint64)
+
+	Verbosef("building map for %s\r\n", c.snap1.ID())
+	treeSize, err := sumAllSubdirs(repo, c.snap1.Tree, string(filepath.Separator), c.map1)
+	if err != nil {
+		return err
+	}
+	Verbosef("total size: of %s: %s\r\n", c.snap1.ID(), formatBytes(treeSize))
+
+	Verbosef("building map for %s\r\n", c.snap2.ID())
+	treeSize, err = sumAllSubdirs(repo, c.snap2.Tree, string(filepath.Separator), c.map2)
+	if err != nil {
+		return err
+	}
+	Verbosef("total size: of %s: %s\r\n", c.snap2.ID(), formatBytes(treeSize))
+
+	return nil
+}
+
+func (c *comparison) compareTrees() {
 	// map2 should be the more recent snapshot
 
 	// iterate over more recent snapshot
-	for path, size2 := range map2 {
-		size1, ok := map1[path]
-		if ok {
-			var change uint64
-			var sign string
-			if size1 < size2 {
-				change = size2 - size1
-				sign = "+"
-			} else if size2 > size1 {
-				change = size1 - size2
-				sign = "-"
-			} else {
-				change = 0
-			}
-
+	for path, _ := range c.map2 {
+		change, sign, present := c.comparePath(path)
+		if present {
 			if change != 0 {
-				Verbosef("%s: size1: %d, size2: %d, change: %s%s (%d)\n", path, size1, size2, sign, formatBytes(change), change)
+				Verbosef("%s: change: %s%s (%d)\r\n", path, sign, formatBytes(change), change)
 			}
 		} else {
-			Verbosef("%s: [missing]\n", path)
+			Verbosef("%s: [missing]\r\n", path)
 		}
 	}
 }
+
+func (c* comparison) comparePath(path string) (change uint64, sign string, present bool) {
+	size1, ok1 := c.map1[path]
+	size2, ok2 := c.map2[path]
+
+	if !ok1 || !ok2 {
+		present = false
+		return
+	}
+
+	present = true
+
+	if size1 < size2 {
+		change = size2 - size1
+		sign = "+"
+	} else if size2 > size1 {
+		change = size1 - size2
+		sign = "-"
+	} else {
+		change = 0
+	}
+
+	return
+}
+

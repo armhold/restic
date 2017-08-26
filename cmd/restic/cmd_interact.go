@@ -48,6 +48,7 @@ type directory struct {
 	Tree *restic.Tree
 }
 
+
 // path user has currently navigated down
 var dirStack []directory
 
@@ -57,6 +58,8 @@ var addedFiles map[string]bool = make(map[string]bool)
 var interactOptions InteractOptions
 
 var term *terminal.Terminal
+
+var currSnapshot *restic.Snapshot
 
 func init() {
 	cmdRoot.AddCommand(cmdInteract)
@@ -115,12 +118,12 @@ func runInteract(opts InteractOptions, gopts GlobalOptions, args []string) error
 		}
 	}
 
-	sn, err := restic.LoadSnapshot(context.TODO(), repo, snapshotID)
+	currSnapshot, err = restic.LoadSnapshot(context.TODO(), repo, snapshotID)
 	if err != nil {
 		return fmt.Errorf("could not load snapshot %q: %v\n", snapshotID, err)
 	}
 
-	if err = loadRootDir(repo, sn.Tree); err != nil {
+	if err = loadRootDir(repo, currSnapshot.Tree); err != nil {
 		return err
 	}
 
@@ -244,6 +247,20 @@ func compareToSnapshot(repo *repository.Repository, compareToSnapshotId string) 
 	}
 
 	Verbosef("found snapshot: %v\r\n", snapID)
+
+
+	compareToSnapshot, err := restic.LoadSnapshot(context.TODO(), repo, snapID)
+	if err != nil {
+		return fmt.Errorf("could not load snapshot %q: %v\n", snapID, err)
+	}
+
+	c := &comparison{snap1: compareToSnapshot, snap2: currSnapshot}
+
+	if err = c.doCompare(repo); err != nil {
+		return err
+	}
+
+	c.compareTrees()
 
 	return nil
 }

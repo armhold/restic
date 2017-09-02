@@ -10,15 +10,11 @@
     <div class="row">
         <nav class="col-sm-3 col-md-2 d-none d-sm-block bg-light sidebar">
             <ul class="nav nav-pills flex-column">
-                <li class="nav-item">
-                    <a class="nav-link active" href="#">Local Repo <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">S3 Repo</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">B3 Repo</a>
-                </li>
+
+                {{range .repos}}
+                {{template "repo" . }}
+                {{end}}
+
                 <li class="nav-item">
                     <a class="nav-link" href="#" data-toggle="modal" data-target="#addRepoModal">NEW Repo</a>
                 </li>

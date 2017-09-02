@@ -9,12 +9,18 @@ import (
 	"fmt"
 	"html/template"
 	"time"
+	"path/filepath"
 )
 
 var (
 	startTime = time.Now().Format(time.Stamp)
-	templates = template.Must(template.ParseGlob("templates/*.html"))
+	templates = template.Must(template.ParseGlob("internal/web/*.html"))
+	WebConfig  Config
 )
+
+
+func init() {
+}
 
 type Repo struct {
 	Name     string `json:"Name"`     // "local repo"
@@ -47,8 +53,27 @@ func LoadConfigFromDefault() (Config, error) {
 		return Config{}, err
 	}
 
-	return LoadConfig(path)
+	result, err := LoadConfig(path)
+	if os.IsNotExist(err) {
+		return SaveDefaultConfig()
+	}
+
+	return result, err
 }
+
+func SaveDefaultConfig() (Config, error) {
+	result := Config{}
+	path, err := defaultConfigPath()
+	if err != nil {
+		return result, err
+	}
+
+	fmt.Printf("saving default config to %s\n", path)
+
+	err = result.Save(path)
+	return result, err
+}
+
 
 func LoadConfig(filepath string) (Config, error) {
 	var result Config
@@ -68,7 +93,7 @@ func defaultConfigPath() (string, error) {
 		return "", err
 	}
 
-	return usr.HomeDir, nil
+	return  filepath.Join(usr.HomeDir, "restic_web.conf"), nil
 }
 
 //var b []byte
@@ -81,6 +106,14 @@ func defaultConfigPath() (string, error) {
 //fmt.Printf("wrote bytes: %s\n", string(buf.Bytes()))
 
 func RunWeb(bindHost string, bindPort int) error {
+
+	c, err := LoadConfigFromDefault()
+	if err != nil {
+		return err
+	}
+
+	WebConfig = c
+
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/addrepo", AddRepoAjaxHandler)
 
@@ -91,7 +124,7 @@ func RunWeb(bindHost string, bindPort int) error {
 	addr := fmt.Sprintf("%s:%d", bindHost, bindPort)
 
 	fmt.Printf("binding to %s\n", addr)
-	err := http.ListenAndServe(addr, nil)
+	err = http.ListenAndServe(addr, nil)
 	if err != nil {
 		return err
 	}

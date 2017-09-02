@@ -13,6 +13,8 @@ type Page struct {
 	InfoFlash    string
 	WarningFlash string
 	DangerFlash  string
+	Config       Config
+	currRepoName string
 }
 
 func PageFromRequest(title string, w http.ResponseWriter, r *http.Request) (Page, error) {

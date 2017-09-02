@@ -8,7 +8,7 @@ import (
 )
 
 func TestConfig(t *testing.T) {
-	configFile, err := ioutil.TempFile("", "config.json")
+	configFile, err := ioutil.TempFile("", "Config.json")
 	if err != nil {
 		t.Error(err)
 		return

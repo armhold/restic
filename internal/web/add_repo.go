@@ -54,6 +54,7 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	if ! addRepo.Validate() {
 		fmt.Printf("AddRepoAjaxHandler validation failed: %v\n", addRepo.Errors)
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 
@@ -62,13 +63,20 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		//w.WriteHeader(http.StatusOK)
 		fmt.Printf("addRepoHandler validation success\n")
-		SaveFlashToCookie(w, "success_flash", []byte(fmt.Sprintf("New repository \"%s\" added", addRepo.Name)))
-		//w.Write([]byte("{'on_success': 'window.location.href = \"/?foo=bar\"'}"))
 
-		// add_repo.html is hard-coded to load / upon success
-		//http.Redirect(w, r, "/", http.StatusSeeOther)
+		// NB: order seems to matter here.
+		// 1) content-type
+		// 2) cookies
+		// 3) status
+		// 4) JSON response
+
+		w.Header().Set("Content-Type", "application/json")
+		SaveFlashToCookie(w, "success_flash", fmt.Sprintf("New repository \"%s\" added", addRepo.Name))
+		w.WriteHeader(http.StatusOK)
+
+		redirectJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/?repo=%s'\"}", addRepo.Name)
+		w.Write([]byte(redirectJs))
 	}
 
 	fmt.Printf("returning from AddRepoAjaxHandler\n")

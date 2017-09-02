@@ -9,8 +9,8 @@ import (
 // NB: only suitable for localhost usage because cookie contents are not signed/verified
 
 
-func SaveFlashToCookie(w http.ResponseWriter, name string, value []byte) {
-	c := &http.Cookie{Name: name, Value: encode(value)}
+func SaveFlashToCookie(w http.ResponseWriter, name string, value string) {
+	c := &http.Cookie{Name: name, Value: encode([]byte(value))}
 	http.SetCookie(w, c)
 }
 

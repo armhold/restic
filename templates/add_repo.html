@@ -59,13 +59,12 @@ $(function () {
                 $(errorsUl).empty();
                 $(errorsDiv).hide();
 
-//                alert('success: ' + response);
-
-                //eval(response.on_success);
-                window.location.href = "/"
+//                alert('success: ' + JSON.stringify(response));
+                eval(response.on_success);
+//                window.location.href = "/"
             },
             error: function(xhr, status, error) {
-//                console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
+                console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
                 console.log('error: got xhr.responseText: ' + xhr.responseText);
                 console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
 

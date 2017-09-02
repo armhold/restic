@@ -35,12 +35,6 @@ var webOptions WebOptions
 var templates = template.Must(template.ParseGlob("templates/*.html"))
 
 
-type Page struct {
-	Title string
-	StartTime string
-}
-
-
 func init() {
 	cmdRoot.AddCommand(cmdWeb)
 
@@ -53,7 +47,7 @@ func init() {
 
 func runWeb(opts WebOptions, gopts GlobalOptions, args []string) error {
 	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/addrepo", web.AddRepoHandler)
+	http.HandleFunc("/addrepo", web.AddRepoAjaxHandler)
 
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}
@@ -72,7 +66,7 @@ func runWeb(opts WebOptions, gopts GlobalOptions, args []string) error {
 
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	Verbosef("rootHandler")
+	Verbosef("rootHandler\n")
 	Verbosef("path: %q\n", r.URL.Path)
 
 	// The "/" pattern matches everything, so we need to check that we're at the root here.
@@ -81,9 +75,15 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p := &Page{Title: "Root Page", StartTime: startTime}
+	p, err :=  web.PageFromRequest("Restic Home", w, r)
+	if err != nil {
+		Verbosef("%s\n", err.Error())
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
 	if err := templates.ExecuteTemplate(w, "index.html", p) ; err != nil {
-		Verbosef(err.Error())
+		Verbosef("%s\n", err.Error())
 	}
 }
 

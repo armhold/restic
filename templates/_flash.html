@@ -1,0 +1,48 @@
+{{define "flash"}}
+
+<section class="text-center placeholders">
+
+    {{if .SuccessFlash}}
+    <div class="alert alert-success alert-dismissable fade show" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+
+        <strong>{{.SuccessFlash}}</strong>
+    </div>
+    {{end}}
+
+
+    {{if .InfoFlash}}
+    <div class="alert alert-info alert-dismissable fade show" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+
+        <strong>{{.InfoFlash}}</strong>
+    </div>
+    {{end}}
+
+    {{if .WarningFlash}}
+    <div class="alert alert-warning alert-dismissable fade show" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+
+        <strong>{{.WarningFlash}}</strong>
+    </div>
+    {{end}}
+
+    {{if .DangerFlash}}
+    <div class="alert alert-danger alert-dismissable fade show" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+
+        <strong>{{.DangerFlash}}</strong>
+    </div>
+    {{end}}
+
+</section>
+
+{{end}}

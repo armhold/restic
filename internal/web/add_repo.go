@@ -36,17 +36,16 @@ func (a *AddRepo) Validate() bool {
 	return len(a.Errors) == 0
 }
 
-func AddRepoHandler(w http.ResponseWriter, r *http.Request) {
+func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("addRepoHandler\n")
 	w.Header().Set("Content-Type", "application/json")
-
 
 	err := r.ParseForm()
 	if err != nil {
 		fmt.Printf("error parsing form: %s\n", err.Error())
 		return
 	}
-	fmt.Printf("addRepoHandler %v\n", r.Form)
+	fmt.Printf("AddRepoAjaxHandler received form data: %v\n", r.Form)
 
 	addRepo := &AddRepo{
 		Name: r.FormValue("name"),
@@ -55,22 +54,20 @@ func AddRepoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if ! addRepo.Validate() {
+		fmt.Printf("AddRepoAjaxHandler validation failed: %v\n", addRepo.Errors)
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Printf("addRepoHandler validation failed: %v\n", addRepo.Errors)
+
+		if err := json.NewEncoder(w).Encode(addRepo.Errors); err != nil {
+			fmt.Printf("error encoding response %s\n", err)
+			return
+		}
 	} else {
-		w.WriteHeader(http.StatusOK)
-		//http.Redirect(w, r, "/", http.StatusSeeOther)
+		//w.WriteHeader(http.StatusOK)
 		fmt.Printf("addRepoHandler validation success\n")
+		SaveFlashToCookie(w, "success_flash", []byte(fmt.Sprintf("New repository \"%s\" added", addRepo.Name)))
+		//http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-
-	if err := json.NewEncoder(w).Encode(addRepo.Errors); err != nil {
-		fmt.Printf("error encoding response %s\n", err)
-		return
-	}
-
-	fmt.Printf("addRepoHandler success\n")
+	fmt.Printf("returning from AddRepoAjaxHandler\n")
 }
 

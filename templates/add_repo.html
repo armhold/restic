@@ -59,10 +59,12 @@ $(function () {
                 $(errorsUl).empty();
                 $(errorsDiv).hide();
 
+                window.location.href = "/"
             },
             error: function(xhr, status, error) {
 //                console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
-//                console.log('got xhr.responseText: ' + xhr.responseText);
+                console.log('got xhr.responseText: ' + xhr.responseText);
+                console.log('got xhr.responseJSON: ' + xhr.responseJSON);
 
                 // clear previous errors, if any
                 $(errorsUl).empty();

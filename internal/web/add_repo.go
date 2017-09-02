@@ -38,7 +38,6 @@ func (a *AddRepo) Validate() bool {
 
 func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("addRepoHandler\n")
-	w.Header().Set("Content-Type", "application/json")
 
 	err := r.ParseForm()
 	if err != nil {
@@ -55,6 +54,7 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	if ! addRepo.Validate() {
 		fmt.Printf("AddRepoAjaxHandler validation failed: %v\n", addRepo.Errors)
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 
 		if err := json.NewEncoder(w).Encode(addRepo.Errors); err != nil {
@@ -65,6 +65,9 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 		//w.WriteHeader(http.StatusOK)
 		fmt.Printf("addRepoHandler validation success\n")
 		SaveFlashToCookie(w, "success_flash", []byte(fmt.Sprintf("New repository \"%s\" added", addRepo.Name)))
+		//w.Write([]byte("{'on_success': 'window.location.href = \"/?foo=bar\"'}"))
+
+		// add_repo.html is hard-coded to load / upon success
 		//http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 

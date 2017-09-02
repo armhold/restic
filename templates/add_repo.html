@@ -1,6 +1,6 @@
 {{define "add_repo"}}
 
-<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="addRepoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -10,7 +10,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form>
+                <form action="/addrepo">
                     <div class="form-group">
                         <label for="recipient-name" class="form-control-label">Path:</label>
                         <input type="text" class="form-control" id="recipient-name">
@@ -23,10 +23,20 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-primary" id="save-repo">Save</button>
             </div>
         </div>
     </div>
 </div>
 
+<script>
+    $(function () {
+        $('#save-repo').click(function (e) {
+            $(this.form).submit();
+            alert('this.form: ' + this.form);
+            $('#addRepoModal').modal('hide');
+        });
+    });
+
+</script>
 {{end}}

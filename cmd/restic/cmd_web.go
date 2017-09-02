@@ -52,7 +52,7 @@ func init() {
 
 func runWeb(opts WebOptions, gopts GlobalOptions, args []string) error {
 	http.HandleFunc("/", rootHandler)
-
+	http.HandleFunc("/addrepo", addRepoHandler)
 
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}
@@ -84,6 +84,11 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	if err := templates.ExecuteTemplate(w, "index.html", p) ; err != nil {
 		Verbosef(err.Error())
 	}
+}
+
+
+func addRepoHandler(w http.ResponseWriter, r *http.Request) {
+	Verbosef("addRepoHandler %s", r)
 }
 
 

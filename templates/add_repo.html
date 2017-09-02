@@ -11,16 +11,20 @@
             </div>
             <div class="modal-body">
 
-                <div class="modal-errors">
-                    <ul class="modal-errors alert alert-danger" aria-hidden="true">
+                <div class="modal-errors" aria-hidden="true" style="display: none;">
+                    <ul class="modal-errors alert alert-danger">
 
                     </ul>
                 </div>
 
                 <form id="add-repo-form" action="/addrepo" method="post">
                     <div class="form-group">
-                        <label for="recipient-name" class="form-control-label">Path:</label>
-                        <input type="text" class="form-control" id="recipient-name" name="path">
+                        <label for="name" class="form-control-label">Name:</label>
+                        <input type="text" class="form-control" id="name" name="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="path" class="form-control-label">Path:</label>
+                        <input type="text" class="form-control" id="path" name="path">
                     </div>
                     <div class="form-group">
                         <label for="password" class="form-control-label">Password:</label>
@@ -43,6 +47,7 @@ $(function () {
         e.preventDefault();
 
         modal = $('#addRepoModal');
+        errorsDiv = $(modal).find('.modal-errors')[0];
         errorsUl = $(modal).find('ul.modal-errors')[0];
 
         $.ajax({
@@ -51,9 +56,8 @@ $(function () {
             data: $('#add-repo-form').serialize(),
             success: function(response) {
                 modal.modal('hide');
-                errorsUl = $('#addRepoModal').find('ul.modal-errors')[0];
                 $(errorsUl).empty();
-                $(errorsUl).hide();
+                $(errorsDiv).hide();
 
             },
             error: function(xhr, status, error) {
@@ -68,7 +72,7 @@ $(function () {
                     $(errorsUl).append(li);
                 });
 
-                $(errorsUl).show();
+                $(errorsDiv).show();
             }
         });
         return false;

@@ -10,10 +10,10 @@ import (
 )
 
 type AddRepo struct {
-	Name    string  `json:"name"`
-	Path    string  `json:"path"`
+	Name     string  `json:"name"`
+	Path     string  `json:"path"`
 	Password string `json:"password"`
-	Errors  map[string]string `json:"errors"`
+	Errors   map[string]string `json:"errors"`
 }
 
 func (a *AddRepo) Validate() bool {
@@ -47,8 +47,8 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("AddRepoAjaxHandler received form data: %v\n", r.Form)
 
 	addRepo := &AddRepo{
-		Name: r.FormValue("name"),
-		Path: r.FormValue("path"),
+		Name:     r.FormValue("name"),
+		Path:     r.FormValue("path"),
 		Password: r.FormValue("password"),
 	}
 
@@ -81,4 +81,3 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("returning from AddRepoAjaxHandler\n")
 }
-

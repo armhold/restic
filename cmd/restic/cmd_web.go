@@ -7,6 +7,9 @@ import (
 	"html/template"
 	"os"
 	"fmt"
+	"regexp"
+	"strings"
+	"encoding/json"
 )
 
 var cmdWeb = &cobra.Command{
@@ -86,9 +89,61 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type AddRepo struct {
+	Path    string
+	Password string
+	Errors  map[string]string
+}
+
+func (a *AddRepo) Validate() bool {
+	a.Errors = make(map[string]string)
+
+	re := regexp.MustCompile("/.*")
+	matched := re.Match([]byte(a.Path))
+	if matched == false {
+		a.Errors["Path"] = "Please enter a valid path"
+	}
+
+	if strings.TrimSpace(a.Password) == "" {
+		Verbosef("no password specified\n")
+		a.Errors["Password"] = "Please enter a password"
+	}
+
+	return len(a.Errors) == 0
+}
+
+
+
+
 
 func addRepoHandler(w http.ResponseWriter, r *http.Request) {
-	Verbosef("addRepoHandler %s", r)
+	Verbosef("addRepoHandler\n")
+	w.Header().Set("Content-Type", "application/json")
+
+
+	err := r.ParseForm()
+	if err != nil {
+		Verbosef("error parsing form: %s\n", err.Error())
+		return
+	}
+	Verbosef("addRepoHandler %v\n", r.Form)
+
+	addRepo := &AddRepo{
+		Path: r.FormValue("path"),
+		Password: r.FormValue("password"),
+	}
+
+	if addRepo.Validate() == false {
+		w.WriteHeader(http.StatusBadRequest)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		//http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+
+	if err := json.NewEncoder(w).Encode(addRepo); err != nil {
+		Verbosef("error encoding response %s\n", err)
+		return
+	}
 }
 
 

@@ -10,14 +10,14 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form action="/addrepo">
+                <form id="add-repo-form" action="/addrepo" method="post">
                     <div class="form-group">
                         <label for="recipient-name" class="form-control-label">Path:</label>
-                        <input type="text" class="form-control" id="recipient-name">
+                        <input type="text" class="form-control" id="recipient-name" name="path">
                     </div>
                     <div class="form-group">
                         <label for="password" class="form-control-label">Password:</label>
-                        <input type="password" class="form-control" id="password">
+                        <input type="password" class="form-control" id="password" name="password">
                     </div>
                 </form>
             </div>
@@ -30,13 +30,31 @@
 </div>
 
 <script>
-    $(function () {
-        $('#save-repo').click(function (e) {
-            $(this.form).submit();
-            alert('this.form: ' + this.form);
-            $('#addRepoModal').modal('hide');
+//    $(function () {
+//        $('#save-repo').click(function (e) {
+//            $('#add-repo-form').submit();
+//            $('#addRepoModal').modal('hide');
+//        });
+//    });
+
+$(function () {
+    $('#save-repo').click(function(e) {
+        e.preventDefault();
+        $.ajax({
+            type: "POST",
+            url: "/addrepo",
+            data: $('#add-repo-form').serialize(),
+            success: function(response) {
+                alert('success: ' + response);
+            },
+            error: function(response) {
+                alert('Error: ' + response);
+            }
         });
+        return false;
     });
+});
+
 
 </script>
 {{end}}

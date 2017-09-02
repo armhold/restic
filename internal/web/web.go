@@ -4,9 +4,6 @@ import (
 	"os/user"
 	"encoding/json"
 	"io/ioutil"
-	"regexp"
-	"strings"
-	"path/filepath"
 )
 
 type Repo struct {
@@ -55,27 +52,6 @@ func defaultConfigPath() (string, error) {
 	return usr.HomeDir, nil
 }
 
-type AddRepo struct {
-	Path    string  `json:"path"`
-	Password string `json:"password"`
-	Errors  map[string]string `json:"errors"`
-}
-
-func (a *AddRepo) Validate() bool {
-	a.Errors = make(map[string]string)
-
-	re := regexp.MustCompile(string(filepath.Separator) + ".*")
-	matched := re.Match([]byte(a.Path))
-	if matched == false {
-		a.Errors["Path"] = "Please enter a valid path beginning with " + string(filepath.Separator)
-	}
-
-	if strings.TrimSpace(a.Password) == "" {
-		a.Errors["Password"] = "Please enter a password"
-	}
-
-	return len(a.Errors) == 0
-}
 
 
 

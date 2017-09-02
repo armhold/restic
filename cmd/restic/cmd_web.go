@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"os"
 	"fmt"
-	"encoding/json"
 	"github.com/restic/restic/internal/web"
 )
 
@@ -54,7 +53,7 @@ func init() {
 
 func runWeb(opts WebOptions, gopts GlobalOptions, args []string) error {
 	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/addrepo", addRepoHandler)
+	http.HandleFunc("/addrepo", web.AddRepoHandler)
 
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}
@@ -86,46 +85,6 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	if err := templates.ExecuteTemplate(w, "index.html", p) ; err != nil {
 		Verbosef(err.Error())
 	}
-}
-
-
-
-
-func addRepoHandler(w http.ResponseWriter, r *http.Request) {
-	Verbosef("addRepoHandler\n")
-	w.Header().Set("Content-Type", "application/json")
-
-
-	err := r.ParseForm()
-	if err != nil {
-		Verbosef("error parsing form: %s\n", err.Error())
-		return
-	}
-	Verbosef("addRepoHandler %v\n", r.Form)
-
-	addRepo := &web.AddRepo{
-		Path: r.FormValue("path"),
-		Password: r.FormValue("password"),
-	}
-
-	if ! addRepo.Validate() {
-		w.WriteHeader(http.StatusBadRequest)
-		Verbosef("addRepoHandler validation failed: %v\n", addRepo.Errors)
-	} else {
-		w.WriteHeader(http.StatusOK)
-		//http.Redirect(w, r, "/", http.StatusSeeOther)
-		Verbosef("addRepoHandler validation success\n")
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-
-
-	if err := json.NewEncoder(w).Encode(addRepo.Errors); err != nil {
-		Verbosef("error encoding response %s\n", err)
-		return
-	}
-
-	Verbosef("addRepoHandler success\n")
 }
 
 

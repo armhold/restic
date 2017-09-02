@@ -12,7 +12,7 @@
             <div class="modal-body">
 
                 <div class="modal-errors">
-                    <ul class="modal-errors" aria-hidden="true">
+                    <ul class="modal-errors alert alert-danger" aria-hidden="true">
 
                     </ul>
                 </div>
@@ -37,30 +37,38 @@
 </div>
 
 <script>
-//    $(function () {
-//        $('#save-repo').click(function (e) {
-//            $('#add-repo-form').submit();
-//            $('#addRepoModal').modal('hide');
-//        });
-//    });
 
 $(function () {
     $('#save-repo').click(function(e) {
         e.preventDefault();
+
+        modal = $('#addRepoModal');
+        errorsUl = $(modal).find('ul.modal-errors')[0];
+
         $.ajax({
             type: "POST",
             url: "/addrepo",
             data: $('#add-repo-form').serialize(),
             success: function(response) {
-                $('#addRepoModal').modal('hide');
+                modal.modal('hide');
+                errorsUl = $('#addRepoModal').find('ul.modal-errors')[0];
+                $(errorsUl).empty();
+                $(errorsUl).hide();
+
             },
             error: function(xhr, status, error) {
-                console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
-                console.log('got xhr.responseText: ' + xhr.responseText);
+//                console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
+//                console.log('got xhr.responseText: ' + xhr.responseText);
 
-                errorsUl = $('#addRepoModal').find('ul.modal-errors')[0];
-                $(errorsUl).append(xhr.responseText);
-                $(errorsUl).show('show');
+                // clear previous errors, if any
+                $(errorsUl).empty();
+
+                $.each(xhr.responseJSON, function( key, value ) {
+                    li = '<li>' + value + '</li>'; //showing only the first error.
+                    $(errorsUl).append(li);
+                });
+
+                $(errorsUl).show();
             }
         });
         return false;

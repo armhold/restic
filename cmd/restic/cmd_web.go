@@ -90,9 +90,9 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type AddRepo struct {
-	Path    string
-	Password string
-	Errors  map[string]string
+	Path    string  `json:"path"`
+	Password string `json:"password"`
+	Errors  map[string]string `json:"errors"`
 }
 
 func (a *AddRepo) Validate() bool {
@@ -133,17 +133,33 @@ func addRepoHandler(w http.ResponseWriter, r *http.Request) {
 		Password: r.FormValue("password"),
 	}
 
-	if addRepo.Validate() == false {
+	if ! addRepo.Validate() {
 		w.WriteHeader(http.StatusBadRequest)
+		Verbosef("addRepoHandler validation failed: %v\n", addRepo.Errors)
 	} else {
 		w.WriteHeader(http.StatusOK)
 		//http.Redirect(w, r, "/", http.StatusSeeOther)
+		Verbosef("addRepoHandler validation success\n")
 	}
 
-	if err := json.NewEncoder(w).Encode(addRepo); err != nil {
+	w.Header().Set("Content-Type", "application/json")
+
+
+	//var b []byte
+	//buf := bytes.NewBuffer(b)
+	//if err := json.NewEncoder(buf).Encode(addRepo.Errors); err != nil {
+	//	Verbosef("error encoding response %s\n", err)
+	//	return
+	//}
+	//
+	//Verbosef("wrote bytes: %s\n", string(buf.Bytes()))
+
+	if err := json.NewEncoder(w).Encode(addRepo.Errors); err != nil {
 		Verbosef("error encoding response %s\n", err)
 		return
 	}
+
+	Verbosef("addRepoHandler success\n")
 }
 
 

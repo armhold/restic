@@ -10,6 +10,13 @@
                 </button>
             </div>
             <div class="modal-body">
+
+                <div class="modal-errors">
+                    <ul class="modal-errors" aria-hidden="true">
+
+                    </ul>
+                </div>
+
                 <form id="add-repo-form" action="/addrepo" method="post">
                     <div class="form-group">
                         <label for="recipient-name" class="form-control-label">Path:</label>
@@ -45,10 +52,15 @@ $(function () {
             url: "/addrepo",
             data: $('#add-repo-form').serialize(),
             success: function(response) {
-                alert('success: ' + response);
+                $('#addRepoModal').modal('hide');
             },
-            error: function(response) {
-                alert('Error: ' + response);
+            error: function(xhr, status, error) {
+                console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
+                console.log('got xhr.responseText: ' + xhr.responseText);
+
+                errorsUl = $('#addRepoModal').find('ul.modal-errors')[0];
+                $(errorsUl).append(xhr.responseText);
+                $(errorsUl).show('show');
             }
         });
         return false;

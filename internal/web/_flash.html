@@ -2,44 +2,44 @@
 
 <section class="text-center placeholders">
 
-    {{if .SuccessFlash}}
+    {{if .Success}}
     <div class="alert alert-success alert-dismissable fade show" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
 
-        <strong>{{.SuccessFlash}}</strong>
+        <strong>{{.Success}}</strong>
     </div>
     {{end}}
 
 
-    {{if .InfoFlash}}
+    {{if .Info}}
     <div class="alert alert-info alert-dismissable fade show" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
 
-        <strong>{{.InfoFlash}}</strong>
+        <strong>{{.Info}}</strong>
     </div>
     {{end}}
 
-    {{if .WarningFlash}}
+    {{if .Warning}}
     <div class="alert alert-warning alert-dismissable fade show" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
 
-        <strong>{{.WarningFlash}}</strong>
+        <strong>{{.Warning}}</strong>
     </div>
     {{end}}
 
-    {{if .DangerFlash}}
+    {{if .Danger}}
     <div class="alert alert-danger alert-dismissable fade show" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
 
-        <strong>{{.DangerFlash}}</strong>
+        <strong>{{.Danger}}</strong>
     </div>
     {{end}}
 

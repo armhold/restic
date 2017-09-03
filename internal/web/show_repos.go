@@ -16,18 +16,23 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := PageFromRequest("Restic Home", w, r)
+	flash, err := ParseFlashes(w, r)
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
-	m := make(map[string]interface{})
-	//WebConfig.Repos = []Repo{{Name: "Local Repo"}, {Name: "B2 Repo"}, {Name: "S3 Repo"}}
-	m["repos"] = WebConfig.Repos
+	data := struct {
+		Repos []Repo
+		Flash Flash
+	} {
+		Repos: WebConfig.Repos,
+		Flash: flash,
+	}
 
-	if err := templates.ExecuteTemplate(w, "index.html", m); err != nil {
+
+	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
 

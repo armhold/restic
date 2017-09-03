@@ -124,12 +124,8 @@ func RunWeb(bindHost string, bindPort int) error {
 	addr := fmt.Sprintf("%s:%d", bindHost, bindPort)
 
 	fmt.Printf("binding to %s\n", addr)
-	err = http.ListenAndServe(addr, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	err = http.ListenAndServe(addr,nil)
+	return err
 }
 
 // FileSystem that prevents directory listing.

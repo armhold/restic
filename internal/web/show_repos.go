@@ -24,7 +24,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := make(map[string]interface{})
-	WebConfig.Repos = []Repo{Repo{Name: "Local Repo"}, Repo{Name: "B2 Repo"}, Repo{Name: "S3 Repo"}}
+	//WebConfig.Repos = []Repo{Repo{Name: "Local Repo"}, Repo{Name: "B2 Repo"}, Repo{Name: "S3 Repo"}}
 	m["repos"] = WebConfig.Repos
 
 	if err := templates.ExecuteTemplate(w, "index.html", m); err != nil {

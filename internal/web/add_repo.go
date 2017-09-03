@@ -65,6 +65,9 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Printf("addRepoHandler validation success\n")
 
+		WebConfig.Repos = append(WebConfig.Repos, Repo{ Name: addRepo.Name, Path: addRepo.Path, Password: addRepo.Password})
+		//WebConfig.Save(defaultConfigPath())
+
 		// NB: order seems to matter here.
 		// 1) content-type
 		// 2) cookies

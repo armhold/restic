@@ -36,28 +36,32 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	var snaps restic.Snapshots
+	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
+	if ok {
+		snaps, err = listSnapshots(repo)
+		if err != nil {
+			fmt.Printf("listSnapshots: %s\n", err.Error())
+		}
+	}
+
 	data := struct {
 		Repos        []Repo
 		CurrRepoName string
 		Flash        Flash
 		Css_class    func(repoName string) (string)
+		Snapshots    restic.Snapshots
 	}{
 		Repos:     WebConfig.Repos,
 		Flash:     flash,
 		Css_class: cssClassForRepo,
+		Snapshots: snaps,
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-	if ok {
-		err := listSnapshots(repo)
-		if err != nil {
-			fmt.Printf("listSnapshots: %s\n", err.Error())
-		}
-	}
 
 	fmt.Printf("sucessful exit rootHandler()\n")
 }
@@ -73,19 +77,21 @@ func findCurrRepoByName(name string, repos []Repo) (Repo, bool) {
 	return Repo{}, false
 }
 
-func listSnapshots(repo Repo) (error) {
+func listSnapshots(repo Repo) (restic.Snapshots, error) {
+	var snaps restic.Snapshots
+
 	//r, err := OpenRepository("/Users/armhold/restic-web", "pass")
 	r, err := OpenRepository(repo.Path, repo.Password)
 	if err != nil {
-		return err
+		return snaps, err
 	}
 
-	list := restic.FindFilteredSnapshots(context.TODO(), r, "", []restic.TagList{}, []string{})
-	sort.Sort(sort.Reverse(list))
+	snaps = restic.FindFilteredSnapshots(context.TODO(), r, "", []restic.TagList{}, []string{})
+	sort.Sort(sort.Reverse(snaps))
 
-	for _, s := range list {
-		fmt.Printf("snapshot: %#v\n", s)
+	for _, s := range snaps {
+		fmt.Printf("snapshot: %#v\n", s.ID)
 	}
 
-	return err
+	return snaps, err
 }

@@ -22,6 +22,21 @@ func (c *Config) listRepos() ([]*Repo) {
 	return result
 }
 
+func (c *Config) AddRepo(repo Repo) (error) {
+	for _, r := range c.Repos {
+		if r.Name == repo.Name {
+			return fmt.Errorf("repo with name \"%s\" already exists", repo.Name)
+		}
+
+		if r.Path == repo.Path {
+			return fmt.Errorf("repo with path \"%s\" already exists", repo.Path)
+		}
+	}
+
+	c.Repos = append(c.Repos, repo)
+	return c.Save()
+}
+
 func (c *Config) Save() (error) {
 	if c.Filepath == "" {
 		return errors.New("filepath missing")

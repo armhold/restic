@@ -42,6 +42,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		snaps, err = listSnapshots(repo)
 		if err != nil {
 			fmt.Printf("listSnapshots: %s\n", err.Error())
+
 		}
 	}
 

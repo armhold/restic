@@ -14,7 +14,6 @@ type FormErrors map[string]string
 func (a *Repo) Validate() (ok bool, errors FormErrors) {
 	errors = make(map[string]string)
 
-	fmt.Printf("about to check name...\n")
 	if strings.TrimSpace(a.Name) == "" {
 		errors["Name"] = "Please enter a name for the repository."
 	}
@@ -41,18 +40,13 @@ func fromForm(r *http.Request) Repo {
 }
 
 func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("addRepoHandler\n")
-
 	err := r.ParseForm()
 	if err != nil {
 		fmt.Printf("error parsing form: %s\n", err.Error())
 		return
 	}
-	fmt.Printf("AddRepoAjaxHandler received form data: %v\n", r.Form)
 
 	repo := fromForm(r)
-	fmt.Printf("got repo %v\n", repo)
-
 	ok, errors := repo.Validate()
 
 	if ! ok {
@@ -76,9 +70,7 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Printf("addRepoHandler validation success\n")
 
-		WebConfig.Repos = append(WebConfig.Repos, repo)
-		WebConfig.Save()
-
+		err := WebConfig.AddRepo(repo)
 		// NB: order seems to matter here.
 		// 1) content-type
 		// 2) cookies
@@ -86,12 +78,16 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 		// 4) JSON response
 
 		w.Header().Set("Content-Type", "application/json")
-		SaveFlashToCookie(w, "success_flash", fmt.Sprintf("New repository \"%s\" added", repo.Name))
+		if err != nil {
+			fmt.Printf("error adding repo: %s\n", err)
+			SaveFlashToCookie(w, "danger_flash", fmt.Sprintf("Error adding new repository: %s", err))
+		} else {
+			SaveFlashToCookie(w, "success_flash", fmt.Sprintf("New repository \"%s\" added", repo.Name))
+		}
+
 		w.WriteHeader(http.StatusOK)
 
 		redirectJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/?repo=%s'\"}", repo.Name)
 		w.Write([]byte(redirectJs))
 	}
-
-	fmt.Printf("returning from AddRepoAjaxHandler\n")
 }

@@ -13,8 +13,10 @@
 
                 {{if .Repos}}
                   {{range .Repos}}
-                    {{template "repo" . }}
-                  {{end}}
+                        <li class="nav-item">
+                            <a class="nav-link {{call $.Css_class .Name}}" href="#">{{.Name}}</a>
+                        </li>
+                {{end}}
 
                 {{else}}
                 <li class="nav-item">

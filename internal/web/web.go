@@ -2,23 +2,17 @@ package web
 
 import (
 	"os"
-	"os/user"
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"fmt"
 	"html/template"
-	"time"
-	"path/filepath"
-	"github.com/restic/restic/internal/errors"
 )
 
 var (
-	startTime = time.Now().Format(time.Stamp)
-	templates = template.Must(template.ParseGlob("internal/web/*.html"))
-	WebConfig  Config
+	// to pass FuncMap, order is important.
+	// See: https://stackoverflow.com/questions/17843311/template-and-custom-function-panic-function-not-defined
+	templates = template.Must(template.New("").Funcs(Helpers).ParseGlob("internal/web/*.html"))
+	WebConfig Config
 )
-
 
 func init() {
 }
@@ -27,80 +21,6 @@ type Repo struct {
 	Name     string `json:"Name"`     // "local repo"
 	Path     string `json:"Path"`     //  "b2:bucket-Name/Path"
 	Password string `json:"Password"` // TODO: encrypt?
-}
-
-type Config struct {
-	Repos []Repo `json:"Repos"`
-	Filepath string // not serialized
-}
-
-func (c *Config) listRepos() ([]*Repo) {
-	var result []*Repo
-
-	return result
-}
-
-func (c *Config) Save() (error) {
-	if c.Filepath == "" {
-		return errors.Errorf("filepath missing")
-	}
-
-	b, err := json.Marshal(c)
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(c.Filepath, b, 0600)
-}
-
-func LoadConfigFromDefault() (Config, error) {
-	path, err := defaultConfigPath()
-	if err != nil {
-		return Config{}, err
-	}
-
-	result, err := LoadConfig(path)
-	if os.IsNotExist(err) {
-		return SaveDefaultConfig()
-	}
-
-	return result, err
-}
-
-func SaveDefaultConfig() (Config, error) {
-	result := Config{}
-	path, err := defaultConfigPath()
-	if err != nil {
-		return result, err
-	}
-	result.Filepath = path
-
-	fmt.Printf("saving default config to %s\n", path)
-
-	err = result.Save()
-	return result, err
-}
-
-
-func LoadConfig(filepath string) (Config, error) {
-	result := Config{Filepath: filepath}
-
-	b, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		return result, err
-	}
-
-	err = json.Unmarshal(b, &result)
-	return result, err
-}
-
-func defaultConfigPath() (string, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-
-	return  filepath.Join(usr.HomeDir, "restic_web.conf"), nil
 }
 
 //var b []byte
@@ -113,7 +33,6 @@ func defaultConfigPath() (string, error) {
 //fmt.Printf("wrote bytes: %s\n", string(buf.Bytes()))
 
 func RunWeb(bindHost string, bindPort int) error {
-
 	c, err := LoadConfigFromDefault()
 	if err != nil {
 		return err
@@ -131,7 +50,7 @@ func RunWeb(bindHost string, bindPort int) error {
 	addr := fmt.Sprintf("%s:%d", bindHost, bindPort)
 
 	fmt.Printf("binding to %s\n", addr)
-	err = http.ListenAndServe(addr,nil)
+	err = http.ListenAndServe(addr, nil)
 	return err
 }
 

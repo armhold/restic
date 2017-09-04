@@ -3,7 +3,6 @@
 {{template "header" . }}
 <body>
 
-
 {{template "nav" . }}
 
 <div class="container-fluid">
@@ -14,7 +13,7 @@
                 {{if .Repos}}
                   {{range .Repos}}
                         <li class="nav-item">
-                            <a class="nav-link {{call $.Css_class .Name}}" href="/?repo={{.Name}}">{{.Name}}</a>
+                            <a class="nav-link {{call $.Css_class .Name}}" href="{{RepoPath .}}">{{.Name}}</a>
                         </li>
                 {{end}}
 
@@ -46,8 +45,6 @@
         </nav>
 
         <main class="col-sm-9 ml-sm-auto col-md-10 pt-3" role="main">
-            <h1>Restic</h1>
-
             {{template "flash" .Flash }}
 
             <section class="row text-center placeholders">

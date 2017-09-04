@@ -77,7 +77,7 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("addRepoHandler validation success\n")
 
 		WebConfig.Repos = append(WebConfig.Repos, repo)
-		//WebConfig.Save(defaultConfigPath())
+		WebConfig.Save()
 
 		// NB: order seems to matter here.
 		// 1) content-type

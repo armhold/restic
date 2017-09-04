@@ -16,9 +16,9 @@ func TestConfig(t *testing.T) {
 
 	repos := []Repo{Repo{Name: "r1", Password: "p1"}, Repo{Name: "r2", Password: "p2"}}
 
-	c := Config{Repos: repos}
+	c := Config{Repos: repos, Filepath: configFile.Name()}
 
-	err = c.Save(configFile.Name())
+	err = c.Save()
 	fmt.Printf("save to : %s\n", configFile.Name())
 	if err != nil {
 		t.Error(err)

@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"time"
 	"path/filepath"
+	"github.com/restic/restic/internal/errors"
 )
 
 var (
@@ -30,6 +31,7 @@ type Repo struct {
 
 type Config struct {
 	Repos []Repo `json:"Repos"`
+	Filepath string // not serialized
 }
 
 func (c *Config) listRepos() ([]*Repo) {
@@ -38,13 +40,17 @@ func (c *Config) listRepos() ([]*Repo) {
 	return result
 }
 
-func (c *Config) Save(filepath string) (error) {
+func (c *Config) Save() (error) {
+	if c.Filepath == "" {
+		return errors.Errorf("filepath missing")
+	}
+
 	b, err := json.Marshal(c)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(filepath, b, 0600)
+	return ioutil.WriteFile(c.Filepath, b, 0600)
 }
 
 func LoadConfigFromDefault() (Config, error) {
@@ -67,16 +73,17 @@ func SaveDefaultConfig() (Config, error) {
 	if err != nil {
 		return result, err
 	}
+	result.Filepath = path
 
 	fmt.Printf("saving default config to %s\n", path)
 
-	err = result.Save(path)
+	err = result.Save()
 	return result, err
 }
 
 
 func LoadConfig(filepath string) (Config, error) {
-	var result Config
+	result := Config{Filepath: filepath}
 
 	b, err := ioutil.ReadFile(filepath)
 	if err != nil {

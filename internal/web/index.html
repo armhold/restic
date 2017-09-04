@@ -14,7 +14,7 @@
                 {{if .Repos}}
                   {{range .Repos}}
                         <li class="nav-item">
-                            <a class="nav-link {{call $.Css_class .Name}}" href="#">{{.Name}}</a>
+                            <a class="nav-link {{call $.Css_class .Name}}" href="/?repo={{.Name}}">{{.Name}}</a>
                         </li>
                 {{end}}
 

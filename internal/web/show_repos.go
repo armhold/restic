@@ -3,6 +3,9 @@ package web
 import (
 	"net/http"
 	"fmt"
+	"github.com/restic/restic/internal/restic"
+	"sort"
+	"context"
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,9 +25,11 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	currRepoName := r.FormValue("repo")
+
 	cssClassForRepo := func(repoName string) (string) {
 		// TODO: names might have spaces. Use id, or urlencode
-		if repoName == r.FormValue("repo") {
+		if repoName == r.FormValue(currRepoName) {
 			return "active"
 		} else {
 			return ""
@@ -46,5 +51,41 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s\n", err.Error())
 	}
 
+	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
+	if ok {
+		err := listSnapshots(repo)
+		if err != nil {
+			fmt.Printf("listSnapshots: %s\n", err.Error())
+		}
+	}
+
 	fmt.Printf("sucessful exit rootHandler()\n")
+}
+
+func findCurrRepoByName(name string, repos []Repo) (Repo, bool) {
+	for _, r := range repos {
+		if r.Name == name {
+			fmt.Printf("found repo: %#v\n", r)
+			return r, true
+		}
+	}
+
+	return Repo{}, false
+}
+
+func listSnapshots(repo Repo) (error) {
+	//r, err := OpenRepository("/Users/armhold/restic-web", "pass")
+	r, err := OpenRepository(repo.Path, repo.Password)
+	if err != nil {
+		return err
+	}
+
+	list := restic.FindFilteredSnapshots(context.TODO(), r, "", []restic.TagList{}, []string{})
+	sort.Sort(sort.Reverse(list))
+
+	for _, s := range list {
+		fmt.Printf("snapshot: %#v\n", s)
+	}
+
+	return err
 }

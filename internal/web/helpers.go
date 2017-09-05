@@ -39,8 +39,8 @@ func (n *Navigation) Exclude() (bool) {
 	return n.req.FormValue("tab") == "exclude"
 }
 
-func (n *Navigation) Foo() (bool) {
-	return n.req.FormValue("tab") == "foo"
+func (n *Navigation) Schedule() (bool) {
+	return n.req.FormValue("tab") == "sched"
 }
 
 func (n *Navigation) CssForTab(tab string) (string) {

@@ -1,10 +1,10 @@
 package web
 
 import (
-	"os"
 	"net/http"
 	"fmt"
 	"html/template"
+	"github.com/restic/restic/internal/restic"
 )
 
 var (
@@ -23,7 +23,6 @@ type Repo struct {
 	Password string `json:"Password"` // TODO: encrypt?
 }
 
-
 func RunWeb(bindHost string, bindPort int) error {
 	c, err := LoadConfigFromDefault()
 	if err != nil {
@@ -34,6 +33,10 @@ func RunWeb(bindHost string, bindPort int) error {
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/addrepo", AddRepoAjaxHandler)
+	http.HandleFunc("/snapshots", snapshotsHandler)
+	http.HandleFunc("/paths", pathsHandler)
+	http.HandleFunc("/exclude", excludeHandler)
+	http.HandleFunc("/sched", scheduleHandler)
 
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}
@@ -46,34 +49,69 @@ func RunWeb(bindHost string, bindPort int) error {
 	return err
 }
 
-// FileSystem that prevents directory listing.
-//
-// http://grokbase.com/t/gg/golang-nuts/12a9yhgr64/go-nuts-disable-directory-listing-with-http-fileserver/oldest#201210095mknmkj366el5oujntxmxybfga
-//
-type JustFilesFilesystem struct {
-	Fs http.FileSystem
-}
+func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("snapshotsHandler\n")
+	fmt.Printf("path: %q\n", r.URL.Path)
 
-func (fs JustFilesFilesystem) Open(name string) (http.File, error) {
-	f, err := fs.Fs.Open(name)
+	flash, err := ParseFlashes(w, r)
 	if err != nil {
-		return nil, err
+		fmt.Printf("%s\n", err.Error())
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
 	}
 
-	stat, err := f.Stat()
-	if stat.IsDir() {
-		return nil, os.ErrNotExist
+	currRepoName := r.FormValue("repo")
+
+	cssClassForRepo := func(repoName string) (string) {
+		// TODO: names might have spaces. Use id, or urlencode
+		if repoName == r.FormValue(currRepoName) {
+			return "active"
+		} else {
+			return ""
+		}
 	}
 
-	//	return neuteredReaddirFile{f}, nil
-	return f, nil
+	var snaps restic.Snapshots
+	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
+	if ok {
+		snaps, err = listSnapshots(repo)
+		if err != nil {
+			fmt.Printf("listSnapshots: %s\n", err.Error())
+
+		}
+	}
+
+	data := struct {
+		Repos        []Repo
+		CurrRepoName string
+		Flash        Flash
+		Css_class    func(repoName string) (string)
+		Snapshots    restic.Snapshots
+		Nav          *Navigation
+	}{
+		Repos:     WebConfig.Repos,
+		Flash:     flash,
+		Css_class: cssClassForRepo,
+		Snapshots: snaps,
+		Nav:       &Navigation{req: r},
+	}
+
+	if err := templates.ExecuteTemplate(w, "snapshots.html", data); err != nil {
+		fmt.Printf("%s\n", err.Error())
+	}
+
+	fmt.Printf("sucessful exit snapshotsHandler()\n")
 }
 
-//type neuteredReaddirFile struct {
-//	http.File
-//}
-//
-//func (f neuteredReaddirFile) Readdir(count int) ([]os.FileInfo, error) {
-//	return nil, nil
-//}
-//
+func pathsHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("pathsHandler\n")
+}
+
+func excludeHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("excludeHandler\n")
+}
+
+func scheduleHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("scheduleHandler\n")
+}
+

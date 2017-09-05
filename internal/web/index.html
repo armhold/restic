@@ -50,22 +50,18 @@
 
             <ul class="nav nav-tabs">
                 <li class="nav-item">
-                    <a class="nav-link {{.Nav.CssForTab "snaps"}}" href="{{.Nav.HrefForTab "snaps"}}">Snapshots</a>
+                    <a class="nav-link" href="{{.Nav.HrefForTab "snaps"}}">Snapshots</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{.Nav.CssForTab "paths"}}" href="{{.Nav.HrefForTab "paths"}}">Paths</a>
+                    <a class="nav-link" href="{{.Nav.HrefForTab "paths"}}">Paths</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{.Nav.CssForTab "exclude"}}" href="{{.Nav.HrefForTab "exclude"}}">Exclusions</a>
+                    <a class="nav-link" href="{{.Nav.HrefForTab "exclude"}}">Exclusions</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link disabled {{.Nav.CssForTab "sched"}}" href="{{.Nav.HrefForTab "sched"}}">Schedule</a>
+                    <a class="nav-link disabled" href="{{.Nav.HrefForTab "sched"}}">Schedule</a>
                 </li>
             </ul>
-
-            {{if .Nav.Snapshots}}
-            {{template "snapshots" . }}
-            {{end}}
 
 
 

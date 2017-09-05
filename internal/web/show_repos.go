@@ -10,7 +10,6 @@ import (
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("rootHandler\n")
-	fmt.Printf("path: %q\n", r.URL.Path)
 
 	// The "/" pattern matches everything, so we need to check that we're at the root here.
 	if r.URL.Path != "/" {
@@ -29,20 +28,10 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 	cssClassForRepo := func(repoName string) (string) {
 		// TODO: names might have spaces. Use id, or urlencode
-		if repoName == r.FormValue(currRepoName) {
+		if repoName == currRepoName {
 			return "active"
 		} else {
 			return ""
-		}
-	}
-
-	var snaps restic.Snapshots
-	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-	if ok {
-		snaps, err = listSnapshots(repo)
-		if err != nil {
-			fmt.Printf("listSnapshots: %s\n", err.Error())
-
 		}
 	}
 
@@ -51,13 +40,12 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		CurrRepoName string
 		Flash        Flash
 		Css_class    func(repoName string) (string)
-		Snapshots    restic.Snapshots
 		Nav          *Navigation
 	}{
 		Repos:     WebConfig.Repos,
+		CurrRepoName: currRepoName,
 		Flash:     flash,
 		Css_class: cssClassForRepo,
-		Snapshots: snaps,
 		Nav:       &Navigation{req: r},
 	}
 
@@ -66,6 +54,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("sucessful exit rootHandler()\n")
+
 }
 
 func findCurrRepoByName(name string, repos []Repo) (Repo, bool) {

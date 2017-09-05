@@ -24,8 +24,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: code repeated in web.go
 	currRepoName := r.FormValue("repo")
-
 	cssClassForRepo := func(repoName string) (string) {
 		// TODO: names might have spaces. Use id, or urlencode
 		if repoName == currRepoName {

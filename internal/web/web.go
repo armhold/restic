@@ -35,8 +35,8 @@ func RunWeb(bindHost string, bindPort int) error {
 	http.HandleFunc("/addrepo", AddRepoAjaxHandler)
 	http.HandleFunc("/snapshots", snapshotsHandler)
 	http.HandleFunc("/paths", pathsHandler)
-	http.HandleFunc("/exclude", excludeHandler)
-	http.HandleFunc("/sched", scheduleHandler)
+	http.HandleFunc("/excludes", excludeHandler)
+	http.HandleFunc("/schedule", scheduleHandler)
 
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}
@@ -60,11 +60,11 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: code repeated in show_repos.go
 	currRepoName := r.FormValue("repo")
-
 	cssClassForRepo := func(repoName string) (string) {
 		// TODO: names might have spaces. Use id, or urlencode
-		if repoName == r.FormValue(currRepoName) {
+		if repoName == currRepoName {
 			return "active"
 		} else {
 			return ""
@@ -114,4 +114,3 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 func scheduleHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("scheduleHandler\n")
 }
-

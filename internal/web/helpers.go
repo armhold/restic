@@ -32,20 +32,19 @@ func (n *Navigation) SnapshotsUrl() (string) {
 	return "/snapshots?repo=" + n.req.FormValue("repo")
 }
 
-func (n *Navigation) Snapshots() (bool) {
-	return n.req.FormValue("tab") == "snaps"
+// return url to paths tab, while preserving current repo id
+func (n *Navigation) PathsUrl() (string) {
+	return "/paths?repo=" + n.req.FormValue("repo")
 }
 
-func (n *Navigation) Paths() (bool) {
-	return n.req.FormValue("tab") == "paths"
+// return url to excludes tab, while preserving current repo id
+func (n *Navigation) ExcludesUrl() (string) {
+	return "/excludes?repo=" + n.req.FormValue("repo")
 }
 
-func (n *Navigation) Exclude() (bool) {
-	return n.req.FormValue("tab") == "exclude"
-}
-
-func (n *Navigation) Schedule() (bool) {
-	return n.req.FormValue("tab") == "sched"
+// return url to schedule tab, while preserving current repo id
+func (n *Navigation) ScheduleUrl() (string) {
+	return "/schedule?repo=" + n.req.FormValue("repo")
 }
 
 func (n *Navigation) CssForTab(tab string) (string) {

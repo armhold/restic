@@ -27,6 +27,11 @@ type Navigation struct {
 	req *http.Request
 }
 
+// return url to snapshots tab, while preserving current repo id
+func (n *Navigation) SnapshotsUrl() (string) {
+	return "/snapshots?repo=" + n.req.FormValue("repo")
+}
+
 func (n *Navigation) Snapshots() (bool) {
 	return n.req.FormValue("tab") == "snaps"
 }

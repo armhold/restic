@@ -52,17 +52,18 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		Flash        Flash
 		Css_class    func(repoName string) (string)
 		Snapshots    restic.Snapshots
+		Nav          *Navigation
 	}{
 		Repos:     WebConfig.Repos,
 		Flash:     flash,
 		Css_class: cssClassForRepo,
 		Snapshots: snaps,
+		Nav:       &Navigation{req: r},
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
-
 
 	fmt.Printf("sucessful exit rootHandler()\n")
 }

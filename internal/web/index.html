@@ -6,6 +6,7 @@
 {{template "nav" . }}
 
 <div class="container-fluid">
+<div class="container-fluid">
     <div class="row">
         <nav class="col-sm-3 col-md-2 d-none d-sm-block bg-light sidebar">
             <ul class="nav nav-pills flex-column">
@@ -47,27 +48,26 @@
         <main class="col-sm-9 ml-sm-auto col-md-10 pt-3" role="main">
             {{template "flash" .Flash }}
 
-            <h2>Snapshots</h2>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Date</th>
-                    </tr>
-                    </thead>
-                    <tbody>
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link {{.Nav.CssForTab "snaps"}}" href="{{.Nav.HrefForTab "snaps"}}">Snapshots</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{.Nav.CssForTab "paths"}}" href="{{.Nav.HrefForTab "paths"}}">Paths</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{.Nav.CssForTab "exclude"}}" href="{{.Nav.HrefForTab "exclude"}}">Exclusions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled {{.Nav.CssForTab "foo"}}" href="{{.Nav.HrefForTab "foo"}}">Foo</a>
+                </li>
+            </ul>
 
-                    {{range .Snapshots}}
-                    <tr>
-                        <td>{{.ID.Str}}</td>
-                        <td>{{.Time}}</td>
-                    </tr>
-                    {{end}}
+            {{if .Nav.Snapshots}}
+            {{template "snapshots" . }}
+            {{end}}
 
-                    </tbody>
-                </table>
-            </div>
+
 
             {{template "add_repo"}}
         </main>

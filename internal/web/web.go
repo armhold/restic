@@ -23,14 +23,6 @@ type Repo struct {
 	Password string `json:"Password"` // TODO: encrypt?
 }
 
-//var b []byte
-//buf := bytes.NewBuffer(b)
-//if err := json.NewEncoder(buf).Encode(addRepo.Errors); err != nil {
-//	fmt.Printf("error encoding response %s\n", err)
-//	return
-//}
-//
-//fmt.Printf("wrote bytes: %s\n", string(buf.Bytes()))
 
 func RunWeb(bindHost string, bindPort int) error {
 	c, err := LoadConfigFromDefault()

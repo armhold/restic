@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-func excludeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("excludeHandler\n")
+func scheduleHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("scheduleHandler\n")
 
 	flash, err := ParseFlashes(w, r)
 	if err != nil {
@@ -38,12 +38,15 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 		CurrRepoName: currRepoName,
 		Flash:     flash,
 		Css_class: cssClassForRepo,
-		Nav:       &Navigation{req: r, Tab: "excludes"},
+		Nav:       &Navigation{req: r, Tab: "schedule"},
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("sucessful exit excludesHandler()\n")
+	fmt.Printf("sucessful exit scheduleHandler()\n")
 }
+
+
+

@@ -77,6 +77,9 @@
             {{template "excludes" . }}
             {{end}}
 
+            {{ if eq .Nav.Tab "schedule"}}
+            {{template "schedule" . }}
+            {{end}}
 
             {{template "add_repo"}}
         </main>

@@ -6,13 +6,15 @@ import (
 	"net/http"
 	"net/url"
 	"log"
+	"time"
 )
 
 // misc rails-style template helpers
 
 var Helpers = template.FuncMap{
-	"HomePath": homePath,
-	"RepoPath": repoUrl,
+	"HomePath":     homePath,
+	"RepoPath":     repoUrl,
+	"SnapshotTime": SnapshotTime,
 }
 
 func homePath() (string) {
@@ -69,3 +71,10 @@ func (n *Navigation) HrefForTab(tab string) (string) {
 
 	return u.String()
 }
+
+func SnapshotTime(t time.Time) (string) {
+	return t.Format(TimeFormat)
+}
+
+// TODO: copied from main/table.go
+const TimeFormat = "2006-01-02 15:04:05"

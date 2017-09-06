@@ -38,9 +38,6 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#">Backup Now</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Schedule</a>
-                </li>
             </ul>
 
         </nav>
@@ -76,7 +73,7 @@
                     {{range .Snapshots}}
                     <tr>
                         <td>{{.ID.Str}}</td>
-                        <td>{{.Time}}</td>
+                        <td>{{.Time | SnapshotTime}}</td>
                     </tr>
                     {{end}}
 

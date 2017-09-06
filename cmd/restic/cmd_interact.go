@@ -559,13 +559,13 @@ func extractFiles(ctx context.Context, opts InteractOptions, repo *repository.Re
 		selectedPaths = append(selectedPaths, k)
 	}
 
-	res.SelectFilter = func(item string, dstpath string, node *restic.Node) bool {
-		matched, err := filter.List(selectedPaths, item)
+	res.SelectFilter = func(item string, dstpath string, node *restic.Node) (bool, bool) {
+		matched, childMayMatch, err := filter.List(selectedPaths, item)
 		if err != nil {
 			Warnf("error for path: %v", err)
 		}
 
-		return matched
+		return matched, childMayMatch
 	}
 
 	screenPrintf("restoring %s to %s\n", res.Snapshot(), opts.Target)

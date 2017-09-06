@@ -35,6 +35,21 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// if repos exist, choose one and redirect to snapshots tab
+	//
+	if len(WebConfig.Repos) > 1 {
+		repo := r.FormValue("repo")
+		if repo == "" {
+			repo = WebConfig.Repos[0].Name
+		}
+
+		toUrl := SnapshotsUrl(repo)
+		http.Redirect(w, r, toUrl, http.StatusSeeOther)
+		fmt.Printf("redirecting from root to %s\n", toUrl)
+
+		return
+	}
+
 	data := struct {
 		Repos        []Repo
 		CurrRepoName string
@@ -54,7 +69,6 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("sucessful exit rootHandler()\n")
-
 }
 
 func findCurrRepoByName(name string, repos []Repo) (Repo, bool) {

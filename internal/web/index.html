@@ -61,6 +61,10 @@
                 </li>
             </ul>
 
+            {{ if eq .Nav.Tab ""}}
+            Nothing to see here....
+            {{end}}
+
             {{ if eq .Nav.Tab "snapshots"}}
             {{template "snapshots" . }}
             {{end}}
@@ -72,6 +76,7 @@
             {{ if eq .Nav.Tab "excludes"}}
             {{template "excludes" . }}
             {{end}}
+
 
             {{template "add_repo"}}
         </main>

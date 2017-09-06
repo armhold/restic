@@ -30,9 +30,13 @@ type Navigation struct {
 	Tab string
 }
 
+func SnapshotsUrl(repo string) string {
+	return "/snapshots?repo=" + repo
+}
+
 // return url to snapshots tab, while preserving current repo id
 func (n *Navigation) SnapshotsUrl() (string) {
-	return "/snapshots?repo=" + n.req.FormValue("repo")
+	return SnapshotsUrl(n.req.FormValue("repo"))
 }
 
 // return url to paths tab, while preserving current repo id

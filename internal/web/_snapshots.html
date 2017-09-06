@@ -1,0 +1,22 @@
+{{define "snapshots"}}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        {{range .Snapshots}}
+        <tr>
+            <td>{{.ID.Str}}</td>
+            <td>{{.Time | SnapshotTime}}</td>
+        </tr>
+        {{end}}
+
+        </tbody>
+    </table>
+</div>
+{{end}}

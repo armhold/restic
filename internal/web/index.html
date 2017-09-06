@@ -60,7 +60,17 @@
                 </li>
             </ul>
 
+            {{ if eq .Tab "snapshots"}}
+            {{template "snapshots" . }}
+            {{end}}
 
+            {{ if eq .Tab "paths"}}
+            {{template "paths" . }}
+            {{end}}
+
+            {{ if eq .Tab "excludes"}}
+            {{template "excludes" . }}
+            {{end}}
 
             {{template "add_repo"}}
         </main>

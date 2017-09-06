@@ -50,7 +50,7 @@ func (n *Navigation) ScheduleUrl() (string) {
 }
 
 func (n *Navigation) CssForTab(tab string) (string) {
-	if n.req.FormValue("tab") == tab {
+	if n.req.URL.Path[1:] == tab {
 		return "active"
 	}
 

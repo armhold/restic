@@ -1,28 +1,27 @@
 package web
 
 import (
-	"github.com/restic/restic/internal/restic"
 	"context"
-	"github.com/restic/restic/internal/options"
-	"github.com/restic/restic/internal/backend/s3"
-	"github.com/restic/restic/internal/backend/gs"
-	"github.com/restic/restic/internal/backend/rest"
-	"github.com/restic/restic/internal/debug"
-	"github.com/restic/restic/internal/backend/location"
-	"github.com/restic/restic/internal/backend/local"
 	"github.com/restic/restic/internal/backend/azure"
-	"github.com/restic/restic/internal/backend/swift"
 	"github.com/restic/restic/internal/backend/b2"
-	"io/ioutil"
-	"github.com/restic/restic/internal/errors"
+	"github.com/restic/restic/internal/backend/gs"
+	"github.com/restic/restic/internal/backend/local"
+	"github.com/restic/restic/internal/backend/location"
+	"github.com/restic/restic/internal/backend/rest"
+	"github.com/restic/restic/internal/backend/s3"
 	"github.com/restic/restic/internal/backend/sftp"
-	"os"
+	"github.com/restic/restic/internal/backend/swift"
+	"github.com/restic/restic/internal/debug"
+	"github.com/restic/restic/internal/errors"
+	"github.com/restic/restic/internal/options"
 	"github.com/restic/restic/internal/repository"
+	"github.com/restic/restic/internal/restic"
+	"io/ioutil"
+	"os"
 )
 
 // TODO: rename this file
 // TODO: much copied from global.go, changed slightly for use as a web server with a stored configuration
-
 
 func parseConfig(loc location.Location, opts options.Options) (interface{}, error) {
 	// only apply options for a particular backend here
@@ -225,4 +224,3 @@ func OpenRepository(path, password string) (*repository.Repository, error) {
 
 	return s, nil
 }
-

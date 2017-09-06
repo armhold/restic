@@ -5,8 +5,10 @@ import (
 	"net/http"
 )
 
-func scheduleHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("scheduleHandler\n")
+// browse the filesystem
+
+func browseHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("browseHandler\n")
 
 	flash, err := ParseFlashes(w, r)
 	if err != nil {
@@ -45,5 +47,5 @@ func scheduleHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("sucessful exit scheduleHandler()\n")
+	fmt.Printf("sucessful exit browseHandler()\n")
 }

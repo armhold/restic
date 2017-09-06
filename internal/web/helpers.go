@@ -1,11 +1,11 @@
 package web
 
 import (
-	"html/template"
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 	"net/url"
-	"log"
 	"time"
 )
 
@@ -17,11 +17,11 @@ var Helpers = template.FuncMap{
 	"SnapshotTime": SnapshotTime,
 }
 
-func homePath() (string) {
+func homePath() string {
 	return "/"
 }
 
-func repoUrl(repo Repo) (string) {
+func repoUrl(repo Repo) string {
 	return fmt.Sprintf("/?repo=%s", repo.Name)
 }
 
@@ -35,26 +35,26 @@ func SnapshotsUrl(repo string) string {
 }
 
 // return url to snapshots tab, while preserving current repo id
-func (n *Navigation) SnapshotsUrl() (string) {
+func (n *Navigation) SnapshotsUrl() string {
 	return SnapshotsUrl(n.req.FormValue("repo"))
 }
 
 // return url to paths tab, while preserving current repo id
-func (n *Navigation) PathsUrl() (string) {
+func (n *Navigation) PathsUrl() string {
 	return "/paths?repo=" + n.req.FormValue("repo")
 }
 
 // return url to excludes tab, while preserving current repo id
-func (n *Navigation) ExcludesUrl() (string) {
+func (n *Navigation) ExcludesUrl() string {
 	return "/excludes?repo=" + n.req.FormValue("repo")
 }
 
 // return url to schedule tab, while preserving current repo id
-func (n *Navigation) ScheduleUrl() (string) {
+func (n *Navigation) ScheduleUrl() string {
 	return "/schedule?repo=" + n.req.FormValue("repo")
 }
 
-func (n *Navigation) CssForTab(tab string) (string) {
+func (n *Navigation) CssForTab(tab string) string {
 	if n.req.URL.Path[1:] == tab {
 		return "active"
 	}
@@ -62,7 +62,7 @@ func (n *Navigation) CssForTab(tab string) (string) {
 	return ""
 }
 
-func (n *Navigation) HrefForTab(tab string) (string) {
+func (n *Navigation) HrefForTab(tab string) string {
 	orig := n.req.URL.String()
 
 	u, err := url.Parse(orig)
@@ -77,7 +77,7 @@ func (n *Navigation) HrefForTab(tab string) (string) {
 	return u.String()
 }
 
-func SnapshotTime(t time.Time) (string) {
+func SnapshotTime(t time.Time) string {
 	return t.Format(TimeFormat)
 }
 

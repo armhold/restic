@@ -1,11 +1,11 @@
 package web
 
 import (
-	"net/http"
+	"context"
 	"fmt"
 	"github.com/restic/restic/internal/restic"
+	"net/http"
 	"sort"
-	"context"
 )
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +26,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: code repeated in web.go
 	currRepoName := r.FormValue("repo")
-	cssClassForRepo := func(repoName string) (string) {
+	cssClassForRepo := func(repoName string) string {
 		// TODO: names might have spaces. Use id, or urlencode
 		if repoName == currRepoName {
 			return "active"
@@ -54,7 +54,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		Repos        []Repo
 		CurrRepoName string
 		Flash        Flash
-		Css_class    func(repoName string) (string)
+		Css_class    func(repoName string) string
 		Nav          *Navigation
 	}{
 		Repos:        WebConfig.Repos,

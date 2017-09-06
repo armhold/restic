@@ -1,10 +1,10 @@
 package web
 
 import (
-	"testing"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 	"reflect"
+	"testing"
 )
 
 func TestConfig(t *testing.T) {
@@ -31,7 +31,7 @@ func TestConfig(t *testing.T) {
 		return
 	}
 
-	if ! reflect.DeepEqual(c, restored) {
+	if !reflect.DeepEqual(c, restored) {
 		t.Errorf("%v != %v", c, restored)
 	}
 }

@@ -1,9 +1,9 @@
 package web
 
 import (
-	"net/http"
 	"fmt"
 	"html/template"
+	"net/http"
 )
 
 var (
@@ -47,4 +47,3 @@ func RunWeb(bindHost string, bindPort int) error {
 	err = http.ListenAndServe(addr, nil)
 	return err
 }
-

@@ -1,13 +1,13 @@
 package web
 
 import (
-	"io/ioutil"
-	"path/filepath"
-	"errors"
 	"encoding/json"
-	"os"
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/user"
+	"path/filepath"
 )
 
 // Config contains all the persistent configuration for the repos managed by the web interface
@@ -16,13 +16,13 @@ type Config struct {
 	Filepath string `json:"-"`
 }
 
-func (c *Config) listRepos() ([]*Repo) {
+func (c *Config) listRepos() []*Repo {
 	var result []*Repo
 
 	return result
 }
 
-func (c *Config) AddRepo(repo Repo) (error) {
+func (c *Config) AddRepo(repo Repo) error {
 	for _, r := range c.Repos {
 		if r.Name == repo.Name {
 			return fmt.Errorf("repo with name \"%s\" already exists", repo.Name)
@@ -37,7 +37,7 @@ func (c *Config) AddRepo(repo Repo) (error) {
 	return c.Save()
 }
 
-func (c *Config) Save() (error) {
+func (c *Config) Save() error {
 	if c.Filepath == "" {
 		return errors.New("filepath missing")
 	}
@@ -85,5 +85,3 @@ func defaultConfigPath() (string, error) {
 
 	return filepath.Join(usr.HomeDir, "restic_web.conf"), nil
 }
-
-

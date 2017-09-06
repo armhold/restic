@@ -17,7 +17,7 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: code repeated in show_repos.go
 	currRepoName := r.FormValue("repo")
-	cssClassForRepo := func(repoName string) (string) {
+	cssClassForRepo := func(repoName string) string {
 		// TODO: names might have spaces. Use id, or urlencode
 		if repoName == currRepoName {
 			return "active"
@@ -30,15 +30,15 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 		Repos        []Repo
 		CurrRepoName string
 		Flash        Flash
-		Css_class    func(repoName string) (string)
+		Css_class    func(repoName string) string
 		Nav          *Navigation
 		Tab          string
 	}{
-		Repos:     WebConfig.Repos,
+		Repos:        WebConfig.Repos,
 		CurrRepoName: currRepoName,
-		Flash:     flash,
-		Css_class: cssClassForRepo,
-		Nav:       &Navigation{req: r, Tab: "excludes"},
+		Flash:        flash,
+		Css_class:    cssClassForRepo,
+		Nav:          &Navigation{req: r, Tab: "excludes"},
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {

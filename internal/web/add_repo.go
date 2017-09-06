@@ -1,12 +1,12 @@
 package web
 
 import (
-	"regexp"
-	"path/filepath"
-	"strings"
-	"net/http"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"path/filepath"
+	"regexp"
+	"strings"
 )
 
 type FormErrors map[string]string
@@ -49,7 +49,7 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	repo := fromForm(r)
 	ok, errors := repo.Validate()
 
-	if ! ok {
+	if !ok {
 		fmt.Printf("AddRepoAjaxHandler validation failed: %v\n", errors)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -57,7 +57,7 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 		errAsString, err := json.Marshal(errors)
 		if err != nil {
-			fmt.Printf("json.Marshal err: %s\n", err);
+			fmt.Printf("json.Marshal err: %s\n", err)
 			return
 		} else {
 			fmt.Printf("sending errs: %s\n", errAsString)

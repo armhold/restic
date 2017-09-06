@@ -8,6 +8,7 @@ import (
 
 // NB: only suitable for localhost usage because cookie contents are not signed/verified
 
+// flash is a message meant to be displayed *after a redirect*
 type Flash struct {
 	Success string
 	Info    string

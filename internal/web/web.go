@@ -78,6 +78,8 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Printf("listSnapshots: %s\n", err.Error())
 
+			// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
+			flash.Danger += fmt.Sprintf("error listing snapshots: %s", err)
 		}
 	}
 
@@ -93,8 +95,7 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 		Flash:     flash,
 		Css_class: cssClassForRepo,
 		Snapshots: snaps,
-		Nav: &Navigation{req: r, Tab: "snapshots",
-		},
+		Nav: &Navigation{req: r, Tab: "snapshots"},
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {

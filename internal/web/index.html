@@ -46,6 +46,8 @@
         <main class="col-sm-9 ml-sm-auto col-md-10 pt-3" role="main">
             {{template "flash" .Flash }}
 
+
+            {{ if ne .Nav.Tab ""}}
             <ul class="nav nav-tabs">
                 <li class="nav-item">
                     <a class="nav-link {{.Nav.CssForTab "snapshots"}}" href="{{.Nav.SnapshotsUrl}}">Snapshots</a>
@@ -60,10 +62,8 @@
                     <a class="nav-link {{.Nav.CssForTab "schedule"}}" href="{{.Nav.ScheduleUrl}}">Schedule</a>
                 </li>
             </ul>
-
-            {{ if eq .Nav.Tab ""}}
-            Nothing to see here....
             {{end}}
+
 
             {{ if eq .Nav.Tab "snapshots"}}
             {{template "snapshots" . }}

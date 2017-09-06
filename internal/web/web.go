@@ -88,14 +88,13 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 		Css_class    func(repoName string) (string)
 		Snapshots    restic.Snapshots
 		Nav          *Navigation
-		Tab          string
 	}{
 		Repos:     WebConfig.Repos,
 		Flash:     flash,
 		Css_class: cssClassForRepo,
 		Snapshots: snaps,
-		Nav:       &Navigation{req: r},
-		Tab:       "snapshots",
+		Nav: &Navigation{req: r, Tab: "snapshots",
+		},
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
@@ -132,13 +131,11 @@ func pathsHandler(w http.ResponseWriter, r *http.Request) {
 		Flash        Flash
 		Css_class    func(repoName string) (string)
 		Nav          *Navigation
-		Tab          string
 	}{
 		Repos:     WebConfig.Repos,
 		Flash:     flash,
 		Css_class: cssClassForRepo,
-		Nav:       &Navigation{req: r},
-		Tab:       "paths",
+		Nav: &Navigation{req: r, Tab: "paths"},
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
@@ -180,8 +177,7 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 		Repos:     WebConfig.Repos,
 		Flash:     flash,
 		Css_class: cssClassForRepo,
-		Nav:       &Navigation{req: r},
-		Tab:       "excludes",
+		Nav:       &Navigation{req: r, Tab: "excludes"},
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {

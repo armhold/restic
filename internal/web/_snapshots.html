@@ -5,15 +5,24 @@
         <tr>
             <th>ID</th>
             <th>Date</th>
+            <th>Restore</th>
+            <th>Delete</th>
         </tr>
         </thead>
         <tbody>
 
+
+        {{if .Snapshots}}
         {{range .Snapshots}}
         <tr>
             <td>{{.ID.Str}}</td>
             <td>{{.Time | SnapshotTime}}</td>
+            <td><button type="button" class="btn btn-info">Restore</button></td>
+            <td><button type="button" class="btn btn-danger">Delete</button></td>
         </tr>
+        {{end}}
+        {{else}}
+        No snapshots yet.
         {{end}}
 
         </tbody>

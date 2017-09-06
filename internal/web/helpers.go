@@ -27,6 +27,7 @@ func repoUrl(repo Repo) (string) {
 
 type Navigation struct {
 	req *http.Request
+	Tab string
 }
 
 // return url to snapshots tab, while preserving current repo id

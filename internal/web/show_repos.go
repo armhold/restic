@@ -42,11 +42,11 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		Css_class    func(repoName string) (string)
 		Nav          *Navigation
 	}{
-		Repos:     WebConfig.Repos,
+		Repos:        WebConfig.Repos,
 		CurrRepoName: currRepoName,
-		Flash:     flash,
-		Css_class: cssClassForRepo,
-		Nav:       &Navigation{req: r},
+		Flash:        flash,
+		Css_class:    cssClassForRepo,
+		Nav:          &Navigation{req: r, Tab: ""},
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {

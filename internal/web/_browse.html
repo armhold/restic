@@ -20,7 +20,7 @@
         {{ range .Files}}
         <tr>
             <td>
-                    {{if call $.IsDir .Name}}
+                    {{if .IsDir}}
                         <a href="{{call $.LinkToDir .Name}}">{{.Name}}</a>
                         {{else}}
                         {{.Name}}

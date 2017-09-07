@@ -62,19 +62,6 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		return nav.BrowseUrl() + "&dir=" + url.QueryEscape(fullPath)
 	}
 
-	isDir := func(file string) bool {
-		fullPath := filepath.Join(dir, file)
-		s, err := os.Stat(fullPath)
-		if err != nil {
-			m := fmt.Sprintf("error getting file status for %s: %s\n", err)
-			fmt.Printf(m)
-			flash.Danger += m
-		}
-
-		return s.IsDir()
-	}
-
-
 	data := struct {
 		Repos        []Repo
 		CurrRepoName string
@@ -85,7 +72,6 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		Dir          string
 		Files        []os.FileInfo
 		LinkToDir    func(string) string
-		IsDir        func(file string) bool
 	}{
 		Repos:        WebConfig.Repos,
 		CurrRepoName: currRepoName,
@@ -96,7 +82,6 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		Dir:          dir,
 		Files:        files,
 		LinkToDir:    linkToDir,
-		IsDir:        isDir,
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {

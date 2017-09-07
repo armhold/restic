@@ -14,7 +14,7 @@ import (
 var Helpers = template.FuncMap{
 	"HomePath":     homePath,
 	"RepoPath":     repoUrl,
-	"SnapshotTime": SnapshotTime,
+	"FormatTime":   FormatTime,
 }
 
 func homePath() string {
@@ -81,7 +81,7 @@ func (n *Navigation) HrefForTab(tab string) string {
 	return u.String()
 }
 
-func SnapshotTime(t time.Time) string {
+func FormatTime(t time.Time) string {
 	return t.Format(TimeFormat)
 }
 

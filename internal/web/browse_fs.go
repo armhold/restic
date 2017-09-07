@@ -4,6 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"os/user"
+	"io/ioutil"
+	"github.com/restic/restic/internal/errors"
+	"os"
+	"path/filepath"
+	"net/url"
 )
 
 // browse the filesystem
@@ -18,23 +23,25 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := r.FormValue("path")
-	if path == "" {
-		fmt.Printf("no path given, starting with home dir\n")
+	dir := r.FormValue("dir")
+	if dir == "" {
+		fmt.Printf("no dir given, starting with home dir\n")
 		usr, err := user.Current()
 		if err != nil {
 			s := fmt.Sprintf("error getting current user: %s", err)
 			flash.Danger += s
 			fmt.Printf(s)
-			path = "/"
+			dir = "/"
 		} else {
-			path = usr.HomeDir
+			dir = usr.HomeDir
 		}
 	}
 
-
-	fmt.Printf("list files in %s\n", path)
-
+	fmt.Printf("list files in %s\n", dir)
+	files, err := listDir(dir)
+	if err != nil {
+		flash.Danger += err.Error()
+	}
 
 	// TODO: code repeated in show_repos.go
 	currRepoName := r.FormValue("repo")
@@ -47,6 +54,13 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	nav := &Navigation{req: r, Tab: "browse"}
+
+	linkToDir := func(file string) string {
+		fullPath := filepath.Join(dir, file)
+		return nav.BrowseUrl() + "&dir=" + url.QueryEscape(fullPath)
+	}
+
 	data := struct {
 		Repos        []Repo
 		CurrRepoName string
@@ -54,19 +68,40 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		Css_class    func(repoName string) string
 		Nav          *Navigation
 		Tab          string
-		currPath     string
+		Dir          string
+		Files        []os.FileInfo
+		LinkToDir    func(string) string
 	}{
 		Repos:        WebConfig.Repos,
 		CurrRepoName: currRepoName,
 		Flash:        flash,
 		Css_class:    cssClassForRepo,
-		Nav:          &Navigation{req: r, Tab: "browse"},
+		Nav:          nav,
 		Tab:          "browse",
+		Dir:          dir,
+		Files:        files,
+		LinkToDir:    linkToDir,
 	}
+
+	fmt.Printf("data: %#v\n", data)
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
 
 	fmt.Printf("sucessful exit browseHandler()\n")
+}
+
+func listDir(dir string) ([]os.FileInfo, error) {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return files, errors.Errorf("error reading directory: %s", err)
+	}
+
+	for _, file := range files {
+		fmt.Println(file.Name())
+		fmt.Println(file.ModTime())
+	}
+
+	return files, nil
 }

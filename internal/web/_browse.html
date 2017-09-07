@@ -12,10 +12,12 @@
         </thead>
         <tbody>
 
+        {{ range .Files}}
         <tr>
-            <td>/Users/armhold</td>
-            <td>2017-09-04 11:47:05</td>
+            <td><a href="{{call $.LinkToDir .Name}}">{{.Name}}</a></td>
+            <td>{{.ModTime | FormatTime}}</td>
         </tr>
+        {{end}}
 
         </tbody>
     </table>

@@ -16,7 +16,7 @@
         {{range .Snapshots}}
         <tr>
             <td>{{.ID.Str}}</td>
-            <td>{{.Time | SnapshotTime}}</td>
+            <td>{{.Time | FormatTime}}</td>
             <td><button type="button" class="btn btn-info">Restore</button></td>
             <td><button type="button" class="btn btn-danger">Delete</button></td>
         </tr>

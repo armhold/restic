@@ -17,14 +17,24 @@
         </thead>
         <tbody>
 
+        <tr>
+            <td>
+                <a href="{{$.LinkToParentDir}}">
+                    <span class="fa fa-level-up"></span>
+                </a>
+            </td>
+            <td>--</td>
+        </tr>
+
+
         {{ range .Files}}
         <tr>
             <td>
-                    {{if .IsDir}}
-                        <a href="{{call $.LinkToDir .Name}}">{{.Name}}</a>
-                        {{else}}
-                        {{.Name}}
-                    {{end}}
+                {{if .IsDir}}
+                <a href="{{call $.LinkToFileInDir .Name}}">{{.Name}}</a>
+                {{else}}
+                {{.Name}}
+                {{end}}
             </td>
             <td>{{.ModTime | FormatTime}}</td>
         </tr>

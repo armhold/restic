@@ -57,31 +57,36 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 
 	nav := &Navigation{req: r, Tab: "browse"}
 
-	linkToDir := func(file string) string {
+	linkToFileInDir := func(file string) string {
 		fullPath := filepath.Join(dir, file)
-		return nav.BrowseUrl() + "&dir=" + url.QueryEscape(fullPath)
+		return nav.BrowseUrl() + "&amp;dir=" + url.QueryEscape(fullPath)
 	}
 
+	parentDir := filepath.Dir(dir)
+	linkToParentDir := nav.BrowseUrl() + "&amp;dir=" + url.QueryEscape(parentDir)
+
 	data := struct {
-		Repos        []Repo
-		CurrRepoName string
-		Flash        Flash
-		Css_class    func(repoName string) string
-		Nav          *Navigation
-		Tab          string
-		Dir          string
-		Files        []os.FileInfo
-		LinkToDir    func(string) string
+		Repos           []Repo
+		CurrRepoName    string
+		Flash           Flash
+		Css_class       func(repoName string) string
+		Nav             *Navigation
+		Tab             string
+		Dir             string
+		Files           []os.FileInfo
+		LinkToFileInDir func(string) string
+		LinkToParentDir string
 	}{
-		Repos:        WebConfig.Repos,
-		CurrRepoName: currRepoName,
-		Flash:        flash,
-		Css_class:    cssClassForRepo,
-		Nav:          nav,
-		Tab:          "browse",
-		Dir:          dir,
-		Files:        files,
-		LinkToDir:    linkToDir,
+		Repos:           WebConfig.Repos,
+		CurrRepoName:    currRepoName,
+		Flash:           flash,
+		Css_class:       cssClassForRepo,
+		Nav:             nav,
+		Tab:             "browse",
+		Dir:             dir,
+		Files:           files,
+		LinkToFileInDir: linkToFileInDir,
+		LinkToParentDir: linkToParentDir,
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {

@@ -161,8 +161,8 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 
-	redirectJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/?repo=%s'\"}", repo.Name)
-	w.Write([]byte(redirectJs))
+	executeJs := fmt.Sprintf("{\"on_success\": \"console.log('ok');\"}")
+	w.Write([]byte(executeJs))
 }
 
 

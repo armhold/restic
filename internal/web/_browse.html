@@ -49,9 +49,10 @@
 
 <script>
     $(function () {
+        // TODO: maybe find a way to make this func reusable, rather than creating it anew for each button?
         $('.add-path-button').click(function(e) {
+            button = this;
             e.preventDefault();
-
 
             dir = $(this).data('dir');
             path = $(this).data('path');
@@ -62,12 +63,15 @@
                 url: "/addpath",
                 data: { repo: repo, dir: dir, path: path},
                 success: function(response) {
-                    modal.modal('hide');
-                    $(errorsUl).empty();
-                    $(errorsDiv).hide();
+//                    modal.modal('hide');
+//                    $(errorsUl).empty();
+//                    $(errorsDiv).hide();
 
-                alert('success: ' + JSON.stringify(response));
                     eval(response.on_success);
+                    console.log('success: ' + JSON.stringify(response));
+                    $(button).fadeOut(500, function() {
+                        $(button).text('Added').fadeIn(500);
+                    });
                 },
                 error: function(xhr, status, error) {
                     console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);

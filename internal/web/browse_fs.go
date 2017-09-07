@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"net/url"
 	"sort"
+	"encoding/json"
 )
 
 // browse the filesystem
@@ -66,7 +67,7 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 	linkToParentDir := nav.BrowseUrl() + "&amp;dir=" + url.QueryEscape(parentDir)
 
 	data := struct {
-		Repos           []Repo
+		Repos           []*Repo
 		CurrRepoName    string
 		Flash           Flash
 		Css_class       func(repoName string) string
@@ -95,6 +96,76 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("sucessful exit browseHandler()\n")
 }
+
+// add a new path to the backup list
+func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Printf("error parsing form: %s\n", err.Error())
+		return
+	}
+
+	path := r.FormValue("path")
+	repoName := r.FormValue("repo")
+
+	fmt.Printf("add path: %s to repo: %s\n", path, repoName)
+
+	var repo *Repo
+	for _, r := range WebConfig.Repos {
+		if r.Name == repoName {
+			repo = r
+			break
+		}
+	}
+
+	if r == nil {
+		errors := errors.Errorf("could not find repo: %s", repoName)
+		fmt.Printf("AddPathAjaxHandler validation failed: %v\n", errors)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+
+		errAsString, err := json.Marshal(errors)
+		if err != nil {
+			fmt.Printf("json.Marshal err: %s\n", err)
+			return
+		} else {
+			fmt.Printf("sending errs: %s\n", errAsString)
+		}
+
+		if err := json.NewEncoder(w).Encode(errors); err != nil {
+			fmt.Printf("error encoding response %s\n", err)
+			return
+		}
+
+		return
+	}
+
+	// TODO: mutex on WebConfig before we modify it
+	repo.BackupPaths.Paths[path] = true
+	err = WebConfig.Save()
+
+	// NB: order seems to matter here.
+	// 1) content-type
+	// 2) cookies
+	// 3) status
+	// 4) JSON response
+
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		fmt.Printf("error saving config: %s\n", err)
+		SaveFlashToCookie(w, "danger_flash", fmt.Sprintf("Error adding new path: %s", err))
+	} else {
+		SaveFlashToCookie(w, "success_flash", fmt.Sprintf("New path \"%s\" added", path))
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	redirectJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/?repo=%s'\"}", repo.Name)
+	w.Write([]byte(redirectJs))
+}
+
+
 
 func listDir(dir string) ([]os.FileInfo, error) {
 	files, err := ioutil.ReadDir(dir)

@@ -16,12 +16,6 @@ var (
 func init() {
 }
 
-type Repo struct {
-	Name     string `json:"Name"`     // "local repo"
-	Path     string `json:"Path"`     //  "b2:bucket-Name/Path"
-	Password string `json:"Password"` // TODO: encrypt?
-}
-
 func RunWeb(bindHost string, bindPort int) error {
 	c, err := LoadConfigFromDefault()
 	if err != nil {
@@ -32,6 +26,7 @@ func RunWeb(bindHost string, bindPort int) error {
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/addrepo", AddRepoAjaxHandler)
+	http.HandleFunc("/addpath", AddPathAjaxHandler)
 	http.HandleFunc("/snapshots", snapshotsHandler)
 	http.HandleFunc("/paths", pathsHandler)
 	http.HandleFunc("/excludes", excludeHandler)

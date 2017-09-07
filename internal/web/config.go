@@ -12,8 +12,36 @@ import (
 
 // Config contains all the persistent configuration for the repos managed by the web interface
 type Config struct {
-	Repos    []Repo `json:"Repos"`
+	Repos    []*Repo `json:"Repos"`
 	Filepath string `json:"-"`
+}
+
+type Repo struct {
+	Name        string      `json:"Name"`     // "local repo"
+	Path        string      `json:"Path"`     //  "b2:bucket-Name/Path"
+	Password    string      `json:"Password"` // TODO: encrypt?
+	BackupPaths *BackupPaths `json:"BackupPaths"`
+}
+
+type BackupPaths struct {
+	Paths    map[string]bool `json:"Paths"`
+	Excludes map[string]bool `json:"Excludes"`
+}
+
+func NewRepo(name, path, password string) *Repo {
+	return &Repo{Name: name,
+		Path: path,
+		Password: password,
+		BackupPaths: NewBackupPaths(),
+	}
+}
+
+
+func NewBackupPaths() *BackupPaths {
+	return &BackupPaths{
+		Paths:    make(map[string]bool),
+		Excludes: make(map[string]bool),
+	}
 }
 
 func (c *Config) listRepos() []*Repo {
@@ -22,7 +50,7 @@ func (c *Config) listRepos() []*Repo {
 	return result
 }
 
-func (c *Config) AddRepo(repo Repo) error {
+func (c *Config) AddRepo(repo *Repo) error {
 	for _, r := range c.Repos {
 		if r.Name == repo.Name {
 			return fmt.Errorf("repo with name \"%s\" already exists", repo.Name)

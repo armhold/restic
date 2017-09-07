@@ -51,7 +51,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Repos        []Repo
+		Repos        []*Repo
 		CurrRepoName string
 		Flash        Flash
 		Css_class    func(repoName string) string
@@ -71,7 +71,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("sucessful exit rootHandler()\n")
 }
 
-func findCurrRepoByName(name string, repos []Repo) (Repo, bool) {
+func findCurrRepoByName(name string, repos []*Repo) (*Repo, bool) {
 	for _, r := range repos {
 		if r.Name == name {
 			fmt.Printf("found repo: %#v\n", r)
@@ -79,10 +79,10 @@ func findCurrRepoByName(name string, repos []Repo) (Repo, bool) {
 		}
 	}
 
-	return Repo{}, false
+	return &Repo{}, false
 }
 
-func listSnapshots(repo Repo) (restic.Snapshots, error) {
+func listSnapshots(repo *Repo) (restic.Snapshots, error) {
 	var snaps restic.Snapshots
 
 	r, err := OpenRepository(repo.Path, repo.Password)

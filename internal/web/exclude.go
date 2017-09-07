@@ -27,7 +27,7 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Repos        []Repo
+		Repos        []*Repo
 		CurrRepoName string
 		Flash        Flash
 		Css_class    func(repoName string) string

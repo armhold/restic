@@ -12,7 +12,6 @@
         <thead>
         <tr>
             <th>Path</th>
-            <th>Time</th>
         </tr>
         </thead>
         <tbody>
@@ -23,7 +22,7 @@
                     <span class="fa fa-level-up"></span>
                 </a>
             </td>
-            <td>--</td>
+            <td><button type="button" class="btn btn-info">Add This Directory</button></td>
         </tr>
 
 
@@ -36,7 +35,7 @@
                 {{.Name}}
                 {{end}}
             </td>
-            <td>{{.ModTime | FormatTime}}</td>
+            <td><button type="button" class="btn btn-info">Add</button></td>
         </tr>
         {{end}}
 

@@ -31,14 +31,6 @@ func (a *Repo) Validate() (ok bool, errors FormErrors) {
 	return len(errors) == 0, errors
 }
 
-func fromForm(r *http.Request) Repo {
-	return Repo{
-		Name:     r.FormValue("name"),
-		Path:     r.FormValue("path"),
-		Password: r.FormValue("password"),
-	}
-}
-
 func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -46,7 +38,7 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := fromForm(r)
+	repo := NewRepo(r.FormValue("name"), r.FormValue("path"), r.FormValue("password"))
 	ok, errors := repo.Validate()
 
 	if !ok {

@@ -35,11 +35,64 @@
                 {{.Name}}
                 {{end}}
             </td>
-            <td><button type="button" class="btn btn-info">Add</button></td>
+            <td><button type="button"
+                        class="btn btn-info add-path-button"
+                        data-repo="{{$.CurrRepoName}}"
+                        data-dir="{{$.Dir}}"
+                        data-path="{{.Name}}" >Add</button></td>
         </tr>
         {{end}}
 
         </tbody>
     </table>
 </div>
+
+<script>
+    $(function () {
+        $('.add-path-button').click(function(e) {
+            e.preventDefault();
+
+
+            dir = $(this).data('dir');
+            path = $(this).data('path');
+            repo = $(this).data('repo');
+
+            $.ajax({
+                type: "POST",
+                url: "/addpath",
+                data: { repo: repo, dir: dir, path: path},
+                success: function(response) {
+                    modal.modal('hide');
+                    $(errorsUl).empty();
+                    $(errorsDiv).hide();
+
+                alert('success: ' + JSON.stringify(response));
+                    eval(response.on_success);
+                },
+                error: function(xhr, status, error) {
+                    console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
+                    console.log('error: got xhr.responseText: ' + xhr.responseText);
+                    console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
+
+                    alert('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
+
+                    // clear previous errors, if any
+//                    $(errorsUl).empty();
+//
+//                    $.each(xhr.responseJSON, function( key, value ) {
+//                        li = '<li>' + value + '</li>'; //showing only the first error.
+//                        $(errorsUl).append(li);
+//                    });
+//
+//                    $(errorsDiv).show();
+                }
+            });
+            return false;
+        });
+    });
+
+
+</script>
+
+
 {{end}}

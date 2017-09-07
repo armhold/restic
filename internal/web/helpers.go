@@ -54,6 +54,10 @@ func (n *Navigation) ScheduleUrl() string {
 	return "/schedule?repo=" + n.req.FormValue("repo")
 }
 
+func (n *Navigation) BrowseUrl() string {
+	return "/browse?repo=" + n.req.FormValue("repo")
+}
+
 func (n *Navigation) CssForTab(tab string) string {
 	if n.req.URL.Path[1:] == tab {
 		return "active"

@@ -36,6 +36,7 @@ func RunWeb(bindHost string, bindPort int) error {
 	http.HandleFunc("/paths", pathsHandler)
 	http.HandleFunc("/excludes", excludeHandler)
 	http.HandleFunc("/schedule", scheduleHandler)
+	http.HandleFunc("/browse", browseHandler)
 
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}
@@ -45,5 +46,10 @@ func RunWeb(bindHost string, bindPort int) error {
 
 	fmt.Printf("binding to %s\n", addr)
 	err = http.ListenAndServe(addr, nil)
+
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+	}
+
 	return err
 }

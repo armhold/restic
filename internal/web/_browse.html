@@ -1,29 +1,33 @@
 {{define "browse"}}
 
 <br/>
-<span>
-    Showing files in {{.Dir}}:
-</span>
+
+<div class="dropdown show">
+    <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="fa fa-folder"></span> {{.Dir}}
+    </a>
+
+    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+        {{range .ParentDirLinks}}
+        <a class="dropdown-item" href="{{.Link}}">{{.Dir}}</a>
+        {{end}}
+    </div>
+</div>
+
+
+
 <br/>
+
+
+<div>
+    <button type="button" class="btn btn-outline-success">Done Adding Paths</button>
+</div>
+
 <br/>
 
 <div class="table-responsive">
-    <table class="table table-striped table-condensed restic-selection-table">
-        <thead>
-        <tr>
-            <th>Path</th>
-        </tr>
-        </thead>
+    <table class="table table-sm table-striped restic-selection-table">
         <tbody>
-
-        <tr>
-            <td>
-                <a href="{{$.LinkToParentDir}}">
-                    <span class="fa fa-level-up"></span>
-                </a>
-            </td>
-            <td><button type="button" class="btn btn-info">Add This Directory</button></td>
-        </tr>
 
         {{ range $i, $f := .Files}}
         <tr>
@@ -97,5 +101,4 @@
 
 
 </script>
-
 {{end}}

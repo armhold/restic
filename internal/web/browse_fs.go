@@ -15,6 +15,12 @@ import (
 
 // browse the filesystem
 
+// for rendering parent dir links in template dropdown
+type dirLink struct {
+	Dir  string
+	Link string
+}
+
 func browseHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("browseHandler\n")
 
@@ -58,9 +64,13 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 
 	nav := &Navigation{req: r, Tab: "browse"}
 
+	linkToPath := func(path string) string {
+		return nav.BrowseUrl() + "&amp;dir=" + url.QueryEscape(path)
+	}
+
 	linkToFileInDir := func(file string) string {
 		fullPath := filepath.Join(dir, file)
-		return nav.BrowseUrl() + "&amp;dir=" + url.QueryEscape(fullPath)
+		return linkToPath(fullPath)
 	}
 
 	parentDir := filepath.Dir(dir)
@@ -79,6 +89,16 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		return repo.BackupPaths.Paths[fullPath]
 	}
 
+	// create links for drop-down for navigating to parent dirs
+	// TODO: add volumename for all volumes on Windows
+	var dirLinks []dirLink
+	d := dir
+	for d != filepath.VolumeName(d) && d != "/" {
+		d = filepath.Dir(d);
+		dl := dirLink{Dir: d, Link: linkToPath(d)}
+		dirLinks = append(dirLinks, dl)
+	}
+
 	data := struct {
 		Repos           []*Repo
 		CurrRepoName    string
@@ -91,6 +111,7 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		LinkToFileInDir func(string) string
 		LinkToParentDir string
 		IsSelected      func(dir, path string) bool
+		ParentDirLinks  []dirLink
 	}{
 		Repos:           WebConfig.Repos,
 		CurrRepoName:    currRepoName,
@@ -103,6 +124,7 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		LinkToFileInDir: linkToFileInDir,
 		LinkToParentDir: linkToParentDir,
 		IsSelected:      isSelected,
+		ParentDirLinks:  dirLinks,
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {

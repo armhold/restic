@@ -66,6 +66,19 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 	parentDir := filepath.Dir(dir)
 	linkToParentDir := nav.BrowseUrl() + "&amp;dir=" + url.QueryEscape(parentDir)
 
+	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
+	if ! ok {
+		// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
+		flash.Danger += fmt.Sprintf("error retrieving repo: %s", currRepoName)
+	} else {
+
+	}
+
+	isSelected := func(dir, path string) bool {
+		fullPath := filepath.Join(dir, path)
+		return repo.BackupPaths.Paths[fullPath]
+	}
+
 	data := struct {
 		Repos           []*Repo
 		CurrRepoName    string
@@ -77,6 +90,7 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		Files           []os.FileInfo
 		LinkToFileInDir func(string) string
 		LinkToParentDir string
+		IsSelected      func(dir, path string) bool
 	}{
 		Repos:           WebConfig.Repos,
 		CurrRepoName:    currRepoName,
@@ -88,6 +102,7 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		Files:           files,
 		LinkToFileInDir: linkToFileInDir,
 		LinkToParentDir: linkToParentDir,
+		IsSelected:      isSelected,
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
@@ -109,28 +124,25 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	dir := r.FormValue("dir")
 	selected := r.FormValue("selected") == "true"
 	repoName := r.FormValue("repo")
+	fullpath := filepath.Join(dir, path)
 
-	fmt.Printf("update repo: \"%s\"\n" , repoName)
+	fmt.Printf("update repo: \"%s\"\n", repoName)
 	fmt.Printf("\tdir: \"%s\"\n", dir)
 	fmt.Printf("\tpath: \"%s\"\n", path)
+	fmt.Printf("\tfullpath: \"%s\"\n", fullpath)
 	fmt.Printf("\tselected: %t\n", selected)
 
-	var repo *Repo
-	for _, r := range WebConfig.Repos {
-		if r.Name == repoName {
-			repo = r
-			break
-		}
-	}
+	currRepoName := r.FormValue("repo")
+	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
 
-	if r == nil {
-		errors := errors.Errorf("could not find repo: %s", repoName)
-		fmt.Printf("AddPathAjaxHandler validation failed: %v\n", errors)
+	if ! ok {
+		repoError := errors.Errorf("could not find repo: %s", repoName)
+		fmt.Printf("AddPathAjaxHandler validation failed: %v\n", repoError)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 
-		errAsString, err := json.Marshal(errors)
+		errAsString, err := json.Marshal(repoError)
 		if err != nil {
 			fmt.Printf("json.Marshal err: %s\n", err)
 			return
@@ -138,7 +150,7 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("sending errs: %s\n", errAsString)
 		}
 
-		if err := json.NewEncoder(w).Encode(errors); err != nil {
+		if err := json.NewEncoder(w).Encode(repoError); err != nil {
 			fmt.Printf("error encoding response %s\n", err)
 			return
 		}
@@ -147,7 +159,11 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: mutex on WebConfig before we modify it
-	repo.BackupPaths.Paths[path] = true
+	if selected {
+		repo.BackupPaths.Paths[fullpath] = true
+	} else {
+		delete(repo.BackupPaths.Paths, fullpath)
+	}
 	err = WebConfig.Save()
 
 	// NB: order seems to matter here.
@@ -160,8 +176,6 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Printf("error saving config: %s\n", err)
 		SaveFlashToCookie(w, "danger_flash", fmt.Sprintf("Error adding new path: %s", err))
-	} else {
-		SaveFlashToCookie(w, "success_flash", fmt.Sprintf("New path \"%s\" added", path))
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -169,8 +183,6 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	executeJs := fmt.Sprintf("{\"on_success\": \"console.log('ok');\"}")
 	w.Write([]byte(executeJs))
 }
-
-
 
 func listDir(dir string) ([]os.FileInfo, error) {
 	files, err := ioutil.ReadDir(dir)

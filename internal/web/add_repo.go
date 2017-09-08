@@ -79,7 +79,7 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusOK)
 
-		redirectJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/?repo=%s'\"}", repo.Name)
+		redirectJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/snapshots?repo=%s'\"}", repo.Name)
 		w.Write([]byte(redirectJs))
 	}
 }

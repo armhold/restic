@@ -43,7 +43,11 @@
                                data-repo="{{$.CurrRepoName}}"
                                data-dir="{{$.Dir}}"
                                data-path="{{$f.Name}}"
-                               title="{{$f.Name}}"/>
+                               title="{{$f.Name}}"
+                               {{if call $.IsSelected $.Dir $f.Name}}
+                               checked
+                               {{end}}
+                        />
                         <label for="checkbox-{{$i}}"></label>
                     </div>
                 </div>

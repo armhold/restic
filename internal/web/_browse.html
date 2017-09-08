@@ -26,20 +26,28 @@
         </tr>
 
 
-        {{ range .Files}}
+        {{ range $i, $f := .Files}}
         <tr>
             <td>
-                {{if .IsDir}}
-                <a href="{{call $.LinkToFileInDir .Name}}">{{.Name}}</a>
+                {{if $f.IsDir}}
+                <a href="{{call $.LinkToFileInDir .Name}}">{{$f.Name}}</a>
                 {{else}}
-                {{.Name}}
+                {{$f.Name}}
                 {{end}}
             </td>
-            <td><button type="button"
-                        class="btn btn-info add-path-button"
-                        data-repo="{{$.CurrRepoName}}"
-                        data-dir="{{$.Dir}}"
-                        data-path="{{.Name}}" >Add</button></td>
+
+            <td>
+                <div class="container">
+                    <div class="checkbox-round">
+                        <input type="checkbox" id="checkbox-{{$i}}"
+                               data-repo="{{$.CurrRepoName}}"
+                               data-dir="{{$.Dir}}"
+                               data-path="{{$f.Name}}"
+                               title="{{$f.Name}}"/>
+                        <label for="checkbox-{{$i}}"></label>
+                    </div>
+                </div>
+            </td>
         </tr>
         {{end}}
 
@@ -50,8 +58,9 @@
 <script>
     $(function () {
         // TODO: maybe find a way to make this func reusable, rather than creating it anew for each button?
-        $('.add-path-button').click(function(e) {
-            button = this;
+        $('input[type=checkbox]').change(function(e) {
+            var button = this;
+            var myRow = $(this).closest('tr');
             e.preventDefault();
 
             dir = $(this).data('dir');
@@ -69,9 +78,13 @@
 
                     eval(response.on_success);
                     console.log('success: ' + JSON.stringify(response));
-                    $(button).fadeOut(500, function() {
-                        $(button).text('Added').fadeIn(500);
-                    });
+
+                    myRow.addClass('stylish');
+
+                    setTimeout(function() {
+                        myRow.removeClass('stylish');
+                    }, 1000);
+
                 },
                 error: function(xhr, status, error) {
                     console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);

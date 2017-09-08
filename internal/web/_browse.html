@@ -8,7 +8,7 @@
 <br/>
 
 <div class="table-responsive">
-    <table class="table table-striped table-condensed">
+    <table class="table table-striped table-condensed restic-selection-table">
         <thead>
         <tr>
             <th>Path</th>
@@ -59,13 +59,13 @@
     $(function () {
         // TODO: maybe find a way to make this func reusable, rather than creating it anew for each button?
         $('input[type=checkbox]').change(function(e) {
-            var button = this;
-            var myRow = $(this).closest('tr');
+            var input = this;
+            var myRow = $(input).closest('tr');
             e.preventDefault();
 
-            dir = $(this).data('dir');
-            path = $(this).data('path');
-            repo = $(this).data('repo');
+            var dir = $(input).data('dir');
+            var path = $(input).data('path');
+            var repo = $(input).data('repo');
 
             $.ajax({
                 type: "POST",
@@ -79,11 +79,11 @@
                     eval(response.on_success);
                     console.log('success: ' + JSON.stringify(response));
 
-                    myRow.addClass('stylish');
+                    myRow.addClass('pulse');
 
                     setTimeout(function() {
-                        myRow.removeClass('stylish');
-                    }, 1000);
+                        myRow.removeClass('pulse');
+                    }, 500);
 
                 },
                 error: function(xhr, status, error) {

@@ -121,13 +121,15 @@ span.fa.fa-level-up {
     opacity: 1;
 }
 
-
-tr {
+table.restic-selection-table tr {
     background-color: white;
     transition: background-color 1s;
 }
 
-.stylish {
-    background-color: green;
+/* nth-of-type(odd) is to override even-odd grey stripe rule for bootstrap tables */
+table.restic-selection-table .pulse, .restic-selection-table.table-striped tbody tr:nth-of-type(odd).pulse {
+    /*background-color: #5d8058;*/
+    background-color: rgba(9, 100, 9, 0.43);
     transition: background-color 1s;
 }
+

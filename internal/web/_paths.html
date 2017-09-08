@@ -2,25 +2,21 @@
 
 <br/>
 <span>
-        The following paths will be included in the backups for "{{.CurrRepoName}}".
+    The following paths will be included in the backups for "{{.CurrRepoName}}".
 </span>
 <br/>
 <br/>
 
 
 <div class="table-responsive">
-
     <table class="table table-striped">
-        <thead>
-        <tr>
-            <th>Path</th>
-        </tr>
-        </thead>
-
         <tbody>
         {{ range $i, $f := .Paths}}
         <tr>
             <td>{{.}}</td>
+            <td>
+                <a class="btn btn-outline-danger" href="#">Remove</a>
+            </td>
         </tr>
         {{end}}
         </tbody>

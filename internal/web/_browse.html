@@ -1,26 +1,31 @@
 {{define "browse"}}
 
 <br/>
+<div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+    <div class="btn-group mr-2" role="group" aria-label="First group">
+        <div class="dropdown show">
+            <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="fa fa-folder"></span> {{.Dir}}
+            </a>
 
-<div class="dropdown show">
-    <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <span class="fa fa-folder"></span> {{.Dir}}
-    </a>
-
-    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-        {{range .ParentDirLinks}}
-        <a class="dropdown-item" href="{{.Link}}">{{.Dir}}</a>
-        {{end}}
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                {{range .ParentDirLinks}}
+                <a class="dropdown-item" href="{{.Link}}">{{.Dir}}</a>
+                {{end}}
+            </div>
+        </div>
     </div>
-</div>
 
+    <!-- just add some space between the buttons -->
+    <div class="btn-group mr-2" role="group" aria-label="Second group">
+    </div>
+    <div class="btn-group mr-2" role="group" aria-label="Second group">
+    </div>
 
+    <div class="btn-group mr-2" role="group" aria-label="Second group">
+        <a class="btn btn-outline-success" href="{{.Nav.PathsUrl}}">Done</a>
+    </div>
 
-<br/>
-
-
-<div>
-    <button type="button" class="btn btn-outline-success">Done Adding Paths</button>
 </div>
 
 <br/>

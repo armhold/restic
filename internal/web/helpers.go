@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -22,7 +21,7 @@ func homePath() string {
 }
 
 func repoUrl(repo Repo) string {
-	return fmt.Sprintf("/?repo=%s", repo.Name)
+	return SnapshotsUrl(repo.Name)
 }
 
 type Navigation struct {

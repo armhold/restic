@@ -2,7 +2,7 @@
 
 <br/>
 <span>
-        The following paths and patterns will be included in the backups for "{{.CurrRepoName}}".
+        The following paths will be included in the backups for "{{.CurrRepoName}}".
 </span>
 <br/>
 <br/>
@@ -16,15 +16,13 @@
             <th>Path</th>
         </tr>
         </thead>
+
         <tbody>
-
+        {{ range $i, $f := .Paths}}
         <tr>
-            <td>/</td>
+            <td>{{.}}</td>
         </tr>
-        <tr>
-            <td>/Users</td>
-        </tr>
-
+        {{end}}
         </tbody>
     </table>
 </div>

@@ -106,9 +106,14 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path := r.FormValue("path")
+	dir := r.FormValue("dir")
+	selected := r.FormValue("selected") == "true"
 	repoName := r.FormValue("repo")
 
-	fmt.Printf("add path: %s to repo: %s\n", path, repoName)
+	fmt.Printf("update repo: \"%s\"\n" , repoName)
+	fmt.Printf("\tdir: \"%s\"\n", dir)
+	fmt.Printf("\tpath: \"%s\"\n", path)
+	fmt.Printf("\tselected: %t\n", selected)
 
 	var repo *Repo
 	for _, r := range WebConfig.Repos {

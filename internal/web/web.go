@@ -35,6 +35,7 @@ func RunWeb(bindHost string, bindPort int) error {
 	http.HandleFunc("/schedule", scheduleHandler)
 	http.HandleFunc("/backup", backupHandler)
 	http.HandleFunc("/browse", browseHandler)
+	http.HandleFunc("/runbackup", RunBackupAjaxHandler)
 
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}

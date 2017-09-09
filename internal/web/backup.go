@@ -15,10 +15,6 @@ import (
 	"strings"
 )
 
-
-func init() {
-}
-
 func backupHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("backupHandler\n")
 
@@ -70,7 +66,44 @@ func backupHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func runBackup(r Repo) error {
+func RunBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("RunBackupAjaxHandler\n")
+
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Printf("error parsing form: %s\n", err.Error())
+		return
+	}
+
+	currRepoName := r.FormValue("repo")
+	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
+
+	if ! ok {
+		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", currRepoName))
+		return
+	}
+
+	err = runBackup(repo)
+
+	// NB: order seems to matter here.
+	// 1) content-type
+	// 2) cookies
+	// 3) status
+	// 4) JSON response
+
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		fmt.Printf("error running backup: %s\n", err)
+		SaveFlashToCookie(w, "danger_flash", fmt.Sprintf("Error adding new exclude: %s", err))
+	}
+
+	w.WriteHeader(http.StatusOK)
+	executeJs := fmt.Sprintf("{\"on_success\": \"console.log('ok');\"}")
+	w.Write([]byte(executeJs))
+}
+
+
+func runBackup(r *Repo) error {
 	target := r.BackupPaths.GetPaths()
 
 	target, err := filterExisting(target)
@@ -166,7 +199,7 @@ func runBackup(r Repo) error {
 		panic(fmt.Sprintf("item %v, device id %v not found, allowedDevs: %v", item, id, allowedDevs))
 	}
 
-	stat, err := archiver.Scan(target, selectFilter, newScanProgress(gopts))
+	stat, err := archiver.Scan(target, selectFilter, newScanProgress())
 	if err != nil {
 		return err
 	}
@@ -177,10 +210,13 @@ func runBackup(r Repo) error {
 
 	arch.Warn = func(dir string, fi os.FileInfo, err error) {
 		// TODO: make ignoring errors configurable
-		fmt.Printf("%s\rwarning for %s: %v\n", ClearLine(), dir, err)
+		clearLine := "\n"
+		fmt.Printf("%s\rwarning for %s: %v\n", clearLine, dir, err)
 	}
 
-	_, id, err = arch.Snapshot(context.TODO(), newArchiveProgress(gopts, stat), target, opts.Tags, opts.Hostname, parentSnapshotID)
+	var tags []string
+
+	_, id, err = arch.Snapshot(context.TODO(), newArchiveProgress(false, stat), target, tags, hostname, parentSnapshotID)
 	if err != nil {
 		return err
 	}
@@ -188,6 +224,66 @@ func runBackup(r Repo) error {
 	fmt.Printf("snapshot %s saved\n", id.Str())
 
 	return nil
+}
+
+// TODO: copied from cmd_backup.go
+func newArchiveProgress(quiet bool, todo restic.Stat) *restic.Progress {
+	if quiet {
+		return nil
+	}
+
+	archiveProgress := restic.NewProgress()
+
+	var bps, eta uint64
+	itemsTodo := todo.Files + todo.Dirs
+
+	archiveProgress.OnUpdate = func(s restic.Stat, d time.Duration, ticker bool) {
+		if IsProcessBackground() {
+			return
+		}
+
+		sec := uint64(d / time.Second)
+		if todo.Bytes > 0 && sec > 0 && ticker {
+			bps = s.Bytes / sec
+			if s.Bytes >= todo.Bytes {
+				eta = 0
+			} else if bps > 0 {
+				eta = (todo.Bytes - s.Bytes) / bps
+			}
+		}
+
+		itemsDone := s.Files + s.Dirs
+
+		status1 := fmt.Sprintf("[%s] %s  %s/s  %s / %s  %d / %d items  %d errors  ",
+			formatDuration(d),
+			formatPercent(s.Bytes, todo.Bytes),
+			formatBytes(bps),
+			formatBytes(s.Bytes), formatBytes(todo.Bytes),
+			itemsDone, itemsTodo,
+			s.Errors)
+		status2 := fmt.Sprintf("ETA %s ", formatSeconds(eta))
+
+		stdoutTerminalWidth := 80
+
+		if w := stdoutTerminalWidth; w > 0 {
+			maxlen := w - len(status2) - 1
+
+			if maxlen < 4 {
+				status1 = ""
+			} else if len(status1) > maxlen {
+				status1 = status1[:maxlen-4]
+				status1 += "... "
+			}
+		}
+
+		PrintProgress("%s%s", status1, status2)
+	}
+
+	archiveProgress.OnDone = func(s restic.Stat, d time.Duration, ticker bool) {
+		fmt.Printf("\nduration: %s, %s\n", formatDuration(d), formatRate(todo.Bytes, d))
+	}
+
+	return archiveProgress
 }
 
 // TODO : maybe check if web client still listening?
@@ -214,8 +310,23 @@ func newScanProgress() *restic.Progress {
 	return p
 }
 
+// TODO: coped from global.go
+// PrintProgress wraps fmt.Printf to handle the difference in writing progress
+// information to terminals and non-terminal stdout
+func PrintProgress(format string, args ...interface{}) {
+	var (
+		message         string
+		carriageControl string
+	)
+	message = fmt.Sprintf(format, args...)
 
+	if !(strings.HasSuffix(message, "\r") || strings.HasSuffix(message, "\n")) {
+		carriageControl = "\n"
+		message = fmt.Sprintf("%s%s", message, carriageControl)
+	}
 
+	fmt.Print(message)
+}
 
 // TODO: copied from cmd_backup.go
 //

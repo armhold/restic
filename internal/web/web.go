@@ -28,6 +28,7 @@ func RunWeb(bindHost string, bindPort int) error {
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/addrepo", AddRepoAjaxHandler)
 	http.HandleFunc("/addpath", AddDeletePathAjaxHandler)
+	http.HandleFunc("/addexclude", AddDeleteExcludeAjaxHandler)
 	http.HandleFunc("/snapshots", snapshotsHandler)
 	http.HandleFunc("/paths", pathsHandler)
 	http.HandleFunc("/excludes", excludeHandler)

@@ -1,6 +1,7 @@
 {{define "add_exclude_modal"}}
 
-<div class="modal fade" id="addExcludeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="addExcludeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -20,8 +21,8 @@
 
                 <form id="add-exclude-form" action="/addexclude" method="post">
                     <div class="form-group">
-                        <label for="dir" class="form-control-label">Exclude:</label>
-                        <input type="text" class="form-control" id="dir" name="dir" autocomplete="off">
+                        <label for="exclude" class="form-control-label">Exclude:</label>
+                        <input type="text" class="form-control" id="exclude" name="exclude" autocomplete="off">
                         <input type="hidden" name="repo" value="{{.CurrRepoName}}">
                     </div>
                 </form>
@@ -43,48 +44,48 @@
 
 <script>
 
-$(function () {
-    $('#save-exclusion').click(function(e) {
-        e.preventDefault();
+    $(function () {
+        $('#save-exclusion').click(function (e) {
+            e.preventDefault();
 
-        modal = $('#addExcludeModal');
-        errorsDiv = $(modal).find('.modal-errors')[0];
-        errorsUl = $(modal).find('ul.modal-errors')[0];
+            modal = $('#addExcludeModal');
+            errorsDiv = $(modal).find('.modal-errors')[0];
+            errorsUl = $(modal).find('ul.modal-errors')[0];
 
-        $.ajax({
-            type: "POST",
-            url: "/addexclude",
-            data: $('#add-exclude-form').serialize(),
-            success: function(response) {
-                modal.modal('hide');
-                $(errorsUl).empty();
-                $(errorsDiv).hide();
+            $.ajax({
+                type: "POST",
+                url: "/addexclude",
+                data: $('#add-exclude-form').serialize(),
+                success: function (response) {
+                    modal.modal('hide');
+                    $(errorsUl).empty();
+                    $(errorsDiv).hide();
 
 //                alert('success: ' + JSON.stringify(response));
-                eval(response.on_success);
+                    eval(response.on_success);
 //                window.location.href = "/"
-                // reload page
-                window.location.href = window.location.href;
-            },
-            error: function(xhr, status, error) {
-                console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
-                console.log('error: got xhr.responseText: ' + xhr.responseText);
-                console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
+                    // reload page
+                    window.location.href = window.location.href;
+                },
+                error: function (xhr, status, error) {
+                    console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
+                    console.log('error: got xhr.responseText: ' + xhr.responseText);
+                    console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
 
-                // clear previous errors, if any
-                $(errorsUl).empty();
+                    // clear previous errors, if any
+                    $(errorsUl).empty();
 
-                $.each(xhr.responseJSON, function( key, value ) {
-                    li = '<li>' + value + '</li>'; //showing only the first error.
-                    $(errorsUl).append(li);
-                });
+                    $.each(xhr.responseJSON, function (key, value) {
+                        li = '<li>' + value + '</li>'; //showing only the first error.
+                        $(errorsUl).append(li);
+                    });
 
-                $(errorsDiv).show();
-            }
+                    $(errorsDiv).show();
+                }
+            });
+            return false;
         });
-        return false;
     });
-});
 
 </script>
 {{end}}

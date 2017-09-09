@@ -7,6 +7,13 @@
 <br/>
 <br/>
 
+<div class="errors" aria-hidden="true" style="display: none;">
+    <ul class="errors alert alert-danger">
+
+    </ul>
+</div>
+
+
 
 <div class="table-responsive">
     <table class="table table-sm table-striped">
@@ -23,14 +30,64 @@
         <tr>
             <td>{{.}}</td>
             <td>
-                <!-- TODO: make this a form...don't want to use a GET request to delete -->
-                <a class="btn btn-outline-danger" href="#">Remove</a>
+                <form action="/addpath" method="post">
+                    <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
+                    <input type="hidden" name="dir" value="{{.}}">
+                    <input type="hidden" name="selected" value="false">
+                    <button type="submit" class="btn btn-outline-danger delete-path">Remove</button>
+                </form>
             </td>
         </tr>
         {{end}}
         </tbody>
     </table>
 </div>
+
+<script>
+    $(function () {
+        $('.delete-path').click(function(e) {
+            e.preventDefault();
+
+            var form = $(this).closest('form');
+            var errorsDiv = $('div.errors')[0];
+            var errorsUl = $(errorsDiv).find('ul.errors')[0];
+
+            console.log('errorsDiv: ' + JSON.stringify(errorsDiv));
+            console.log('errorsUl: ' + JSON.stringify(errorsUl));
+
+            $.ajax({
+                type: "POST",
+                url: "/addpath",
+                data: $(form).serialize(),
+                success: function(response) {
+                    $(errorsUl).empty();
+                    $(errorsDiv).hide();
+
+                    eval(response.on_success);
+
+                    // reload page
+                    // TODO: animate change rather than reload
+                    window.location.href = window.location.href;
+                },
+                error: function(xhr, status, error) {
+                    console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
+                    console.log('error: got xhr.responseText: ' + xhr.responseText);
+                    console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
+
+                    // clear previous errors, if any
+                    $(errorsUl).empty();
+                    $.each(xhr.responseJSON, function( key, value ) {
+                        li = '<li>' + value + '</li>'; //showing only the first error.
+                        $(errorsUl).append(li);
+                    });
+                    $(errorsDiv).show();
+                }
+            });
+            return false;
+        });
+    });
+</script>
+
 
 {{template "add_path" . }}
 

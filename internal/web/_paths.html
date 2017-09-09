@@ -11,6 +11,14 @@
 <div class="table-responsive">
     <table class="table table-sm table-striped">
         <tbody>
+
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                <a class="btn btn-success" href="#" data-toggle="modal" data-target="#addPathModal">Add a Path</a>
+            </td>
+        </tr>
+
         {{ range $i, $f := .Paths}}
         <tr>
             <td>{{.}}</td>
@@ -22,4 +30,7 @@
         </tbody>
     </table>
 </div>
+
+{{template "add_path" . }}
+
 {{end}}

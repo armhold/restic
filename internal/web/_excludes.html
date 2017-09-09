@@ -9,13 +9,32 @@
         <tbody>
 
         <tr>
-            <td>.DS_Store</td>
+            <td>&nbsp;</td>
+            <td>
+                <a class="btn btn-success" href="#" data-toggle="modal" data-target="#addExcludeModal">Add an Exclusion</a>
+            </td>
         </tr>
+
+        {{ range $i, $f := .Excludes}}
         <tr>
-            <td>.Trash</td>
+            <td><code>{{.}}</code></td>
+            <td>
+                <!-- ajax will specify method="DELETE" -->
+                <form action="/addexclude" method="post">
+                    <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
+                    <input type="hidden" name="dir" value="{{.}}">
+                    <button type="submit" class="btn btn-outline-danger delete-path">Remove</button>
+                </form>
+            </td>
         </tr>
+        {{end}}
 
         </tbody>
     </table>
 </div>
+
+
+{{template "add_exclude_modal" . }}
+
+
 {{end}}

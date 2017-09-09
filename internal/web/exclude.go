@@ -3,6 +3,7 @@ package web
 import (
 	"fmt"
 	"net/http"
+	"sort"
 )
 
 func excludeHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,12 +27,19 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
+	if ! ok {
+		// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
+		flash.Danger += fmt.Sprintf("error retrieving repo: %s", currRepoName)
+	}
+
 	data := struct {
 		Repos        []*Repo
 		CurrRepoName string
 		Flash        Flash
 		Css_class    func(repoName string) string
 		Nav          *Navigation
+		Excludes     []string
 		Tab          string
 	}{
 		Repos:        WebConfig.Repos,
@@ -39,6 +47,7 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 		Flash:        flash,
 		Css_class:    cssClassForRepo,
 		Nav:          &Navigation{req: r, Tab: "excludes"},
+		Excludes:     sortedExcludes(repo),
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
@@ -46,4 +55,18 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("sucessful exit excludesHandler()\n")
+}
+
+func sortedExcludes(repo *Repo) ([]string) {
+	var result []string
+
+	for k, _ := range repo.BackupPaths.Excludes {
+		result = append(result, k)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i] < result[j]
+	})
+
+	return result
 }

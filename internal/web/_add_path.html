@@ -1,5 +1,7 @@
 {{define "add_path"}}
 
+{{/* NB: this modal re-uses /addpath URL and AddPathAjaxHandler code in browse_fs.go */}}
+
 <div class="modal fade" id="addPathModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -20,8 +22,10 @@
 
                 <form id="add-path-form" action="/addpath" method="post">
                     <div class="form-group">
-                        <label for="path" class="form-control-label">Path:</label>
-                        <input type="text" class="form-control" id="path" name="path">
+                        <label for="dir" class="form-control-label">Path:</label>
+                        <input type="text" class="form-control" id="dir" name="dir">
+                        <input type="hidden" name="repo" value="{{.CurrRepoName}}">
+                        <input type="hidden" name="selected" value="true">
                     </div>
                 </form>
 
@@ -62,6 +66,8 @@ $(function () {
 //                alert('success: ' + JSON.stringify(response));
                 eval(response.on_success);
 //                window.location.href = "/"
+                // reload page
+                window.location.href = window.location.href;
             },
             error: function(xhr, status, error) {
                 console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);

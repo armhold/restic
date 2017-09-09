@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"encoding/json"
 )
 
 var (
@@ -47,4 +48,21 @@ func RunWeb(bindHost string, bindPort int) error {
 	}
 
 	return err
+}
+
+func sendErrorToJs(w http.ResponseWriter, err string) {
+	m := make(map[string]string)
+	m["error"] = err
+
+	sendErrorMapToJs(w, m)
+}
+
+func sendErrorMapToJs(w http.ResponseWriter, errMap map[string]string) {
+	// javascript front-end expects errors as key/value pairs, so use a map
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusBadRequest)
+
+	if err := json.NewEncoder(w).Encode(errMap); err != nil {
+		fmt.Printf("error encoding response %s\n", err)
+	}
 }

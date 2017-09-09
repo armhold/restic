@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"net/url"
 	"sort"
-	"encoding/json"
 )
 
 // browse the filesystem
@@ -148,6 +147,12 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	repoName := r.FormValue("repo")
 	fullpath := filepath.Join(dir, path)
 
+	if _, err := os.Stat(fullpath); os.IsNotExist(err) {
+		// path/to/whatever does not exist
+		sendErrorToJs(w, fmt.Sprintf("path does not exist: %s", fullpath))
+		return
+	}
+
 	fmt.Printf("update repo: \"%s\"\n", repoName)
 	fmt.Printf("\tdir: \"%s\"\n", dir)
 	fmt.Printf("\tpath: \"%s\"\n", path)
@@ -158,25 +163,7 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
 
 	if ! ok {
-		repoError := errors.Errorf("could not find repo: %s", repoName)
-		fmt.Printf("AddPathAjaxHandler validation failed: %v\n", repoError)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-
-		errAsString, err := json.Marshal(repoError)
-		if err != nil {
-			fmt.Printf("json.Marshal err: %s\n", err)
-			return
-		} else {
-			fmt.Printf("sending errs: %s\n", errAsString)
-		}
-
-		if err := json.NewEncoder(w).Encode(repoError); err != nil {
-			fmt.Printf("error encoding response %s\n", err)
-			return
-		}
-
+		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", repoName))
 		return
 	}
 

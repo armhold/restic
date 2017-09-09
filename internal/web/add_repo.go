@@ -1,7 +1,6 @@
 package web
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -43,22 +42,7 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	if !ok {
 		fmt.Printf("AddRepoAjaxHandler validation failed: %v\n", errors)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-
-		errAsString, err := json.Marshal(errors)
-		if err != nil {
-			fmt.Printf("json.Marshal err: %s\n", err)
-			return
-		} else {
-			fmt.Printf("sending errs: %s\n", errAsString)
-		}
-
-		if err := json.NewEncoder(w).Encode(errors); err != nil {
-			fmt.Printf("error encoding response %s\n", err)
-			return
-		}
+		sendErrorMapToJs(w, errors)
 	} else {
 		fmt.Printf("addRepoHandler validation success\n")
 

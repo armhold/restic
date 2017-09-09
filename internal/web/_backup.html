@@ -1,0 +1,77 @@
+{{define "backup"}}
+
+<br/>
+<span>
+    Run backup for "{{.CurrRepoName}}".
+</span>
+<br/>
+<br/>
+
+<div class="errors" aria-hidden="true" style="display: none;">
+    <ul class="errors alert alert-danger">
+
+    </ul>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-sm table-striped">
+        <tbody>
+
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                <a class="btn btn-success" href="#" data-toggle="modal" data-target="#addPathModal">Do Something</a>
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(function () {
+        $('.delete-path').click(function(e) {
+            e.preventDefault();
+
+            var form = $(this).closest('form');
+            var errorsDiv = $('div.errors')[0];
+            var errorsUl = $(errorsDiv).find('ul.errors')[0];
+
+            console.log('errorsDiv: ' + JSON.stringify(errorsDiv));
+            console.log('errorsUl: ' + JSON.stringify(errorsUl));
+            console.log("serialize: " + $(form).serialize());
+
+            $.ajax({
+                type: "DELETE",
+                url: "/addpath?" + $(form).serialize(),
+                // can't use 'data:' with delete; params must appear in URL
+                success: function(response) {
+                    $(errorsUl).empty();
+                    $(errorsDiv).hide();
+
+                    eval(response.on_success);
+
+                    // reload page
+                    // TODO: animate change rather than reload
+                    window.location.href = window.location.href;
+                },
+                error: function(xhr, status, error) {
+                    console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
+                    console.log('error: got xhr.responseText: ' + xhr.responseText);
+                    console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
+
+                    // clear previous errors, if any
+                    $(errorsUl).empty();
+                    $.each(xhr.responseJSON, function( key, value ) {
+                        li = '<li>' + value + '</li>'; //showing only the first error.
+                        $(errorsUl).append(li);
+                    });
+                    $(errorsDiv).show();
+                }
+            });
+            return false;
+        });
+    });
+</script>
+
+{{end}}

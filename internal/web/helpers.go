@@ -53,6 +53,10 @@ func (n *Navigation) ScheduleUrl() string {
 	return "/schedule?repo=" + n.req.FormValue("repo")
 }
 
+func (n *Navigation) BackupUrl() string {
+	return "/backup?repo=" + n.req.FormValue("repo")
+}
+
 func (n *Navigation) BrowseUrl() string {
 	return "/browse?repo=" + n.req.FormValue("repo")
 }

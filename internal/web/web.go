@@ -33,6 +33,7 @@ func RunWeb(bindHost string, bindPort int) error {
 	http.HandleFunc("/paths", pathsHandler)
 	http.HandleFunc("/excludes", excludeHandler)
 	http.HandleFunc("/schedule", scheduleHandler)
+	http.HandleFunc("/backup", backupHandler)
 	http.HandleFunc("/browse", browseHandler)
 
 	// static assets

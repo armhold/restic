@@ -1,10 +1,13 @@
-{{define "add_repo"}}
+{{define "add_path_modal"}}
 
-<div class="modal fade" id="addRepoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+{{/* NB: this modal re-uses /addpath URL and AddPathAjaxHandler code in browse_fs.go */}}
+
+<div class="modal fade" id="addPathModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Add a New Repository</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Add a Path to Backup</h5>
+
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -17,24 +20,25 @@
                     </ul>
                 </div>
 
-                <form id="add-repo-form" action="/addrepo" method="post">
+                <form id="add-path-form" action="/addpath" method="post">
                     <div class="form-group">
-                        <label for="name" class="form-control-label">Name:</label>
-                        <input type="text" class="form-control" id="name" name="name">
-                    </div>
-                    <div class="form-group">
-                        <label for="path" class="form-control-label">Path:</label>
-                        <input type="text" class="form-control" id="path" name="path">
-                    </div>
-                    <div class="form-group">
-                        <label for="password" class="form-control-label">Password:</label>
-                        <input type="password" class="form-control" id="password" name="password">
+                        <label for="dir" class="form-control-label">Path:</label>
+                        <input type="text" class="form-control" id="dir" name="dir" autocomplete="off">
+                        <input type="hidden" name="repo" value="{{.CurrRepoName}}">
+                        <input type="hidden" name="selected" value="true">
                     </div>
                 </form>
+
+                <div>
+                    <small class="form-text text-muted">
+                        You can enter a path manually here, or
+                        you can <a href="{{.Nav.BrowseUrl}}">browse the filesystem</a> and interactively add paths.
+                        </small>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="save-repo">Save</button>
+                <button type="button" class="btn btn-primary" id="save-path">Save</button>
             </div>
         </div>
     </div>
@@ -43,17 +47,17 @@
 <script>
 
 $(function () {
-    $('#save-repo').click(function(e) {
+    $('#save-path').click(function(e) {
         e.preventDefault();
 
-        modal = $('#addRepoModal');
+        modal = $('#addPathModal');
         errorsDiv = $(modal).find('.modal-errors')[0];
         errorsUl = $(modal).find('ul.modal-errors')[0];
 
         $.ajax({
             type: "POST",
-            url: "/addrepo",
-            data: $('#add-repo-form').serialize(),
+            url: "/addpath",
+            data: $('#add-path-form').serialize(),
             success: function(response) {
                 modal.modal('hide');
                 $(errorsUl).empty();
@@ -62,6 +66,8 @@ $(function () {
 //                alert('success: ' + JSON.stringify(response));
                 eval(response.on_success);
 //                window.location.href = "/"
+                // reload page
+                window.location.href = window.location.href;
             },
             error: function(xhr, status, error) {
                 console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
@@ -82,7 +88,6 @@ $(function () {
         return false;
     });
 });
-
 
 </script>
 {{end}}

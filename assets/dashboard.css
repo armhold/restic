@@ -128,3 +128,9 @@ table.restic-selection-table .pulse, .restic-selection-table.table-striped tbody
     transition: background-color 1s;
 }
 
+
+code {
+    color: black;
+    background: transparent;
+    font-size: 15px;
+}

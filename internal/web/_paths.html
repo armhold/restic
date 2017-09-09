@@ -26,7 +26,7 @@
 
         {{ range $i, $f := .Paths}}
         <tr>
-            <td>{{.}}</td>
+            <td><code>{{.}}</code></td>
             <td>
                 <!-- ajax will specify method="DELETE" -->
                 <form action="/addpath" method="post">

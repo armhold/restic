@@ -29,19 +29,20 @@
 </div>
 
 <br/>
-
 <div class="table-responsive">
     <table class="table table-sm table-striped restic-selection-table">
         <tbody>
 
-        {{ range $i, $f := .Files}}
+        {{range $i, $f := .Files}}
         <tr>
             <td>
+                <code>
                 {{if $f.IsDir}}
                 <a href="{{call $.LinkToFileInDir .Name}}">{{$f.Name}}</a>
                 {{else}}
                 {{$f.Name}}
                 {{end}}
+                </code>
             </td>
 
             <td>

@@ -133,7 +133,7 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("sucessful exit browseHandler()\n")
 }
 
-// add a new path to the backup list
+// add/remove path to/from the backup list
 func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -147,10 +147,13 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	repoName := r.FormValue("repo")
 	fullpath := filepath.Join(dir, path)
 
-	if _, err := os.Stat(fullpath); os.IsNotExist(err) {
-		// path/to/whatever does not exist
-		sendErrorToJs(w, fmt.Sprintf("path does not exist: %s", fullpath))
-		return
+	// if adding a path, ensure it exists
+	if selected {
+		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
+			// path/to/whatever does not exist
+			sendErrorToJs(w, fmt.Sprintf("path does not exist: %s", fullpath))
+			return
+		}
 	}
 
 	fmt.Printf("update repo: \"%s\"\n", repoName)

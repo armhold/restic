@@ -28,10 +28,10 @@
         <tr>
             <td>{{.}}</td>
             <td>
+                <!-- ajax will specify method="DELETE" -->
                 <form action="/addpath" method="post">
                     <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
                     <input type="hidden" name="dir" value="{{.}}">
-                    <input type="hidden" name="selected" value="false">
                     <button type="submit" class="btn btn-outline-danger delete-path">Remove</button>
                 </form>
             </td>
@@ -52,11 +52,12 @@
 
             console.log('errorsDiv: ' + JSON.stringify(errorsDiv));
             console.log('errorsUl: ' + JSON.stringify(errorsUl));
+            console.log("serialize: " + $(form).serialize());
 
             $.ajax({
-                type: "POST",
-                url: "/addpath",
-                data: $(form).serialize(),
+                type: "DELETE",
+                url: "/addpath?" + $(form).serialize(),
+                // can't use 'data:' with delete; params must appear in URL
                 success: function(response) {
                     $(errorsUl).empty();
                     $(errorsDiv).hide();

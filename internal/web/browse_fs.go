@@ -134,7 +134,8 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // add/remove path to/from the backup list
-func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
+// when method=DELETE, the path is deleted
+func AddDeletePathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		fmt.Printf("error parsing form: %s\n", err.Error())
@@ -143,12 +144,12 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	path := r.FormValue("path")
 	dir := r.FormValue("dir")
-	selected := r.FormValue("selected") == "true"
+	createPath := r.Method != "DELETE"
 	repoName := r.FormValue("repo")
 	fullpath := filepath.Join(dir, path)
 
 	// if adding a path, ensure it exists
-	if selected {
+	if createPath {
 		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
 			// path/to/whatever does not exist
 			sendErrorToJs(w, fmt.Sprintf("path does not exist: %s", fullpath))
@@ -157,10 +158,11 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("update repo: \"%s\"\n", repoName)
+	fmt.Printf("\tmethod: \"%s\"\n", r.Method)
 	fmt.Printf("\tdir: \"%s\"\n", dir)
 	fmt.Printf("\tpath: \"%s\"\n", path)
 	fmt.Printf("\tfullpath: \"%s\"\n", fullpath)
-	fmt.Printf("\tselected: %t\n", selected)
+	fmt.Printf("\tcreatePath: %t\n", createPath)
 
 	currRepoName := r.FormValue("repo")
 	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
@@ -171,7 +173,7 @@ func AddPathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: mutex on WebConfig before we modify it
-	if selected {
+	if createPath {
 		repo.BackupPaths.Paths[fullpath] = true
 	} else {
 		delete(repo.BackupPaths.Paths, fullpath)

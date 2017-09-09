@@ -28,6 +28,22 @@ type BackupPaths struct {
 	Excludes map[string]bool `json:"Excludes"`
 }
 
+func (b *BackupPaths) GetPaths() (result []string) {
+	for k, _ := range b.Paths {
+		result = append(result, k)
+	}
+
+	return
+}
+
+func (b *BackupPaths) GetExcludes() (result []string) {
+	for k, _ := range b.Excludes {
+		result = append(result, k)
+	}
+
+	return
+}
+
 func NewRepo(name, path, password string) *Repo {
 	return &Repo{Name: name,
 		Path: path,

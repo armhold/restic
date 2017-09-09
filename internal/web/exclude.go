@@ -110,11 +110,7 @@ func AddDeleteExcludeAjaxHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func sortedExcludes(repo *Repo) ([]string) {
-	var result []string
-
-	for k, _ := range repo.BackupPaths.Excludes {
-		result = append(result, k)
-	}
+	result := repo.BackupPaths.GetExcludes()
 
 	sort.Slice(result, func(i, j int) bool {
 		return result[i] < result[j]

@@ -36,6 +36,7 @@ func RunWeb(bindHost string, bindPort int) error {
 	http.HandleFunc("/backup", backupHandler)
 	http.HandleFunc("/browse", browseHandler)
 	http.HandleFunc("/runbackup", RunBackupAjaxHandler)
+	http.HandleFunc("/status", StatusAjaxHandler)
 
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}
@@ -57,6 +58,7 @@ func sendErrorToJs(w http.ResponseWriter, err string) {
 	m := make(map[string]string)
 	m["error"] = err
 
+	fmt.Println(err)
 	sendErrorMapToJs(w, m)
 }
 

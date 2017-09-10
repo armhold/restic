@@ -31,6 +31,41 @@
     </table>
 </div>
 
+
+
+<div class="progress">
+    <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+</div>
+
+<script>
+    var timeout = 60000; // milliseconds
+
+    function doPoll() {
+        $.ajax({
+            url: "/status?timeout=" + timeout,
+            timeout: timeout,
+            success: function (response) {
+                console.log('success: ' + JSON.stringify(response));
+                var percentDone = response["PercentDone"];
+                var percentDoneString =  percentDone + '%';
+                $('.progress-bar').attr('aria-valuenow', percentDone).css('width', percentDoneString).text(percentDoneString);
+                setTimeout(doPoll, 500);
+            },
+            error: function (xhr, status, error) {
+                console.log('error, xhr: ' + JSON.stringify(xhr) + ', status: ' + JSON.stringify(status) + ', error: ' + JSON.stringify(error));
+                setTimeout(doPoll, 10000);
+            }
+        });
+    }
+
+    $(document).ready(function(){
+        doPoll();
+    });
+
+</script>
+
+
+
 <script>
     $(function () {
         $('.run-backup').click(function (e) {

@@ -65,22 +65,23 @@ func runProducer() {
 	time.Sleep(time.Second * 5)
 	fmt.Printf("runProducer running...")
 
-	for i := 1; i < 101; i++ {
-	Loop:
-		for {
-			select {
-			// if there's a client waiting
-			case clientchan := <-lpchan:
-				status := &BackupStatus{RepoName: "local1", PercentDone: i, StatusMsg: "running..."}
-				clientchan <- status
-			default:
-				break Loop
-			}
+	// forever loop from 0..100
+	for {
+		for i := 0; i <= 100; i++ {
+		//Loop:
+		//	for {
+				select {
+				// if there's a client waiting
+				case clientchan := <-lpchan:
+					status := &BackupStatus{RepoName: "local1", PercentDone: i, StatusMsg: "running..."}
+					clientchan <- status
+				default:
+					//break Loop
+				}
+			//}
+
+			fmt.Printf("runProducer: %d\n", i)
+			time.Sleep(time.Millisecond * 200)
 		}
-
-		fmt.Printf("runProducer: %d\n", i)
-		time.Sleep(time.Millisecond * 200)
 	}
-
-	fmt.Printf("runProducer exiting\n")
 }

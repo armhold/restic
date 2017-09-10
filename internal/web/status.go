@@ -74,7 +74,14 @@ func runProducer() {
 				// if there's a client waiting
 				case clientchan := <-lpchan:
 					status := &BackupStatus{RepoName: "local1", PercentDone: i, StatusMsg: "running..."}
+
+					if i % 2 == 0 {
+						status.PercentDone = i - 10
+						status.RepoName = "local2"
+					}
+
 					clientchan <- status
+
 				default:
 					//break Loop
 				}

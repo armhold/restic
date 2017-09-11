@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	//go runProducer()
+	go runProducer()
 }
 
 // long-polling status updates
@@ -22,6 +22,7 @@ type BackupStatus struct {
 	RepoName    string `json:"RepoName"`
 	PercentDone int    `json:"PercentDone"`
 	StatusMsg   string `json:"StatusMsg"`
+	Indeterminate bool `json:"Indeterminate"`
 }
 
 // do a long poll
@@ -68,7 +69,15 @@ func runProducer() {
 	// forever loop from 0..100
 	for {
 		for i := 0; i <= 100; i++ {
-			status := BackupStatus{RepoName: "local1", PercentDone: i, StatusMsg: "running..."}
+			status := BackupStatus{RepoName: "local1", PercentDone: i}
+			if i < 50 {
+				status.Indeterminate = true
+				status.StatusMsg = "scanning"
+			} else {
+				status.Indeterminate = false
+				status.StatusMsg = "running"
+			}
+
 
 			if i % 2 == 0 {
 				status.PercentDone = i - 10

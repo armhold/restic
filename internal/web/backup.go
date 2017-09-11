@@ -119,7 +119,7 @@ func runBackup(r *Repo) error {
 	}
 
 	repo, err := OpenRepository(r.Path, r.Password)
-	err = errors.New("fake an error")
+	//err = errors.New("fake an error")
 	if err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func runBackup(r *Repo) error {
 		panic(fmt.Sprintf("item %v, device id %v not found, allowedDevs: %v", item, id, allowedDevs))
 	}
 
-	stat, err := archiver.Scan(target, selectFilter, newScanProgress())
+	stat, err := archiver.Scan(target, selectFilter, newScanProgress(r.Name))
 	if err != nil {
 		return err
 	}
@@ -281,7 +281,7 @@ func newArchiveProgress(repoName string, quiet bool, todo restic.Stat) *restic.P
 
 		// TODO: don't seem to get called often when run under "fresh", maybe because it's no longer
 		// running connected to a terminal.
-		bs := BackupStatus{RepoName: repoName, PercentDone: percent, StatusMsg: status1}
+		bs := BackupStatus{RepoName: repoName, PercentDone: percent, StatusMsg: status1, Indeterminate: false}
 		UpdateStatus(bs)
 		fmt.Printf("updated: %v\n", bs)
 	}
@@ -298,9 +298,13 @@ func IsProcessBackground() bool {
 	return false
 }
 
-// TODO: copied from cmd_backup.go
-func newScanProgress() *restic.Progress {
+func newScanProgress(repoName string) *restic.Progress {
 	p := restic.NewProgress()
+
+	p.OnStart = func() {
+		bs := BackupStatus{RepoName: repoName, PercentDone: 100, StatusMsg: "Scanning", Indeterminate: true}
+		UpdateStatus(bs)
+	}
 
 	p.OnUpdate = func(s restic.Stat, d time.Duration, ticker bool) {
 		if IsProcessBackground() {

@@ -7,8 +7,8 @@
 <br/>
 <br/>
 
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+<div class="alert alert-danger fade show" role="alert" style="display: none;">
+    <button type="button" class="close" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
     <strong id="ajax-error">placeholder!</strong>
@@ -36,6 +36,15 @@
 
 <div id="progress-container">
 </div>
+
+<script>
+    // prevent close button from removing alert div from the DOM so we can reuse it.
+    // Unfortunately, this seems to also disable fade in/out from working.
+    // https://stackoverflow.com/questions/8965018/dynamically-creating-bootstrap-css-alert-messages
+    $('.alert .close').on('click', function(e) {
+        $(this).parent().hide();
+    });
+</script>
 
 <script>
     var timeout = 60000; // milliseconds
@@ -125,7 +134,6 @@
                     });
 
                     $(errorsDiv).show();
-//                    $(errorsDiv).alert();
                 }
             });
             return false;

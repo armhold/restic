@@ -78,6 +78,8 @@ func RunBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	currRepoName := r.FormValue("repo")
 	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
 
+	w.Header().Set("Content-Type", "application/json")
+
 	if ! ok {
 		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", currRepoName))
 		return
@@ -85,16 +87,9 @@ func RunBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = runBackup(repo)
 
-	// NB: order seems to matter here.
-	// 1) content-type
-	// 2) cookies
-	// 3) status
-	// 4) JSON response
-
-	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
-		fmt.Printf("error running backup: %s\n", err)
-		SaveFlashToCookie(w, "danger_flash", fmt.Sprintf("Error adding new exclude: %s", err))
+		sendErrorToJs(w, fmt.Sprintf("error running backup: %s\n", err))
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -112,6 +107,7 @@ func runBackup(r *Repo) error {
 	}
 
 	// allowed devices
+	// TODO: maybe make this an option in repo config for web ui
 	ExcludeOtherFS := false
 	var allowedDevs map[string]uint64
 	if ExcludeOtherFS {
@@ -123,6 +119,7 @@ func runBackup(r *Repo) error {
 	}
 
 	repo, err := OpenRepository(r.Path, r.Password)
+	err = errors.New("fake an error")
 	if err != nil {
 		return err
 	}
@@ -141,9 +138,8 @@ func runBackup(r *Repo) error {
 	var parentSnapshotID *restic.ID
 
 	// Find last snapshot to set it as parent, if not already set
-	var tagLists []restic.TagList
 	hostname := ""
-	id, err := restic.FindLatestSnapshot(context.TODO(), repo, target, tagLists, hostname)
+	id, err := restic.FindLatestSnapshot(context.TODO(), repo, target, []restic.TagList{}, hostname)
 	if err == nil {
 		parentSnapshotID = &id
 	} else if err != restic.ErrNoSnapshotFound {

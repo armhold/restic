@@ -68,24 +68,13 @@ func runProducer() {
 	// forever loop from 0..100
 	for {
 		for i := 0; i <= 100; i++ {
-		//Loop:
-		//	for {
-				select {
-				// if there's a client waiting
-				case clientchan := <-lpchan:
-					status := &BackupStatus{RepoName: "local1", PercentDone: i, StatusMsg: "running..."}
+			status := BackupStatus{RepoName: "local1", PercentDone: i, StatusMsg: "running..."}
 
-					if i % 2 == 0 {
-						status.PercentDone = i - 10
-						status.RepoName = "local2"
-					}
-
-					clientchan <- status
-
-				default:
-					//break Loop
-				}
-			//}
+			if i % 2 == 0 {
+				status.PercentDone = i - 10
+				status.RepoName = "local2"
+			}
+			UpdateStatus(status)
 
 			fmt.Printf("runProducer: %d\n", i)
 			time.Sleep(time.Millisecond * 200)
@@ -95,12 +84,24 @@ func runProducer() {
 
 
 func UpdateStatus(s BackupStatus) {
-	select {
-	// if there's a client waiting
-	case clientchan := <-lpchan:
-		clientchan <- &s
+	count := 0
 
-	default:
-		//prevent blocking if no clients available to consume the status
+	Loop:
+	// loop in case there are multiple clients waiting concurrently; we'll send the same status to each of them.
+	// when no clients are waiting, then we break
+
+	for {
+		select {
+		// if there's a client waiting
+		case clientchan := <-lpchan:
+			clientchan <- &s
+			count++
+
+		default:
+			//prevent blocking if no clients available to consume the status
+			break Loop
+		}
 	}
+
+	fmt.Printf("handled a total of %d clients w status: %v\n", count, s)
 }

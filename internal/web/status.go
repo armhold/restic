@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	go runProducer()
+	//go runProducer()
 }
 
 // long-polling status updates
@@ -90,5 +90,17 @@ func runProducer() {
 			fmt.Printf("runProducer: %d\n", i)
 			time.Sleep(time.Millisecond * 200)
 		}
+	}
+}
+
+
+func UpdateStatus(s BackupStatus) {
+	select {
+	// if there's a client waiting
+	case clientchan := <-lpchan:
+		clientchan <- &s
+
+	default:
+		//prevent blocking if no clients available to consume the status
 	}
 }

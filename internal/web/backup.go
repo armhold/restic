@@ -216,7 +216,7 @@ func runBackup(r *Repo) error {
 
 	var tags []string
 
-	_, id, err = arch.Snapshot(context.TODO(), newArchiveProgress(false, stat), target, tags, hostname, parentSnapshotID)
+	_, id, err = arch.Snapshot(context.TODO(), newArchiveProgress(r.Name, false, stat), target, tags, hostname, parentSnapshotID)
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func runBackup(r *Repo) error {
 }
 
 // TODO: copied from cmd_backup.go
-func newArchiveProgress(quiet bool, todo restic.Stat) *restic.Progress {
+func newArchiveProgress(repoName string, quiet bool, todo restic.Stat) *restic.Progress {
 	if quiet {
 		return nil
 	}
@@ -277,6 +277,17 @@ func newArchiveProgress(quiet bool, todo restic.Stat) *restic.Progress {
 		}
 
 		PrintProgress("%s%s", status1, status2)
+
+		percent := int(100.0 * float64(s.Bytes) / float64(todo.Bytes))
+		if percent > 100 {
+			percent = 100
+		}
+
+		// TODO: don't seem to get called often when run under "fresh", maybe because it's no longer
+		// running connected to a terminal.
+		bs := BackupStatus{RepoName: repoName, PercentDone: percent, StatusMsg: status1}
+		UpdateStatus(bs)
+		fmt.Printf("updated: %v\n", bs)
 	}
 
 	archiveProgress.OnDone = func(s restic.Stat, d time.Duration, ticker bool) {

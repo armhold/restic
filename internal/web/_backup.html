@@ -7,10 +7,11 @@
 <br/>
 <br/>
 
-<div class="errors" aria-hidden="true" style="display: none;">
-    <ul class="errors alert alert-danger">
-
-    </ul>
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <strong id="ajax-error">placeholder!</strong>
 </div>
 
 <div class="table-responsive">
@@ -64,7 +65,6 @@
         doPoll();
     });
 
-
     function findOrCreateProgressBar(repo, percentDone, percentDoneString) {
         // TODO: ensure repo names have no spaces, can always serve as ids
         var pbarId = 'progress-bar-' + repo;
@@ -73,7 +73,8 @@
             console.log("did not find " + pbarId);
 
             var container = $('#progress-container');
-            var holder = $('<div class="progress"></div><br/>');
+            $(container).append($('<div><span>' + repo + '</span></div><br/>'));
+            var holder = $('<div class="progress"></div>');
 
             pbar = $('<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">10%</div>');
             $(pbar).attr('id', pbarId);
@@ -84,11 +85,7 @@
 
         $(pbar).attr('aria-valuenow', percentDone).css('width', percentDoneString).text(percentDoneString);
     }
-
-
 </script>
-
-
 
 <script>
     $(function () {
@@ -96,11 +93,10 @@
             e.preventDefault();
 
             var form = $(this).closest('form');
-            var errorsDiv = $('div.errors')[0];
-            var errorsUl = $(errorsDiv).find('ul.errors')[0];
+            var errorSpan = $('#ajax-error');
+            var errorsDiv = $(errorSpan).closest('div');
 
-            console.log('errorsDiv: ' + JSON.stringify(errorsDiv));
-            console.log('errorsUl: ' + JSON.stringify(errorsUl));
+            console.log('errorsDiv: ' + errorsDiv[0].outerHTML);
             console.log("serialize: " + $(form).serialize());
 
             $.ajax({
@@ -122,12 +118,14 @@
                     console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
 
                     // clear previous errors, if any
-                    $(errorsUl).empty();
+                    $(errorSpan).empty();
+
                     $.each(xhr.responseJSON, function (key, value) {
-                        li = '<li>' + value + '</li>'; //showing only the first error.
-                        $(errorsUl).append(li);
+                        $(errorSpan).append(value);
                     });
+
                     $(errorsDiv).show();
+//                    $(errorsDiv).alert();
                 }
             });
             return false;

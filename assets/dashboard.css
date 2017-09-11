@@ -134,3 +134,8 @@ code {
     background: transparent;
     font-size: 15px;
 }
+
+div.errors ul.errors  {
+    list-style-type: none;
+}
+

@@ -6,7 +6,13 @@
     Run backup for <span class="font-weight-bold">{{.CurrRepoName}}</span>.
 </div>
 <br/>
-<br/>
+
+<div class="alert alert-info fade show" role="alert" style="display: none;">
+    <button type="button" class="close" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <strong id="ajax-info">placeholder!</strong>
+</div>
 
 <div class="alert alert-danger fade show" role="alert" style="display: none;">
     <button type="button" class="close" aria-label="Close">
@@ -14,6 +20,8 @@
     </button>
     <strong id="ajax-error">placeholder!</strong>
 </div>
+<br/>
+<br/>
 
 <div>
     <!-- ajax will specify method="DELETE" -->
@@ -37,9 +45,25 @@
         $(this).parent().hide();
     });
 
-    // NB: errorMap (xhr.responseJSON) is only present if the server has explicitly
-    // set application/json and wrote a JSON response.
-    function showAjaxErrors(errorMap) {
+    function showAjaxErrors(xhr, status, error) {
+        console.log('error, xhr: ' + JSON.stringify(xhr) + ', status: ' + JSON.stringify(status) + ', error: ' + JSON.stringify(error));
+
+        var errorMap = {};
+
+        // https://stackoverflow.com/a/28404728/93995
+        if (xhr.readyState === 4) {
+            // HTTP error (can be checked by XMLHttpRequest.status and XMLHttpRequest.statusText)
+            errorMap = xhr.responseJSON;
+        }
+        else if (xhr.readyState === 0) {
+            // Network error (i.e. connection refused, access denied due to CORS, etc.)
+            errorMap = {"error": "error contacting restic server"};
+        }
+        else {
+            // something weird is happening
+            errorMap = {"error": "error contacting restic server"};
+        }
+
         var errorSpan = $('#ajax-error');
         var errorsDiv = $(errorSpan).closest('div');
 
@@ -68,13 +92,15 @@
                 var percentDoneString =  percentDone + '%';
                 var statusMsg = response['StatusMsg'];
                 var indeterminate = response['Indeterminate'];
+                var error = response['Error'];
 
-                updateOrCreateProgressBar(repo, percentDone, percentDoneString, statusMsg, indeterminate);
+                updateOrCreateProgressBar(repo, percentDone, percentDoneString, statusMsg, indeterminate, error);
                 setTimeout(doPoll, 500);
             },
             error: function (xhr, status, error) {
                 console.log('error, xhr: ' + JSON.stringify(xhr) + ', status: ' + JSON.stringify(status) + ', error: ' + JSON.stringify(error));
-                showAjaxErrors(xhr.responseJSON);
+
+                showAjaxErrors(xhr. status, error);
                 setTimeout(doPoll, 2000);
             }
         });
@@ -84,7 +110,7 @@
         doPoll();
     });
 
-    function updateOrCreateProgressBar(repo, percentDone, percentDoneString, statusMsg, indeterminate) {
+    function updateOrCreateProgressBar(repo, percentDone, percentDoneString, statusMsg, indeterminate, error) {
         // TODO: ensure repo names have no spaces, can always serve as ids
         var pbarId = 'progress-bar-' + repo;
         var statusSpanId = 'status-msg-' + repo;
@@ -103,17 +129,22 @@
             $(container).append(holder);
         }
 
-        if (indeterminate) {
+        if (error !== "") {
             $('#' + statusSpanId).text("");
-            $(pbar).addClass('progress-bar-striped progress-bar-animated');
-            $(pbar).attr('aria-valuenow', percentDone).css('width', '100%').text(statusMsg);
-        } else {
-            $('#' + statusSpanId).text("");
-//            $('#' + statusSpanId).text(statusMsg);
             $(pbar).removeClass('progress-bar-striped progress-bar-animated');
-            $(pbar).attr('aria-valuenow', percentDone).css('width', percentDoneString).text(statusMsg + ": " + percentDoneString);
+            $(pbar).addClass('bg-danger');
+            $(pbar).attr('aria-valuenow', percentDone).css('width', '100%').text(error);
+        } else {
+            if (indeterminate) {
+                $('#' + statusSpanId).text("");
+                $(pbar).addClass('progress-bar-striped progress-bar-animated');
+                $(pbar).attr('aria-valuenow', percentDone).css('width', '100%').text(statusMsg);
+            } else {
+                $('#' + statusSpanId).text("");
+                $(pbar).removeClass('progress-bar-striped progress-bar-animated');
+                $(pbar).attr('aria-valuenow', percentDone).css('width', percentDoneString).text(statusMsg + ": " + percentDoneString);
+            }
         }
-
     }
 </script>
 
@@ -123,29 +154,17 @@
             e.preventDefault();
 
             var form = $(this).closest('form');
-            var errorSpan = $('#ajax-error');
-            var errorsDiv = $(errorSpan).closest('div');
+            var infoSpan = $('#ajax-info');
+            var infoDiv = $(infoSpan).closest('div');
 
             $.ajax({
                 type: "POST",
                 url: "/runbackup?" + $(form).serialize(),
                 success: function (response) {
-                    $(errorsUl).empty();
-                    $(errorsDiv).hide();
-
-                    eval(response.on_success);
-
-                    // reload page
-                    // TODO: animate change rather than reload
-                    window.location.href = window.location.href;
+                    $(infoSpan).text(response["on_success"]);
+                    $(infoDiv).show();
                 },
-                error: function (xhr, status, error) {
-                    console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
-                    console.log('error: got xhr.responseText: ' + xhr.responseText);
-                    console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
-
-                    showAjaxErrors(xhr.responseJSON);
-                }
+                error: showAjaxErrors
             });
             return false;
         });

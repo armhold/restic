@@ -85,15 +85,17 @@ func RunBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = runBackup(repo)
 
-	if err != nil {
-		sendErrorToJs(w, fmt.Sprintf("error running backup: %s\n", err))
-		return
-	}
+	go func() {
+		err := runBackup(repo)
+		if err != nil {
+			bs := BackupStatus{RepoName: currRepoName, Error: fmt.Sprintf("backup failed: %s", err.Error())}
+			UpdateStatusBlocking(bs)
+		}
+	}()
 
 	w.WriteHeader(http.StatusOK)
-	executeJs := fmt.Sprintf("{\"on_success\": \"console.log('ok');\"}")
+	executeJs := fmt.Sprintf("{\"on_success\": \"backup started for %s\"}", currRepoName)
 	w.Write([]byte(executeJs))
 }
 
@@ -104,6 +106,11 @@ func runBackup(r *Repo) error {
 	target, err := filterExisting(target)
 	if err != nil {
 		return err
+	}
+
+	if true {
+		time.Sleep(time.Second * 5)
+		return errors.New("oopsie doopsie")
 	}
 
 	// allowed devices

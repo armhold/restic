@@ -19,10 +19,11 @@ func init() {
 // long-polling status updates
 
 type BackupStatus struct {
-	RepoName    string `json:"RepoName"`
-	PercentDone int    `json:"PercentDone"`
-	StatusMsg   string `json:"StatusMsg"`
-	Indeterminate bool `json:"Indeterminate"`
+	RepoName      string `json:"RepoName"`
+	PercentDone   int    `json:"PercentDone"`
+	StatusMsg     string `json:"StatusMsg"`
+	Indeterminate bool   `json:"Indeterminate"`
+	Error         string `json:"Error"`
 }
 
 // do a long poll
@@ -78,8 +79,7 @@ func runProducer() {
 				status.StatusMsg = "running"
 			}
 
-
-			if i % 2 == 0 {
+			if i%2 == 0 {
 				status.PercentDone = i - 10
 				status.RepoName = "local2"
 			}
@@ -91,13 +91,12 @@ func runProducer() {
 	}
 }
 
-
 func UpdateStatus(s BackupStatus) {
 	count := 0
 
-	Loop:
-	// loop in case there are multiple clients waiting concurrently; we'll send the same status to each of them.
-	// when no clients are waiting, then we break
+Loop:
+// loop in case there are multiple clients waiting concurrently; we'll send the same status to each of them.
+// when no clients are waiting, then we break
 
 	for {
 		select {
@@ -113,4 +112,12 @@ func UpdateStatus(s BackupStatus) {
 	}
 
 	fmt.Printf("handled a total of %d clients w status: %v\n", count, s)
+}
+
+// blocks the caller until a client consumes the status
+func UpdateStatusBlocking(s BackupStatus) {
+	clientchan := <-lpchan
+	clientchan <- &s
+
+	fmt.Printf("returning from UpdateStatusBlocking\n")
 }

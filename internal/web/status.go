@@ -70,7 +70,7 @@ func runProducer() {
 	for {
 		for i := 0; i <= 100; i++ {
 			status := BackupStatus{RepoName: "local1", PercentDone: i}
-			if i < 50 {
+			if i < 25 {
 				status.Indeterminate = true
 				status.StatusMsg = "scanning"
 			} else {

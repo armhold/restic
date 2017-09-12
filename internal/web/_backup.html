@@ -1,9 +1,10 @@
 {{define "backup"}}
 
 <br/>
-<span>
-    Run backup for "{{.CurrRepoName}}".
-</span>
+
+<div>
+    Run backup for <span class="font-weight-bold">{{.CurrRepoName}}</span>.
+</div>
 <br/>
 <br/>
 
@@ -14,24 +15,15 @@
     <strong id="ajax-error">placeholder!</strong>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-sm table-striped">
-        <tbody>
-
-        <tr>
-            <td>&nbsp;
-                <!-- ajax will specify method="DELETE" -->
-                <form action="/runbackup" method="post">
-                    <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
-                    <button type="submit" class="btn btn-success run-backup">Run Backup</button>
-                </form>
-            </td>
-        </tr>
-
-        </tbody>
-    </table>
+<div>
+    <!-- ajax will specify method="DELETE" -->
+    <form action="/runbackup" method="post">
+        <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
+        <button type="submit" class="btn btn-success run-backup">Backup Now</button>
+    </form>
 </div>
-
+<br/>
+<br/>
 
 
 <div id="progress-container">
@@ -102,7 +94,7 @@
 
             var container = $('#progress-container');
             $(container).append($('<div><span>' + repo + '</span></div><div><span id="' + statusSpanId + '"></span></div>'));
-            var holder = $('<div class="progress"></div>');
+            var holder = $('<div class="progress"></div><br/>');
 
             pbar = $('<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>');
             $(pbar).attr('id', pbarId);

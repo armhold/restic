@@ -44,6 +44,22 @@
     $('.alert .close').on('click', function(e) {
         $(this).parent().hide();
     });
+
+    // NB: errorMap (xhr.responseJSON) is only present if the server has explicitly
+    // set application/json and wrote a JSON response.
+    function showAjaxErrors(errorMap) {
+        var errorSpan = $('#ajax-error');
+        var errorsDiv = $(errorSpan).closest('div');
+
+        // clear previous errors, if any
+        $(errorSpan).empty();
+
+        $.each(errorMap, function (key, value) {
+            $(errorSpan).append(value);
+        });
+
+        $(errorsDiv).show();
+    }
 </script>
 
 <script>
@@ -62,11 +78,11 @@
                 var indeterminate = response['Indeterminate'];
 
                 updateOrCreateProgressBar(repo, percentDone, percentDoneString, statusMsg, indeterminate);
-
                 setTimeout(doPoll, 500);
             },
             error: function (xhr, status, error) {
                 console.log('error, xhr: ' + JSON.stringify(xhr) + ', status: ' + JSON.stringify(status) + ', error: ' + JSON.stringify(error));
+                showAjaxErrors(xhr.responseJSON);
                 setTimeout(doPoll, 2000);
             }
         });
@@ -136,14 +152,7 @@
                     console.log('error: got xhr.responseText: ' + xhr.responseText);
                     console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
 
-                    // clear previous errors, if any
-                    $(errorSpan).empty();
-
-                    $.each(xhr.responseJSON, function (key, value) {
-                        $(errorSpan).append(value);
-                    });
-
-                    $(errorsDiv).show();
+                    showAjaxErrors(xhr.responseJSON);
                 }
             });
             return false;

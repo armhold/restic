@@ -216,8 +216,8 @@ func runBackup(r *Repo) error {
 	}
 
 	var tags []string
-
-	_, id, err = arch.Snapshot(context.TODO(), newArchiveProgress(r.Name, false, stat), target, tags, hostname, parentSnapshotID)
+	timeStamp := time.Now()
+	_, id, err = arch.Snapshot(context.TODO(), newArchiveProgress(r.Name, false, stat), target, tags, hostname, parentSnapshotID, timeStamp)
 	err = errors.New("WOOPS")
 	if err != nil {
 		return err

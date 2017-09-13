@@ -52,7 +52,6 @@ func NewRepo(name, path, password string) *Repo {
 	}
 }
 
-
 func NewBackupPaths() *BackupPaths {
 	return &BackupPaths{
 		Paths:    make(map[string]bool),

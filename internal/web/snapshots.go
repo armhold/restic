@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/restic/restic/internal/restic"
 	"net/http"
+	"strings"
 )
 
 func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
@@ -60,4 +61,70 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("sucessful exit snapshotsHandler()\n")
+}
+
+type deleteSnapshot struct {
+	repo string
+	snapshotId string
+	confirmed string
+}
+
+func fromForm(r *http.Request) deleteSnapshot {
+	result := deleteSnapshot{}
+	result.repo= r.FormValue("repo")
+	result.snapshotId= r.FormValue("snapshotId")
+	result.confirmed = r.FormValue("confirmed")
+
+	return result
+}
+
+func (d *deleteSnapshot) Validate() (ok bool, errors FormErrors) {
+	errors = make(map[string]string)
+
+	if strings.TrimSpace(d.repo) == "" {
+		errors["repo"] = "repository name missing"
+	}
+
+	if strings.TrimSpace(d.snapshotId) == "" {
+		errors["snapshotId"] = "snapshot ID missing"
+	}
+
+	if strings.TrimSpace(d.confirmed) != "confirmed" {
+		errors["confirmation"] = "must confirm"
+	}
+
+	return len(errors) == 0, errors
+}
+
+func DeleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("DeleteSnapshotAjaxHandler\n")
+
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Printf("error parsing form: %s\n", err.Error())
+		return
+	}
+
+	d := fromForm(r)
+	ok, errors := d.Validate()
+	if !ok {
+		sendErrorMapToJs(w, errors)
+		return
+	}
+
+	fmt.Printf("DeleteSnapshotAjaxHandler validation success\n")
+
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		msg := fmt.Sprintf("Error deleting snapshot: %s", err)
+		fmt.Println(msg)
+		SaveFlashToCookie(w, "danger_flash", msg)
+	} else {
+		SaveFlashToCookie(w, "success_flash", fmt.Sprintf("Snapshot \"%s\" deleted", d.snapshotId))
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	redirectJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/snapshots?repo=%s'\"}", d.repo)
+	w.Write([]byte(redirectJs))
 }

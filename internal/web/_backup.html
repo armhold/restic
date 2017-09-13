@@ -37,46 +37,7 @@
 <div id="progress-container">
 </div>
 
-<script>
-    // prevent close button from removing alert div from the DOM so we can reuse it.
-    // Unfortunately, this seems to also disable fade in/out from working.
-    // https://stackoverflow.com/questions/8965018/dynamically-creating-bootstrap-css-alert-messages
-    $('.alert .close').on('click', function(e) {
-        $(this).parent().hide();
-    });
-
-    function showAjaxErrors(xhr, status, error) {
-        console.log('error, xhr: ' + JSON.stringify(xhr) + ', status: ' + JSON.stringify(status) + ', error: ' + JSON.stringify(error));
-
-        var errorMap = {};
-
-        // https://stackoverflow.com/a/28404728/93995
-        if (xhr.readyState === 4) {
-            // HTTP error (can be checked by XMLHttpRequest.status and XMLHttpRequest.statusText)
-            errorMap = xhr.responseJSON;
-        }
-        else if (xhr.readyState === 0) {
-            // Network error (i.e. connection refused, access denied due to CORS, etc.)
-            errorMap = {"error": "error contacting restic server"};
-        }
-        else {
-            // something weird is happening
-            errorMap = {"error": "error contacting restic server"};
-        }
-
-        var errorSpan = $('#ajax-error');
-        var errorsDiv = $(errorSpan).closest('div');
-
-        // clear previous errors, if any
-        $(errorSpan).empty();
-
-        $.each(errorMap, function (key, value) {
-            $(errorSpan).append(value);
-        });
-
-        $(errorsDiv).show();
-    }
-</script>
+{{template "show_ajax_errors" . }}
 
 <script>
     var timeout = 60000; // milliseconds

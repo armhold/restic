@@ -11,14 +11,23 @@
         </thead>
         <tbody>
 
-
         {{if .Snapshots}}
         {{range .Snapshots}}
         <tr>
             <td>{{.ID.Str}}</td>
             <td>{{.Time | FormatTime}}</td>
             <td><button type="button" class="btn btn-info">Restore</button></td>
-            <td><button type="button" class="btn btn-danger">Delete</button></td>
+            <td>
+                <!-- ajax will specify method="DELETE" -->
+                <form action="/deletesnapshot" method="post">
+                    <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
+                    <input type="hidden" name="snapshotId" value="{{$.ID.Str}}">
+                    <input type="checkbox" id="confirmation" value="confirmed">
+                    <label for="confirmation">Confirm</label>
+                    <!--TODO: move this to a modal -->
+                    <button type="submit" class="btn btn-outline-danger delete-snapshot">Delete</button>
+                </form>
+            </td>
         </tr>
         {{end}}
         {{else}}
@@ -31,3 +40,37 @@
     </table>
 </div>
 {{end}}
+
+{{template "show_ajax_errors" . }}
+
+
+<script>
+    $(function () {
+        $('.delete-snapshot').click(function(e) {
+            e.preventDefault();
+
+            var form = $(this).closest('form');
+            var errorsDiv = $('div.errors')[0];
+            var errorsUl = $(errorsDiv).find('ul.errors')[0];
+
+            console.log('errorsDiv: ' + JSON.stringify(errorsDiv));
+            console.log('errorsUl: ' + JSON.stringify(errorsUl));
+            console.log("serialize: " + $(form).serialize());
+
+            $.ajax({
+                type: "DELETE",
+                url: "/deletesnapshot?" + $(form).serialize(),
+                // can't use 'data:' with delete; params must appear in URL
+                success: function(response) {
+                    $(errorsUl).empty();
+                    $(errorsDiv).hide();
+
+                    eval(response.on_success);
+                },
+                error: showAjaxErrors
+            });
+            return false;
+        });
+    });
+</script>
+

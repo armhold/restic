@@ -87,20 +87,33 @@
             timeout: timeout,
             success: function (response) {
                 console.log('success: ' + JSON.stringify(response));
-                var repo = response['RepoName'];
-                var percentDone = response["PercentDone"];
-                var percentDoneString =  percentDone + '%';
-                var statusMsg = response['StatusMsg'];
-                var indeterminate = response['Indeterminate'];
-                var error = response['Error'];
 
-                updateOrCreateProgressBar(repo, percentDone, percentDoneString, statusMsg, indeterminate, error);
+                if (response === "") {
+                    // long-poll timeout on server end, no status to update
+                    console.log("long poll timeout on server, carry on");
+                } else {
+                    var repo = response['RepoName'];
+                    var percentDone = response["PercentDone"];
+                    var percentDoneString =  percentDone + '%';
+                    var statusMsg = response['StatusMsg'];
+                    var indeterminate = response['Indeterminate'];
+                    var error = response['Error'];
+
+                    updateOrCreateProgressBar(repo, percentDone, percentDoneString, statusMsg, indeterminate, error);
+                }
+
                 setTimeout(doPoll, 500);
             },
             error: function (xhr, status, error) {
                 console.log('error, xhr: ' + JSON.stringify(xhr) + ', status: ' + JSON.stringify(status) + ', error: ' + JSON.stringify(error));
 
-                showAjaxErrors(xhr. status, error);
+                if (status === "timeout") {
+                    // long-poll timeout on client end, no status to update
+                    console.log("long poll timeout on client, carry on");
+                } else {
+                    showAjaxErrors(xhr. status, error);
+                }
+
                 setTimeout(doPoll, 2000);
             }
         });

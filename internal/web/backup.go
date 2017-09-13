@@ -65,7 +65,6 @@ func backupHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("sucessful exit backupHandler()\n")
 }
 
-
 func RunBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("RunBackupAjaxHandler\n")
 
@@ -85,13 +84,18 @@ func RunBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	go func() {
 		err := runBackup(repo)
+
+		bs := BackupStatus{RepoName: currRepoName, PercentDone: 100}
+
 		if err != nil {
-			bs := BackupStatus{RepoName: currRepoName, Error: fmt.Sprintf("backup failed: %s", err.Error())}
-			UpdateStatusBlocking(bs)
+			bs.Error = fmt.Sprintf("%s: backup failed: %s", currRepoName, err.Error())
+		} else {
+			bs.StatusMsg = fmt.Sprintf("%s: backup complete", currRepoName)
 		}
+
+		UpdateStatusBlocking(bs)
 	}()
 
 	w.WriteHeader(http.StatusOK)
@@ -99,18 +103,12 @@ func RunBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(executeJs))
 }
 
-
 func runBackup(r *Repo) error {
 	target := r.BackupPaths.GetPaths()
 
 	target, err := filterExisting(target)
 	if err != nil {
 		return err
-	}
-
-	if true {
-		time.Sleep(time.Second * 5)
-		return errors.New("oopsie doopsie")
 	}
 
 	// allowed devices
@@ -220,10 +218,10 @@ func runBackup(r *Repo) error {
 	var tags []string
 
 	_, id, err = arch.Snapshot(context.TODO(), newArchiveProgress(r.Name, false, stat), target, tags, hostname, parentSnapshotID)
+	err = errors.New("WOOPS")
 	if err != nil {
 		return err
 	}
-
 	fmt.Printf("snapshot %s saved\n", id.Str())
 
 	return nil
@@ -288,7 +286,7 @@ func newArchiveProgress(repoName string, quiet bool, todo restic.Stat) *restic.P
 
 		// TODO: don't seem to get called often when run under "fresh", maybe because it's no longer
 		// running connected to a terminal.
-		bs := BackupStatus{RepoName: repoName, PercentDone: percent, StatusMsg: status1, Indeterminate: false}
+		bs := BackupStatus{RepoName: repoName, PercentDone: percent, StatusMsg: "", Indeterminate: false}
 		UpdateStatus(bs)
 		fmt.Printf("updated: %v\n", bs)
 	}

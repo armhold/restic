@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	go runProducer()
+	//go runProducer()
 }
 
 // long-polling status updates

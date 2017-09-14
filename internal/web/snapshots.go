@@ -126,8 +126,7 @@ func DeleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		msg := fmt.Sprintf("Error deleting snapshot: %s", err)
 		fmt.Println(msg)
-		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", d.repo))
-		return
+		SaveFlashToCookie(w, "danger_flash", msg)
 	} else {
 		SaveFlashToCookie(w, "success_flash", fmt.Sprintf("Snapshot \"%s\" deleted", d.snapshotId))
 	}

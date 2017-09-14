@@ -111,22 +111,11 @@
                     eval(response.on_success);
                 },
                 error: function (xhr, status, error) {
-
-                    // TODO: refactor error func to work with showAjaxErrors() in modal
+                    // no real error handling here- actual errors will be displayed in flash after redirect
 
                     console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
                     console.log('error: got xhr.responseText: ' + xhr.responseText);
                     console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
-
-                    // clear previous errors, if any
-                    $(errorsUl).empty();
-
-                    $.each(xhr.responseJSON, function (key, value) {
-                        li = '<li>' + value + '</li>'; //showing only the first error.
-                        $(errorsUl).append(li);
-                    });
-
-                    $(errorsDiv).show();
                 }
             });
             return false;

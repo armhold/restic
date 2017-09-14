@@ -5,6 +5,7 @@ import (
 	"github.com/restic/restic/internal/restic"
 	"net/http"
 	"strings"
+	"context"
 )
 
 func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
@@ -111,13 +112,22 @@ func DeleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("DeleteSnapshotAjaxHandler validation success\n")
-
 	w.Header().Set("Content-Type", "application/json")
+
+	currRepo, ok := findCurrRepoByName(d.repo, WebConfig.Repos)
+
+	if ! ok {
+		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", d.repo))
+		return
+	}
+
+	err = removeSnapshot(currRepo, d.snapshotId)
+
 	if err != nil {
 		msg := fmt.Sprintf("Error deleting snapshot: %s", err)
 		fmt.Println(msg)
-		SaveFlashToCookie(w, "danger_flash", msg)
+		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", d.repo))
+		return
 	} else {
 		SaveFlashToCookie(w, "success_flash", fmt.Sprintf("Snapshot \"%s\" deleted", d.snapshotId))
 	}
@@ -126,4 +136,30 @@ func DeleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	redirectJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/snapshots?repo=%s'\"}", d.repo)
 	w.Write([]byte(redirectJs))
+}
+
+func removeSnapshot(repo *Repo, snapId string) (error) {
+	r, err := OpenRepository(repo.Path, repo.Password)
+	if err != nil {
+		return err
+	}
+
+	lock, err := lockRepoExclusive(r)
+	defer unlockRepo(lock)
+	if err != nil {
+		return err
+	}
+
+	id, err := restic.FindSnapshot(r, snapId)
+	if err != nil {
+		return err
+	}
+
+	h := restic.Handle{Type: restic.SnapshotFile, Name: id.String()}
+	err = r.Backend().Remove(context.TODO(), h)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -50,6 +50,7 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 		Nav          *Navigation
 	}{
 		Repos:     WebConfig.Repos,
+		CurrRepoName: currRepoName,
 		Flash:     flash,
 		Css_class: cssClassForRepo,
 		Snapshots: snaps,
@@ -66,14 +67,14 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 type deleteSnapshot struct {
 	repo string
 	snapshotId string
-	confirmed string
 }
 
 func fromForm(r *http.Request) deleteSnapshot {
 	result := deleteSnapshot{}
-	result.repo= r.FormValue("repo")
-	result.snapshotId= r.FormValue("snapshotId")
-	result.confirmed = r.FormValue("confirmed")
+	result.repo = r.FormValue("repo")
+	result.snapshotId = r.FormValue("snapshotId")
+
+	fmt.Printf("deleteSnap: %#v\n", result)
 
 	return result
 }
@@ -89,10 +90,6 @@ func (d *deleteSnapshot) Validate() (ok bool, errors FormErrors) {
 		errors["snapshotId"] = "snapshot ID missing"
 	}
 
-	if strings.TrimSpace(d.confirmed) != "confirmed" {
-		errors["confirmation"] = "must confirm"
-	}
-
 	return len(errors) == 0, errors
 }
 
@@ -104,6 +101,8 @@ func DeleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("error parsing form: %s\n", err.Error())
 		return
 	}
+
+	fmt.Printf("received form: %#v\n", r.Form)
 
 	d := fromForm(r)
 	ok, errors := d.Validate()

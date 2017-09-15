@@ -135,7 +135,7 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 
 // add/remove path to/from the backup list
 // when method=DELETE, the path is deleted
-func AddDeletePathAjaxHandler(w http.ResponseWriter, r *http.Request) {
+func addDeletePathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		fmt.Printf("error parsing form: %s\n", err.Error())

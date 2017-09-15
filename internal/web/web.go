@@ -26,18 +26,19 @@ func RunWeb(bindHost string, bindPort int) error {
 	WebConfig = c
 
 	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/addrepo", AddRepoAjaxHandler)
-	http.HandleFunc("/addpath", AddDeletePathAjaxHandler)
-	http.HandleFunc("/addexclude", AddDeleteExcludeAjaxHandler)
+	http.HandleFunc("/addrepo", addRepoAjaxHandler)
+	http.HandleFunc("/addpath", addDeletePathAjaxHandler)
+	http.HandleFunc("/addexclude", addDeleteExcludeAjaxHandler)
 	http.HandleFunc("/snapshots", snapshotsHandler)
 	http.HandleFunc("/paths", pathsHandler)
 	http.HandleFunc("/excludes", excludeHandler)
 	http.HandleFunc("/schedule", scheduleHandler)
 	http.HandleFunc("/backup", backupHandler)
 	http.HandleFunc("/browse", browseHandler)
-	http.HandleFunc("/runbackup", RunBackupAjaxHandler)
-	http.HandleFunc("/status", StatusAjaxHandler)
-	http.HandleFunc("/deletesnapshot", DeleteSnapshotAjaxHandler)
+	http.HandleFunc("/runbackup", runBackupAjaxHandler)
+	http.HandleFunc("/status", statusAjaxHandler)
+	http.HandleFunc("/restore", restoreHandler)
+	http.HandleFunc("/deletesnapshot", deleteSnapshotAjaxHandler)
 
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}

@@ -94,8 +94,8 @@ func (d *deleteSnapshot) Validate() (ok bool, errors FormErrors) {
 	return len(errors) == 0, errors
 }
 
-func DeleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("DeleteSnapshotAjaxHandler\n")
+func deleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("deleteSnapshotAjaxHandler\n")
 
 	err := r.ParseForm()
 	if err != nil {
@@ -155,10 +155,5 @@ func removeSnapshot(repo *Repo, snapId string) (error) {
 	}
 
 	h := restic.Handle{Type: restic.SnapshotFile, Name: id.String()}
-	err = r.Backend().Remove(context.TODO(), h)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return r.Backend().Remove(context.TODO(), h)
 }

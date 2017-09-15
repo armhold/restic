@@ -27,15 +27,15 @@ type BackupStatus struct {
 }
 
 // do a long poll
-func StatusAjaxHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("StatusAjaxHandler\n")
+func statusAjaxHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("statusAjaxHandler\n")
 
 	timeout, err := strconv.Atoi(r.URL.Query().Get("timeout"))
 	if err != nil || timeout > 180000 || timeout < 0 {
 		timeout = 60000
 	}
 
-	fmt.Printf("StatusAjaxHandler waiting for request...\n")
+	fmt.Printf("statusAjaxHandler waiting for request...\n")
 
 	myRequestChan := make(chan *BackupStatus)
 

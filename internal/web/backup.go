@@ -65,8 +65,8 @@ func backupHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("sucessful exit backupHandler()\n")
 }
 
-func RunBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("RunBackupAjaxHandler\n")
+func runBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("runBackupAjaxHandler\n")
 
 	err := r.ParseForm()
 	if err != nil {

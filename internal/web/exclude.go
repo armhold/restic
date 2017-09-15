@@ -59,7 +59,7 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 
 // add/remove exclusion to/from the backup list
 // when method=DELETE, the exclusion is deleted
-func AddDeleteExcludeAjaxHandler(w http.ResponseWriter, r *http.Request) {
+func addDeleteExcludeAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		fmt.Printf("error parsing form: %s\n", err.Error())

@@ -55,6 +55,9 @@
                 <li class="nav-item">
                     <a class="nav-link {{.Nav.CssForTab "browse"}}" href="{{.Nav.BrowseUrl}}">Browse</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{.Nav.CssForTab "restore"}}" href="{{.Nav.RestoreUrl}}">Restore</a>
+                </li>
             </ul>
             {{end}}
 
@@ -80,6 +83,10 @@
 
             {{ if eq .Nav.Tab "browse"}}
             {{template "browse" . }}
+            {{end}}
+
+            {{ if eq .Nav.Tab "restore"}}
+            {{template "restore" . }}
             {{end}}
 
             {{template "add_repo_modal"}}

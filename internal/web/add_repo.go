@@ -30,7 +30,7 @@ func (a *Repo) Validate() (ok bool, errors FormErrors) {
 	return len(errors) == 0, errors
 }
 
-func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
+func addRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		fmt.Printf("error parsing form: %s\n", err.Error())
@@ -41,7 +41,7 @@ func AddRepoAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	ok, errors := repo.Validate()
 
 	if !ok {
-		fmt.Printf("AddRepoAjaxHandler validation failed: %v\n", errors)
+		fmt.Printf("addRepoAjaxHandler validation failed: %v\n", errors)
 		sendErrorMapToJs(w, errors)
 	} else {
 		fmt.Printf("addRepoHandler validation success\n")

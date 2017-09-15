@@ -2,10 +2,10 @@ package web
 
 import (
 	"html/template"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
+	"fmt"
 )
 
 // misc rails-style template helpers
@@ -60,8 +60,24 @@ func (n *Navigation) BackupUrl() string {
 func (n *Navigation) BrowseUrl() string {
 	return "/browse?repo=" + n.req.FormValue("repo")
 }
-func (n *Navigation) RestoreUrl() string {
+
+func (n *Navigation) EmptyRestoreUrl() string {
 	return "/restore?repo=" + n.req.FormValue("repo")
+}
+
+func (n *Navigation) RestoreUrl(repo, snapshotId string) string {
+	restoreUrl, err := url.Parse("/restore")
+	if err != nil {
+		// TODO: better way to handle errors in a helper func
+		fmt.Println(err)
+		return ""
+	}
+
+	q := restoreUrl.Query()
+	q.Set("repo", repo)
+	q.Set("snapshotId", snapshotId)
+	restoreUrl.RawQuery = q.Encode()
+	return restoreUrl.String()
 }
 
 func (n *Navigation) CssForTab(tab string) string {
@@ -70,21 +86,6 @@ func (n *Navigation) CssForTab(tab string) string {
 	}
 
 	return ""
-}
-
-func (n *Navigation) HrefForTab(tab string) string {
-	orig := n.req.URL.String()
-
-	u, err := url.Parse(orig)
-	if err != nil {
-		log.Printf("error parsing url: %s", err)
-		return ""
-	}
-	q := u.Query()
-	q.Set("tab", tab)
-	u.RawQuery = q.Encode()
-
-	return u.String()
 }
 
 func FormatTime(t time.Time) string {

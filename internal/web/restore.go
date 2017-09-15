@@ -6,6 +6,15 @@ import (
 	"fmt"
 )
 
+type restore struct {
+	Id         string   `json:"Id"`
+	Snapshot   string   `json:"Snapshot"`
+	Paths      []string `json:"Paths"`
+	Target     string   `json:"Target"`
+	Errors     []string `json:"Errors"`
+	IsComplete bool     `json:"IsComplete"`
+}
+
 func restoreHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("restoreHandler\n")
 
@@ -47,12 +56,12 @@ func restoreHandler(w http.ResponseWriter, r *http.Request) {
 		Snapshots    restic.Snapshots
 		Nav          *Navigation
 	}{
-		Repos:     WebConfig.Repos,
+		Repos:        WebConfig.Repos,
 		CurrRepoName: currRepoName,
-		Flash:     flash,
-		Css_class: cssClassForRepo,
-		Snapshots: snaps,
-		Nav:       &Navigation{req: r, Tab: "restore"},
+		Flash:        flash,
+		Css_class:    cssClassForRepo,
+		Snapshots:    snaps,
+		Nav:          &Navigation{req: r, Tab: "restore"},
 	}
 
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {

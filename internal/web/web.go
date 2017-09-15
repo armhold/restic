@@ -37,7 +37,7 @@ func RunWeb(bindHost string, bindPort int) error {
 	http.HandleFunc("/browse", browseHandler)
 	http.HandleFunc("/runbackup", runBackupAjaxHandler)
 	http.HandleFunc("/status", statusAjaxHandler)
-	http.HandleFunc("/restore", restoreHandler)
+	http.HandleFunc("/nav", navigateSnapshotHandler)
 	http.HandleFunc("/deletesnapshot", deleteSnapshotAjaxHandler)
 
 	// static assets

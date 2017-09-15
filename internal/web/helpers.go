@@ -61,12 +61,8 @@ func (n *Navigation) BrowseUrl() string {
 	return "/browse?repo=" + n.req.FormValue("repo")
 }
 
-func (n *Navigation) EmptyRestoreUrl() string {
-	return "/restore?repo=" + n.req.FormValue("repo")
-}
-
 func (n *Navigation) RestoreUrl(repo, snapshotId string) string {
-	restoreUrl, err := url.Parse("/restore")
+	restoreUrl, err := url.Parse("/nav")
 	if err != nil {
 		// TODO: better way to handle errors in a helper func
 		fmt.Println(err)
@@ -79,6 +75,8 @@ func (n *Navigation) RestoreUrl(repo, snapshotId string) string {
 	restoreUrl.RawQuery = q.Encode()
 	return restoreUrl.String()
 }
+
+
 
 func (n *Navigation) CssForTab(tab string) string {
 	if n.req.URL.Path[1:] == tab {

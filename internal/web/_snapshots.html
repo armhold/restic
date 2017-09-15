@@ -1,4 +1,6 @@
 {{define "snapshots"}}
+
+{{if not .SnapSelected}}
 <div class="table-responsive">
     <table class="table table-striped">
         <thead>
@@ -37,6 +39,42 @@
         </tbody>
     </table>
 </div>
+{{end}}
+
+{{if .SnapSelected }}
+<div class="table-responsive">
+    <table class="table table-sm table-striped restic-selection-table">
+        <tbody>
+
+        {{range $i, $f := .Files}}
+        <tr>
+            <td>
+                <code>
+                    {{if $f.IsDir}}
+                    <a href="{{call $.LinkToFileInSnapshot .Name}}">{{$f.Name}}</a>
+                    {{else}}
+                    {{$f.Name}}
+                    {{end}}
+                </code>
+            </td>
+
+            <td>
+                <form action="/restorefile" method="post">
+                    <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
+                    <input type="hidden" name="snapshotId" value="{{$.SnapshotId}}">
+                    <input type="hidden" name="filename" value="{{$f.Name}}">
+                    <button type="button" class="btn btn-outline-success restore-file" data-toggle="modal" data-target="#restoreFileModal">Restore</button>
+                </form>
+            </td>
+
+        </tr>
+        {{end}}
+
+        </tbody>
+    </table>
+</div>
+{{end}}
+
 
 <div class="modal fade" id="deleteSnapshotModal" tabindex="-1" role="dialog" aria-labelledby="deleteSnapshotModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">

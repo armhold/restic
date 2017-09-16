@@ -185,14 +185,8 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		dir = "/"  // TODO: root for non-unix OSes
 	}
 
-	fmt.Printf("list files in snapshot: %s under dir: %s\n", snapshotId,  dir)
-	files, err := listFilesUnderDirInSnapshot(snapshotId, dir)
-	if err != nil {
-		flash.Danger += err.Error()
-	}
-
-	// TODO: code repeated in show_repos.go
 	currRepoName := r.FormValue("repo")
+	// TODO: code repeated in show_repos.go
 	cssClassForRepo := func(repoName string) string {
 		// TODO: names might have spaces. Use id, or urlencode
 		if repoName == currRepoName {
@@ -200,6 +194,21 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			return ""
 		}
+	}
+
+	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
+	if ! ok {
+		msg := fmt.Sprintf("error retrieving repo: %s", currRepoName)
+		fmt.Println(msg)
+		SaveFlashToCookie(w, "danger_flash", msg)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Printf("list files in snapshot: %s under dir: %s\n", snapshotId,  dir)
+	files, err := listFilesUnderDirInSnapshot(repo, snapshotId, dir)
+	if err != nil {
+		flash.Danger += err.Error()
 	}
 
 	nav := &Navigation{req: r, Tab: "snapshots"}
@@ -216,13 +225,6 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 	parentDir := filepath.Dir(dir)
 	linkToParentDir := nav.BrowseUrl() + "&amp;dir=" + url.QueryEscape(parentDir)
 
-	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-	if ! ok {
-		// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
-		flash.Danger += fmt.Sprintf("error retrieving repo: %s", currRepoName)
-	} else {
-
-	}
 
 	isSelected := func(dir, path string) bool {
 		fullPath := filepath.Join(dir, path)
@@ -283,12 +285,40 @@ type snapshotPath struct {
 	IsDir bool
 }
 
-func listFilesUnderDirInSnapshot(snapshotId, dir string) ([]*snapshotPath, error) {
+func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*snapshotPath, error) {
 	result := []*snapshotPath{
 		{Name: "foo"},
 		{Name: "bar"},
 		{Name: "baz"},
 	}
+
+	r, err := OpenRepository(repo.Path, repo.Password)
+	if err != nil {
+		return result, err
+	}
+
+	// TODO: lock repo here?
+
+	if err = r.LoadIndex(context.TODO()); err != nil {
+		return result, err
+	}
+
+	snapshotID, err := restic.FindSnapshot(r, snapshotIDString)
+	if err != nil {
+		return result, fmt.Errorf("invalid id %q: %v", snapshotIDString, err)
+	}
+
+	currSnapshot, err := restic.LoadSnapshot(context.TODO(), r, snapshotID)
+	if err != nil {
+		return result, fmt.Errorf("could not load snapshot %q: %v\n", snapshotID, err)
+	}
+
+	tree, err := r.LoadTree(context.TODO(), *currSnapshot.Tree)
+	if err != nil {
+		return result, err
+	}
+
+	fmt.Printf("TODO: do something with tree %v\n", tree)
 
 	return result, nil
 }

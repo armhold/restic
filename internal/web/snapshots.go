@@ -312,34 +312,44 @@ func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*s
 		return result, fmt.Errorf("could not load snapshot %q: %v\n", snapshotID, err)
 	}
 
-	fmt.Printf("about to splitIntoDirs()\n")
 	dirs := splitIntoDirs(dir)
-	fmt.Printf("return from splitIntoDirs()\n")
 
 	fmt.Printf("dir is: \"%s\"\n", dir)
-	for _, s := range dirs {
-		fmt.Printf("load: \"%s\"\n", s)
-	}
-
-
 
 	tree, err := r.LoadTree(context.TODO(), *currSnapshot.Tree)
 	if err != nil {
 		return result, err
 	}
 
-	// walk the tree down to the current dir
-	for  range dirs {
-		// TODO
+	if (true) {
+		panic("oops!")
 	}
 
+	// walk the tree down to the current dir
+	for _, d := range dirs {
+		found := false
+		for _, n := range tree.Nodes {
+			fmt.Printf("compare \"%s\" => \"%s\"\n", n.Name, d)
 
+			if n.Type == "dir" && n.Subtree != nil && n.Name == d {
+				tree, err = r.LoadTree(context.TODO(), *n.Subtree)
+				if err != nil {
+					return result, err
+				}
 
-	fmt.Printf("TODO: do something with tree %v\n", tree)
+				found = true
+				break
+			}
+		}
 
+		if ! found {
+			return result, fmt.Errorf("failed to find %s in snapshot", d)
+		}
+	}
 
 	for _, entry := range tree.Nodes {
 		result = append(result, &snapshotPath{Name: entry.Name, IsDir: entry.Type == "dir"})
+		fmt.Printf("\tcontents: %s\n", entry.Name)
 	}
 
 	return result, nil

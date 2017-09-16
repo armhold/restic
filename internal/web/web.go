@@ -23,7 +23,7 @@ func init() {
 	}
 
 	dir := filepath.Dir(filename)
-	path := filepath.Join(dir, "*.html" )
+	path := filepath.Join(dir, "*.html")
 
 	// to pass FuncMap, order is important.
 	// See: https://stackoverflow.com/questions/17843311/template-and-custom-function-panic-function-not-defined
@@ -38,20 +38,20 @@ func RunWeb(bindHost string, bindPort int) error {
 
 	WebConfig = c
 
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/addrepo", addRepoAjaxHandler)
-	http.HandleFunc("/addpath", addDeletePathAjaxHandler)
-	http.HandleFunc("/addexclude", addDeleteExcludeAjaxHandler)
-	http.HandleFunc("/snapshots", snapshotsHandler)
-	http.HandleFunc("/paths", pathsHandler)
-	http.HandleFunc("/excludes", excludeHandler)
-	http.HandleFunc("/schedule", scheduleHandler)
-	http.HandleFunc("/backup", backupHandler)
-	http.HandleFunc("/browse", browseHandler)
-	http.HandleFunc("/runbackup", runBackupAjaxHandler)
-	http.HandleFunc("/status", statusAjaxHandler)
-	http.HandleFunc("/nav", navigateSnapshotHandler)
-	http.HandleFunc("/deletesnapshot", deleteSnapshotAjaxHandler)
+	http.HandleFunc("/", panicRecover(rootHandler))
+	http.HandleFunc("/addrepo", panicRecover(addRepoAjaxHandler))
+	http.HandleFunc("/addpath", panicRecover(addDeletePathAjaxHandler))
+	http.HandleFunc("/addexclude", panicRecover(addDeleteExcludeAjaxHandler))
+	http.HandleFunc("/snapshots", panicRecover(snapshotsHandler))
+	http.HandleFunc("/paths", panicRecover(pathsHandler))
+	http.HandleFunc("/excludes", panicRecover(excludeHandler))
+	http.HandleFunc("/schedule", panicRecover(scheduleHandler))
+	http.HandleFunc("/backup", panicRecover(backupHandler))
+	http.HandleFunc("/browse", panicRecover(browseHandler))
+	http.HandleFunc("/runbackup", panicRecover(runBackupAjaxHandler))
+	http.HandleFunc("/status", panicRecover(statusAjaxHandler))
+	http.HandleFunc("/nav", panicRecover(navigateSnapshotHandler))
+	http.HandleFunc("/deletesnapshot", panicRecover(deleteSnapshotAjaxHandler))
 
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}
@@ -67,6 +67,18 @@ func RunWeb(bindHost string, bindPort int) error {
 	}
 
 	return err
+}
+
+// standard web server seems to swallow panics without logging them?
+func panicRecover(f func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("PANIC RECOVERED:%s\n", r)
+			}
+		}()
+		f(w, r)
+	}
 }
 
 func sendErrorToJs(w http.ResponseWriter, err string) {

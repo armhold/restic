@@ -233,6 +233,7 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 
 	// create links for drop-down for navigating to parent dirs
 	// TODO: add volumename for all volumes on Windows
+	// TODO: copied from browse.go
 	var dirLinks []dirLink
 	d := dir
 	for d != filepath.VolumeName(d) && d != "/" {
@@ -250,7 +251,7 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		Tab             string
 		Dir             string
 		Files           []*snapshotPath
-		LinkToFileInDir func(string) string
+		LinkToFileInDir func(file string) string
 		LinkToParentDir string
 		IsSelected      func(dir, path string) bool
 		ParentDirLinks  []dirLink
@@ -287,9 +288,9 @@ type snapshotPath struct {
 
 func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*snapshotPath, error) {
 	result := []*snapshotPath{
-		{Name: "foo"},
-		{Name: "bar"},
-		{Name: "baz"},
+		//{Name: "foo"},
+		//{Name: "bar"},
+		//{Name: "baz"},
 	}
 
 	r, err := OpenRepository(repo.Path, repo.Password)
@@ -319,6 +320,10 @@ func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*s
 	}
 
 	fmt.Printf("TODO: do something with tree %v\n", tree)
+
+	for _, entry := range tree.Nodes {
+		result = append(result, &snapshotPath{Name: entry.Name, IsDir: entry.Type == "dir"})
+	}
 
 	return result, nil
 }

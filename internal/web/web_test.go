@@ -14,7 +14,7 @@ func TestConfig(t *testing.T) {
 		return
 	}
 
-	repos := []Repo{Repo{Name: "r1", Password: "p1"}, Repo{Name: "r2", Password: "p2"}}
+	repos := []*Repo{&Repo{Name: "r1", Password: "p1"}, &Repo{Name: "r2", Password: "p2"}}
 
 	c := Config{Repos: repos, Filepath: configFile.Name()}
 

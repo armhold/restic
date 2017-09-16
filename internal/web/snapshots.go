@@ -53,12 +53,12 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 		Nav          *Navigation
 		SnapSelected bool
 	}{
-		Repos:     WebConfig.Repos,
+		Repos:        WebConfig.Repos,
 		CurrRepoName: currRepoName,
-		Flash:     flash,
-		Css_class: cssClassForRepo,
-		Snapshots: snaps,
-		Nav:       &Navigation{req: r, Tab: "snapshots"},
+		Flash:        flash,
+		Css_class:    cssClassForRepo,
+		Snapshots:    snaps,
+		Nav:          &Navigation{req: r, Tab: "snapshots"},
 		SnapSelected: false,
 	}
 
@@ -70,7 +70,7 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type deleteSnapshot struct {
-	repo string
+	repo       string
 	snapshotId string
 }
 
@@ -182,7 +182,7 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 	dir := r.FormValue("dir")
 	if dir == "" {
 		fmt.Printf("no dir given, starting with root\n")
-		dir = "/"  // TODO: root for non-unix OSes
+		dir = "/" // TODO: root for non-unix OSes
 	}
 
 	currRepoName := r.FormValue("repo")
@@ -205,9 +205,10 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("list files in snapshot: %s under dir: %s\n", snapshotId,  dir)
+	fmt.Printf("list files in snapshot: %s under dir: %s\n", snapshotId, dir)
 	files, err := listFilesUnderDirInSnapshot(repo, snapshotId, dir)
 	if err != nil {
+		fmt.Println(err)
 		flash.Danger += err.Error()
 	}
 
@@ -224,7 +225,6 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 
 	parentDir := filepath.Dir(dir)
 	linkToParentDir := nav.BrowseUrl() + "&amp;dir=" + url.QueryEscape(parentDir)
-
 
 	isSelected := func(dir, path string) bool {
 		fullPath := filepath.Join(dir, path)
@@ -255,8 +255,8 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		LinkToParentDir string
 		IsSelected      func(dir, path string) bool
 		ParentDirLinks  []dirLink
-		SnapshotId       string
-		SnapSelected     bool
+		SnapshotId      string
+		SnapSelected    bool
 	}{
 		Repos:           WebConfig.Repos,
 		CurrRepoName:    currRepoName,
@@ -274,6 +274,8 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		SnapSelected:    true,
 	}
 
+	fmt.Printf("rendering...\n")
+
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
@@ -282,16 +284,12 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type snapshotPath struct {
-	Name string
+	Name  string
 	IsDir bool
 }
 
 func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*snapshotPath, error) {
-	result := []*snapshotPath{
-		//{Name: "foo"},
-		//{Name: "bar"},
-		//{Name: "baz"},
-	}
+	var result []*snapshotPath
 
 	r, err := OpenRepository(repo.Path, repo.Password)
 	if err != nil {
@@ -314,16 +312,49 @@ func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*s
 		return result, fmt.Errorf("could not load snapshot %q: %v\n", snapshotID, err)
 	}
 
+	fmt.Printf("about to splitIntoDirs()\n")
+	dirs := splitIntoDirs(dir)
+	fmt.Printf("return from splitIntoDirs()\n")
+
+	fmt.Printf("dir is: \"%s\"\n", dir)
+	for _, s := range dirs {
+		fmt.Printf("load: \"%s\"\n", s)
+	}
+
+
+
 	tree, err := r.LoadTree(context.TODO(), *currSnapshot.Tree)
 	if err != nil {
 		return result, err
 	}
 
+	// walk the tree down to the current dir
+	for  range dirs {
+		// TODO
+	}
+
+
+
 	fmt.Printf("TODO: do something with tree %v\n", tree)
+
 
 	for _, entry := range tree.Nodes {
 		result = append(result, &snapshotPath{Name: entry.Name, IsDir: entry.Type == "dir"})
 	}
 
 	return result, nil
+}
+
+// TODO: handle non-Unix paths
+func splitIntoDirs(path string) []string {
+	fmt.Printf("inside splitIntoDirs: \"%s\"\n", path)
+
+	path = strings.Trim(path, string(filepath.Separator))
+	fmt.Printf("after 1st trim, path is \"%s\"\n", path)
+
+	if len(path) == 0 {
+		return []string{}
+	}
+
+	return strings.Split(path, string(filepath.Separator))
 }

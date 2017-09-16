@@ -5,16 +5,29 @@ import (
 	"html/template"
 	"net/http"
 	"encoding/json"
+	"path/filepath"
+	"runtime"
 )
 
 var (
-	// to pass FuncMap, order is important.
-	// See: https://stackoverflow.com/questions/17843311/template-and-custom-function-panic-function-not-defined
-	templates = template.Must(template.New("").Funcs(Helpers).ParseGlob("internal/web/*.html"))
 	WebConfig Config
+	templates *template.Template
 )
 
 func init() {
+
+	// get path to templates dir relative to this source file
+	_, filename, _, ok := runtime.Caller(0)
+	if ! ok {
+		panic("unable to get path to web.go")
+	}
+
+	dir := filepath.Dir(filename)
+	path := filepath.Join(dir, "*.html" )
+
+	// to pass FuncMap, order is important.
+	// See: https://stackoverflow.com/questions/17843311/template-and-custom-function-panic-function-not-defined
+	templates = template.Must(template.New("").Funcs(Helpers).ParseGlob(path))
 }
 
 func RunWeb(bindHost string, bindPort int) error {

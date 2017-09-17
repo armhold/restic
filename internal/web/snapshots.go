@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/url"
 	"path/filepath"
+	"time"
 )
 
 func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
@@ -291,26 +292,35 @@ type snapshotPath struct {
 func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*snapshotPath, error) {
 	var result []*snapshotPath
 
+	start := time.Now()
+
 	r, err := OpenRepository(repo.Path, repo.Password)
 	if err != nil {
 		return result, err
 	}
+	fmt.Printf("OpenRepository took %s\n", time.Since(start))
 
 	// TODO: lock repo here?
 
+	start = time.Now()
 	if err = r.LoadIndex(context.TODO()); err != nil {
 		return result, err
 	}
+	fmt.Printf("LoadIndex took %s\n", time.Since(start))
 
+	start = time.Now()
 	snapshotID, err := restic.FindSnapshot(r, snapshotIDString)
 	if err != nil {
 		return result, fmt.Errorf("invalid id %q: %v", snapshotIDString, err)
 	}
+	fmt.Printf("FindSnapshot took %s\n", time.Since(start))
 
+	start = time.Now()
 	currSnapshot, err := restic.LoadSnapshot(context.TODO(), r, snapshotID)
 	if err != nil {
 		return result, fmt.Errorf("could not load snapshot %q: %v\n", snapshotID, err)
 	}
+	fmt.Printf("LoadSnapshot took %s\n", time.Since(start))
 
 	dirs := splitIntoDirs(dir)
 
@@ -328,10 +338,14 @@ func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*s
 			fmt.Printf("compare \"%s\" => \"%s\"\n", n.Name, d)
 
 			if n.Type == "dir" && n.Subtree != nil && n.Name == d {
+				start := time.Now()
+
 				tree, err = r.LoadTree(context.TODO(), *n.Subtree)
 				if err != nil {
 					return result, err
 				}
+				elapsed := time.Since(start)
+				fmt.Printf("LoadTree took %s\n", elapsed)
 
 				found = true
 				break

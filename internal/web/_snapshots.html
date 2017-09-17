@@ -1,6 +1,5 @@
 {{define "snapshots"}}
 
-{{if not .SnapSelected}}
 <div class="table-responsive">
     <table class="table table-striped">
         <thead>
@@ -39,72 +38,6 @@
         </tbody>
     </table>
 </div>
-{{end}}
-
-{{if .SnapSelected }}
-
-<!--TODO: dropdown copied from _browse.html-->
-<div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-    <div class="btn-group mr-2" role="group" aria-label="First group">
-        <div class="dropdown show">
-            <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="fa fa-folder"></span> {{.Dir}}
-            </a>
-
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                {{range .ParentDirLinks}}
-                <a class="dropdown-item" href="{{.Link}}">{{.Dir}}</a>
-                {{end}}
-            </div>
-        </div>
-    </div>
-
-    <!-- just add some space between the buttons -->
-    <div class="btn-group mr-2" role="group" aria-label="Second group">
-    </div>
-    <div class="btn-group mr-2" role="group" aria-label="Second group">
-    </div>
-
-    <div class="btn-group mr-2" role="group" aria-label="Second group">
-        <a class="btn btn-outline-success" href="{{.Nav.PathsUrl}}">Done</a>
-    </div>
-
-</div>
-
-
-<div class="table-responsive">
-    <table class="table table-sm table-striped restic-selection-table">
-        <tbody>
-
-        {{range $i, $f := .Files}}
-        <tr>
-            <td>
-                <code>
-                    {{if $f.IsDir}}
-                    <a href="{{call $.LinkToFileInDir .Name}}">{{$f.Name}}</a>
-                    {{else}}
-                    {{$f.Name}}
-                    {{end}}
-                </code>
-            </td>
-
-            <td>
-                <form action="/restorefile" method="post">
-                    <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
-                    <input type="hidden" name="snapshotId" value="{{$.SnapshotId}}">
-                    <input type="hidden" name="filename" value="{{$f.Name}}">
-                    <button type="button" class="btn btn-outline-success restore-file" data-toggle="modal" data-target="#restoreFileModal">Restore</button>
-                </form>
-            </td>
-
-        </tr>
-        {{end}}
-
-        </tbody>
-    </table>
-</div>
-{{end}}
-
 
 <div class="modal fade" id="deleteSnapshotModal" tabindex="-1" role="dialog" aria-labelledby="deleteSnapshotModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">

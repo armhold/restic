@@ -91,7 +91,7 @@ func listSnapshots(repo *Repo) (restic.Snapshots, error) {
 	}
 
 	snaps = restic.FindFilteredSnapshots(context.TODO(), r, "", []restic.TagList{}, []string{})
-	sort.Sort(sort.Reverse(snaps))
+	sort.Sort(snaps)
 
 	return snaps, nil
 }

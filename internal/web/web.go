@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 )
 
 var (
@@ -74,7 +75,7 @@ func panicRecover(f func(w http.ResponseWriter, r *http.Request)) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Printf("PANIC RECOVERED:%s\n", r)
+				fmt.Printf("PANIC RECOVERED: %s, %s\n", r, debug.Stack())
 			}
 		}()
 		f(w, r)

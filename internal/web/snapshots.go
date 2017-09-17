@@ -321,10 +321,6 @@ func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*s
 		return result, err
 	}
 
-	if (true) {
-		panic("oops!")
-	}
-
 	// walk the tree down to the current dir
 	for _, d := range dirs {
 		found := false

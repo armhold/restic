@@ -123,8 +123,6 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 		SnapSelected:    true,
 	}
 
-	fmt.Printf("rendering...\n")
-
 	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
@@ -183,8 +181,6 @@ func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*s
 	for _, d := range dirs {
 		found := false
 		for _, n := range tree.Nodes {
-			fmt.Printf("compare \"%s\" => \"%s\"\n", n.Name, d)
-
 			if n.Type == "dir" && n.Subtree != nil && n.Name == d {
 				start := time.Now()
 
@@ -207,7 +203,6 @@ func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*s
 
 	for _, entry := range tree.Nodes {
 		result = append(result, &snapshotPath{Name: entry.Name, IsDir: entry.Type == "dir"})
-		fmt.Printf("\tcontents: %s\n", entry.Name)
 	}
 
 	return result, nil
@@ -215,10 +210,7 @@ func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*s
 
 // TODO: handle non-Unix paths
 func splitIntoDirs(path string) []string {
-	fmt.Printf("inside splitIntoDirs: \"%s\"\n", path)
-
 	path = strings.Trim(path, string(filepath.Separator))
-	fmt.Printf("after 1st trim, path is \"%s\"\n", path)
 
 	if len(path) == 0 {
 		return []string{}

@@ -11,7 +11,8 @@ import (
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("rootHandler\n")
 
-	// The "/" pattern matches everything, so we need to check that we're at the root here.
+	// if we get here, none of the other handlers matched, so implement 404 behavior if client
+	// not actually requesting root.
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return

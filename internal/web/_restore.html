@@ -46,10 +46,11 @@
             </td>
 
             <td>
-                <form action="/restorefile" method="post">
+                <form action="/restore" method="post">
                     <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
                     <input type="hidden" name="snapshotId" value="{{$.SnapshotId}}">
-                    <input type="hidden" name="filename" value="{{$f.Name}}">
+                    <input type="hidden" name="path" value="{{$f.Name}}">
+                    <input type="hidden" name="target" value="">
                     <button type="button" class="btn btn-outline-success restore-file" data-toggle="modal" data-target="#restoreModal">Restore</button>
                 </form>
             </td>
@@ -84,10 +85,10 @@
                     <h6>Restoring: <code id="filename-to-be-restored"></code></h6>
                 </div>
 
-                <form id="add-exclude-form" action="/restore" method="post">
+                <form id="confirm-restore-form" action="/restore" method="post">
                     <div class="form-group">
-                        <label for="dir" class="form-control-label">Choose a directory to restore the file(s) to:</label>
-                        <input type="text" class="form-control" id="dir" name="dir" autocomplete="off">
+                        <label for="target" class="form-control-label">Choose a directory to restore the file(s) to:</label>
+                        <input type="text" class="form-control" id="target" name="target" autocomplete="off">
                         <input type="hidden" name="repo" value="{{.CurrRepoName}}">
                     </div>
                 </form>
@@ -112,33 +113,40 @@
 <script>
 
     $(function () {
-        var form;
+        var modal = $('#restoreModal');
+        var target = $(modal).find('input[name="target"]');
+
+        var modalForm = $('#confirm-restore-form');
+        var submissionForm;
 
         // button that brings up the modal
         $('.restore-file').click(function (e) {
             e.preventDefault();
 
             // remember form so it can be submitted if user clicks "OK" in modal
-            form = $(this).closest('form');
+            submissionForm = $(this).closest('form');
 
-            // update snap id in modal
-            var filename = $(form).find('input[name="filename"]').attr('value');
-            $('#filename-to-be-restored').text(filename);
-            console.log('delete: ' + filename);
+            // update path in modal
+            var path = $(modalForm).find('input[name="path"]').attr('value');
+            $('#filename-to-be-restored').text(path);
         });
 
         // OK button in modal
         $('#restore-submit').click(function (e) {
             e.preventDefault();
 
-            var modal = $('#restoreModal');
+            // copy target value from modal to submissionForm
+            $(submissionForm).find('input[name="target"]').val($(target).val());
+
             var errorsDiv = $(modal).find('.modal-errors')[0];
             var errorsUl = $(modal).find('ul.modal-errors')[0];
+
+            console.log("submitting: " + $(submissionForm).serialize());
 
             $.ajax({
                 type: "POST",
                 url: "/restore",
-                data: $(form).serialize(),
+                data: $(submissionForm).serialize(),
                 success: function (response) {
                     modal.modal('hide');
                     $(errorsUl).empty();

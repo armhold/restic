@@ -130,6 +130,71 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("sucessful exit navigateRestoreHandler\n")
 }
 
+type restore struct {
+	repo       string
+	snapshotId string
+	target     string
+	path       string
+}
+
+func restoreFromForm(r *http.Request) restore {
+	result := restore{}
+	result.repo = r.FormValue("repo")
+	result.snapshotId = r.FormValue("snapshotId")
+	result.target = r.FormValue("target")
+	result.path = r.FormValue("path")
+
+	fmt.Printf("restore: %#v\n", result)
+
+	return result
+}
+
+func (d *restore) Validate() (ok bool, errors FormErrors) {
+	errors = make(map[string]string)
+
+	if strings.TrimSpace(d.repo) == "" {
+		errors["repo"] = "repository name missing"
+	}
+
+	if strings.TrimSpace(d.snapshotId) == "" {
+		errors["snapshotId"] = "snapshot ID missing"
+	}
+
+	if strings.TrimSpace(d.target) == "" {
+		errors["target"] = "target missing"
+	}
+
+	if strings.TrimSpace(d.path) == "" {
+		errors["path"] = "path missing"
+	}
+
+	return len(errors) == 0, errors
+}
+
+func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("doRestoreHandler\n")
+
+	restore := restoreFromForm(r)
+
+	ok, formErrors := restore.Validate()
+	if ! ok {
+		fmt.Println(formErrors)
+		sendErrorMapToJs(w, formErrors)
+		return
+	}
+
+	_, ok = findCurrRepoByName(restore.repo, WebConfig.Repos)
+	if ! ok {
+		msg := fmt.Sprintf("error retrieving repo: %s", restore.repo)
+		fmt.Println(msg)
+		sendErrorToJs(w, msg)
+		return
+	}
+
+	fmt.Println("do restore: %#v\n", restore)
+	fmt.Printf("sucessful exit doRestoreHandler\n")
+}
+
 type snapshotPath struct {
 	Name  string
 	IsDir bool

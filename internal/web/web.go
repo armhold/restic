@@ -52,6 +52,7 @@ func RunWeb(bindHost string, bindPort int) error {
 	http.HandleFunc("/runbackup", panicRecover(runBackupAjaxHandler))
 	http.HandleFunc("/status", panicRecover(statusAjaxHandler))
 	http.HandleFunc("/nav", panicRecover(navigateRestoreHandler))
+	http.HandleFunc("/restore", panicRecover(doRestoreHandler))
 	http.HandleFunc("/deletesnapshot", panicRecover(deleteSnapshotAjaxHandler))
 
 	// static assets

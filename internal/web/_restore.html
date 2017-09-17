@@ -75,10 +75,8 @@
             </div>
             <div class="modal-body">
 
-                <div class="modal-errors" aria-hidden="true" style="display: none;">
-                    <ul class="modal-errors alert alert-danger">
-
-                    </ul>
+                <div class="alert alert-danger fade show" role="alert" style="display: none;">
+                    <strong id="ajax-error">placeholder!</strong>
                 </div>
 
                 <div>
@@ -110,6 +108,8 @@
     </div>
 </div>
 
+{{template "show_ajax_errors" . }}
+
 <script>
 
     $(function () {
@@ -122,6 +122,8 @@
         // button that brings up the modal
         $('.restore-file').click(function (e) {
             e.preventDefault();
+
+            clearAjaxErrors();
 
             // remember form so it can be submitted if user clicks "OK" in modal
             submissionForm = $(this).closest('form');
@@ -154,13 +156,7 @@
 
                     eval(response.on_success);
                 },
-                error: function (xhr, status, error) {
-                    // no real error handling here- actual errors will be displayed in flash after redirect
-
-                    console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
-                    console.log('error: got xhr.responseText: ' + xhr.responseText);
-                    console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
-                }
+                error: showAjaxErrors
             });
             return false;
         });

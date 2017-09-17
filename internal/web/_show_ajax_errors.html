@@ -7,6 +7,9 @@
         $(this).parent().hide();
     });
 
+    var errorSpan = $('#ajax-error');
+    var errorsDiv = $(errorSpan).closest('div');
+
     function showAjaxErrors(xhr, status, error) {
         console.log('error, xhr: ' + JSON.stringify(xhr) + ', status: ' + JSON.stringify(status) + ', error: ' + JSON.stringify(error));
 
@@ -26,11 +29,7 @@
             errorMap = {"error": "error contacting restic server"};
         }
 
-        var errorSpan = $('#ajax-error');
-        var errorsDiv = $(errorSpan).closest('div');
-
-        // clear previous errors, if any
-        $(errorSpan).empty();
+        clearAjaxErrors();
 
         $.each(errorMap, function (key, value) {
             $(errorSpan).append(value);
@@ -38,5 +37,12 @@
 
         $(errorsDiv).show();
     }
+
+    // clear previous errors, if any
+    function clearAjaxErrors() {
+        $(errorSpan).empty();
+        $(errorsDiv).hide();
+    }
+
 </script>
 {{end}}

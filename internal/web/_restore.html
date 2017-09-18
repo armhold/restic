@@ -154,6 +154,7 @@
                     $(errorsUl).empty();
                     $(errorsDiv).hide();
 
+                    console.log("success: " + JSON.stringify(response));
                     eval(response.on_success);
                 },
                 error: showAjaxErrors

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 	"context"
+	"github.com/restic/restic/internal/filter"
 )
 
 func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
@@ -176,6 +177,8 @@ func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
 
 	restore := restoreFromForm(r)
 
+	w.Header().Set("Content-Type", "application/json")
+
 	ok, formErrors := restore.Validate()
 	if ! ok {
 		fmt.Println(formErrors)
@@ -183,7 +186,7 @@ func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, ok = findCurrRepoByName(restore.repo, WebConfig.Repos)
+	repo, ok := findCurrRepoByName(restore.repo, WebConfig.Repos)
 	if ! ok {
 		msg := fmt.Sprintf("error retrieving repo: %s", restore.repo)
 		fmt.Println(msg)
@@ -192,6 +195,67 @@ func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println("do restore: %#v\n", restore)
+
+	repository, err := OpenRepository(repo.Path, repo.Password)
+	if err != nil {
+		msg := fmt.Sprintf("error opening repo: %s", err.Error())
+		fmt.Println(msg)
+		sendErrorToJs(w, msg)
+		return
+	}
+
+	if err = repository.LoadIndex(context.TODO()); err != nil {
+		msg := fmt.Sprintf("error loading index: %s", err.Error())
+		fmt.Println(msg)
+		sendErrorToJs(w, msg)
+		return
+	}
+
+	snapshotID, err := restic.FindSnapshot(repository, restore.snapshotId)
+	if err != nil {
+		msg := fmt.Sprintf("invalid snapshot id: %q: %s", restore.snapshotId, err.Error())
+		fmt.Println(msg)
+		sendErrorToJs(w, msg)
+		return
+	}
+
+	res, err := restic.NewRestorer(repository, snapshotID)
+	if err != nil {
+		msg := fmt.Sprintf("creating restorer failed: %v", err.Error)
+		fmt.Println(msg)
+		sendErrorToJs(w, msg)
+		return
+	}
+
+	totalErrors := 0
+	res.Error = func(dir string, node *restic.Node, err error) error {
+		fmt.Printf("ignoring error for %s: %s\n", dir, err)
+		totalErrors++
+		return nil
+	}
+
+	selectedPaths := []string{restore.path}
+
+	res.SelectFilter = func(item string, dstpath string, node *restic.Node) (bool, bool) {
+		matched, childMayMatch, err := filter.List(selectedPaths, item)
+		if err != nil {
+			fmt.Printf("error for path: %v", err)
+		}
+
+		return matched, childMayMatch
+	}
+
+	fmt.Printf("restoring %s to %s\n", res.Snapshot(), restore.target)
+
+	err = res.RestoreTo(context.TODO(), restore.target)
+	if totalErrors > 0 {
+		SaveFlashToCookie(w, "warn_flash", fmt.Sprintf("There were %d errors\n", totalErrors))
+	}
+
+	w.WriteHeader(http.StatusOK)
+	executeJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/snapshots?repo=%s'\"}", repo.Name)
+	w.Write([]byte(executeJs))
+
 	fmt.Printf("sucessful exit doRestoreHandler\n")
 }
 

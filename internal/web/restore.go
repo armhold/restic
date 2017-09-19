@@ -140,7 +140,6 @@ type restore struct {
 	repo       string
 	snapshotId string
 	target     string
-	path       string
 }
 
 func restoreFromForm(r *http.Request) restore {
@@ -148,7 +147,6 @@ func restoreFromForm(r *http.Request) restore {
 	result.repo = r.FormValue("repo")
 	result.snapshotId = r.FormValue("snapshotId")
 	result.target = r.FormValue("target")
-	result.path = r.FormValue("path")
 
 	fmt.Printf("restore: %#v\n", result)
 
@@ -170,10 +168,6 @@ func (d *restore) Validate() (ok bool, errors FormErrors) {
 		errors["target"] = "target missing"
 	}
 
-	if strings.TrimSpace(d.path) == "" {
-		errors["path"] = "path missing"
-	}
-
 	return len(errors) == 0, errors
 }
 
@@ -191,7 +185,11 @@ func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err, warnings := doRestore(restore)
+	selectedPaths := getSelectedPaths(w, r)
+
+	fmt.Printf("selectedPaths: %#v\n", selectedPaths)
+
+	err, warnings := doRestore(restore, selectedPaths)
 	if err != nil {
 		fmt.Println(err)
 		sendErrorToJs(w, err.Error())
@@ -212,13 +210,13 @@ func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // returns error (fatal if non-nil), and count of warnings. Warnings may occur e.g. setting ownership bits, etc.
-func doRestore(restore restore) (error, int) {
+func doRestore(restore restore, selectedPaths []string) (error, int) {
 	repo, ok := findCurrRepoByName(restore.repo, WebConfig.Repos)
 	if ! ok {
 		return errors.Errorf("error retrieving repo: %s", restore.repo), 0
 	}
 
-	fmt.Println("do restore: %#v\n", restore)
+	fmt.Printf("do restore: %#v\n", restore)
 
 	repository, err := OpenRepository(repo.Path, repo.Password)
 	if err != nil {
@@ -246,7 +244,6 @@ func doRestore(restore restore) (error, int) {
 		return nil
 	}
 
-	selectedPaths := []string{restore.path}
 
 	res.SelectFilter = func(item string, dstpath string, node *restic.Node) (bool, bool) {
 		matched, childMayMatch, err := filter.List(selectedPaths, item)
@@ -318,10 +315,10 @@ func addRemoveRestorePathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	includedPaths := getIncludedPathsMapFromSession(w, r)
 
 	if entry.selected {
-		fmt.Printf("added: %s", entry.completePath())
+		fmt.Printf("added: %s\n", entry.completePath())
 		includedPaths.Store(entry.completePath(), true)
 	} else {
-		fmt.Printf("removed: %s", entry.completePath())
+		fmt.Printf("removed: %s\n", entry.completePath())
 		includedPaths.Delete(entry.completePath())
 	}
 
@@ -331,6 +328,19 @@ func addRemoveRestorePathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(executeJs))
 
 	fmt.Printf("successful exit addRemoveRestorePathAjaxHandler\n")
+}
+
+func getSelectedPaths(w http.ResponseWriter, r *http.Request) (result []string) {
+	includedPaths := getIncludedPathsMapFromSession(w, r)
+
+	includedPaths.Range(func(k, v interface{}) bool {
+		path := k.(string)
+		result = append(result, path)
+
+		return true
+	})
+
+	return
 }
 
 func getIncludedPathsMapFromSession(w http.ResponseWriter, r *http.Request) *sync.Map {

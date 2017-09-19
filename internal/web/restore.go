@@ -11,6 +11,7 @@ import (
 	"context"
 	"github.com/restic/restic/internal/filter"
 	"github.com/restic/restic/internal/errors"
+	"sync"
 )
 
 func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
@@ -258,6 +259,88 @@ func doRestore(restore restore) (error, int) {
 	err = res.RestoreTo(context.TODO(), restore.target)
 
 	return err, warnings
+}
+
+// a path to be restored
+type restoreEntry struct {
+	dir string
+	name string
+	selected bool
+}
+
+func (e *restoreEntry) completePath() string {
+	return filepath.Join(e.dir, e.name)
+}
+
+func restoreEntryFromForm(r *http.Request) restoreEntry {
+	result := restoreEntry{}
+	result.dir = r.FormValue("dir")
+	result.name = r.FormValue("name")
+	result.selected = r.FormValue("selected") == "true"
+
+	return result
+}
+
+func (d *restoreEntry) Validate() (ok bool, errors FormErrors) {
+	errors = make(map[string]string)
+
+	if strings.TrimSpace(d.dir) == "" {
+		errors["dir"] = "dir missing"
+	}
+
+	if strings.TrimSpace(d.name) == "" {
+		errors["name"] = "name missing"
+	}
+
+	return len(errors) == 0, errors
+}
+
+// add/remove a path to/from the restore list when user clicks checkbox
+func addRemoveRestorePathAjaxHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("enter addRemoveRestorePathAjaxHandler\n")
+
+	// TODO: ok to set session cookie, and in the same request also send JSON response?
+	session , _:= sessionManager.GetOrCreateSession(w, r)
+
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Printf("error parsing form: %s\n", err.Error())
+		return
+	}
+
+	entry := restoreEntryFromForm(r)
+	ok, errMap := entry.Validate()
+	if ! ok {
+		sendErrorMapToJs(w, errMap)
+		return
+	}
+
+	var includedPaths *sync.Map
+
+	ip, ok := session.Get("included_paths")
+	if ! ok {
+		includedPaths = &sync.Map{}
+		session.Set("included_paths", includedPaths)
+		fmt.Printf("created new includedPaths map\n")
+	} else {
+		includedPaths = ip.(*sync.Map)
+		fmt.Printf("use existing includedPaths map\n")
+	}
+
+	if entry.selected {
+		fmt.Printf("added: %s", entry.completePath())
+		includedPaths.Store(entry.completePath(), true)
+	} else {
+		fmt.Printf("removed: %s", entry.completePath())
+		includedPaths.Delete(entry.completePath())
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	executeJs := fmt.Sprintf("{\"on_success\": \"console.log('ok');\"}")
+	w.Write([]byte(executeJs))
+
+	fmt.Printf("successful exit addRemoveRestorePathAjaxHandler\n")
 }
 
 type snapshotPath struct {

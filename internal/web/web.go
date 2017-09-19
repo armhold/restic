@@ -55,6 +55,7 @@ func RunWeb(bindHost string, bindPort int) error {
 	http.HandleFunc("/nav", panicRecover(navigateRestoreHandler))
 	http.HandleFunc("/restore", panicRecover(doRestoreHandler))
 	http.HandleFunc("/deletesnapshot", panicRecover(deleteSnapshotAjaxHandler))
+	http.HandleFunc("/addrestorepath", panicRecover(addRemoveRestorePathAjaxHandler))
 
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}

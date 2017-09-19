@@ -78,9 +78,12 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	parentDir := filepath.Dir(dir)
 	linkToParentDir := nav.BrowseUrl() + "&amp;dir=" + url.QueryEscape(parentDir)
 
+	includedPaths := getIncludedPathsMapFromSession(w, r)
+
 	isSelected := func(dir, path string) bool {
 		fullPath := filepath.Join(dir, path)
-		return repo.BackupPaths.Paths[fullPath]
+		_, ok := includedPaths.Load(fullPath)
+		return ok
 	}
 
 	// create links for drop-down for navigating to parent dirs
@@ -263,8 +266,8 @@ func doRestore(restore restore) (error, int) {
 
 // a path to be restored
 type restoreEntry struct {
-	dir string
-	name string
+	dir      string
+	name     string
 	selected bool
 }
 
@@ -299,9 +302,6 @@ func (d *restoreEntry) Validate() (ok bool, errors FormErrors) {
 func addRemoveRestorePathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("enter addRemoveRestorePathAjaxHandler\n")
 
-	// TODO: ok to set session cookie, and in the same request also send JSON response?
-	session , _:= sessionManager.GetOrCreateSession(w, r)
-
 	err := r.ParseForm()
 	if err != nil {
 		fmt.Printf("error parsing form: %s\n", err.Error())
@@ -315,17 +315,7 @@ func addRemoveRestorePathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var includedPaths *sync.Map
-
-	ip, ok := session.Get("included_paths")
-	if ! ok {
-		includedPaths = &sync.Map{}
-		session.Set("included_paths", includedPaths)
-		fmt.Printf("created new includedPaths map\n")
-	} else {
-		includedPaths = ip.(*sync.Map)
-		fmt.Printf("use existing includedPaths map\n")
-	}
+	includedPaths := getIncludedPathsMapFromSession(w, r)
 
 	if entry.selected {
 		fmt.Printf("added: %s", entry.completePath())
@@ -341,6 +331,25 @@ func addRemoveRestorePathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(executeJs))
 
 	fmt.Printf("successful exit addRemoveRestorePathAjaxHandler\n")
+}
+
+func getIncludedPathsMapFromSession(w http.ResponseWriter, r *http.Request) *sync.Map {
+	// TODO: ok to set session cookie, and in the same request also send JSON response?
+	session, _ := sessionManager.GetOrCreateSession(w, r)
+
+	var includedPaths *sync.Map
+
+	ip, ok := session.Get("included_paths")
+	if ! ok {
+		includedPaths = &sync.Map{}
+		session.Set("included_paths", includedPaths)
+		fmt.Printf("created new includedPaths map\n")
+	} else {
+		includedPaths = ip.(*sync.Map)
+		fmt.Printf("use existing includedPaths map\n")
+	}
+
+	return includedPaths
 }
 
 type snapshotPath struct {

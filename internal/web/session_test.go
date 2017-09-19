@@ -28,6 +28,26 @@ func TestSessions(t *testing.T) {
 	if isNew {
 		t.Errorf("should not be new")
 	}
+
+	s1.Delete("foo")
+	result, ok = s1.Get("foo")
+	if ok {
+		t.Errorf("\"ok\" should be false; failed to delete from s1")
+	}
+
+	if result != nil {
+		t.Errorf("result not empty; failed to delete from s1: %s", result)
+	}
+
+	// now check s2; should be same results
+	result, ok = s2.Get("foo")
+	if ok {
+		t.Errorf("\"ok\" should be false; failed to delete from s2")
+	}
+
+	if result != nil {
+		t.Errorf("result not empty; failed to delete from s2: %s", result)
+	}
 }
 
 func TestSessionsConcurrency(t *testing.T) {

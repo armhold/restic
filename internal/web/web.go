@@ -13,6 +13,7 @@ import (
 var (
 	WebConfig Config
 	templates *template.Template
+	sessionManager Manager
 )
 
 func init() {

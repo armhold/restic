@@ -10,6 +10,7 @@ import (
 	"time"
 	"context"
 	"github.com/restic/restic/internal/filter"
+	"github.com/restic/restic/internal/errors"
 )
 
 func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
@@ -186,51 +187,58 @@ func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err, warnings := doRestore(restore)
+	if err != nil {
+		fmt.Println(err)
+		sendErrorToJs(w, err.Error())
+		return
+	}
+
+	if warnings > 0 {
+		SaveFlashToCookie(w, "warn_flash", fmt.Sprintf("There were %d errors\n", warnings))
+	}
+
+	SaveFlashToCookie(w, "success_flash", fmt.Sprintf("Restore successful; files saved to %s", restore.target))
+
+	w.WriteHeader(http.StatusOK)
+	executeJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/snapshots?repo=%s'\"}", restore.repo)
+	w.Write([]byte(executeJs))
+
+	fmt.Printf("sucessful exit doRestoreHandler\n")
+}
+
+// returns error (fatal if non-nil), and count of warnings. Warnings may occur e.g. setting ownership bits, etc.
+func doRestore(restore restore) (error, int) {
 	repo, ok := findCurrRepoByName(restore.repo, WebConfig.Repos)
 	if ! ok {
-		msg := fmt.Sprintf("error retrieving repo: %s", restore.repo)
-		fmt.Println(msg)
-		sendErrorToJs(w, msg)
-		return
+		return errors.Errorf("error retrieving repo: %s", restore.repo), 0
 	}
 
 	fmt.Println("do restore: %#v\n", restore)
 
 	repository, err := OpenRepository(repo.Path, repo.Password)
 	if err != nil {
-		msg := fmt.Sprintf("error opening repo: %s", err.Error())
-		fmt.Println(msg)
-		sendErrorToJs(w, msg)
-		return
+		return errors.Errorf("error opening repo: %s", err.Error()), 0
 	}
 
 	if err = repository.LoadIndex(context.TODO()); err != nil {
-		msg := fmt.Sprintf("error loading index: %s", err.Error())
-		fmt.Println(msg)
-		sendErrorToJs(w, msg)
-		return
+		return errors.Errorf("error loading index: %s", err.Error()), 0
 	}
 
 	snapshotID, err := restic.FindSnapshot(repository, restore.snapshotId)
 	if err != nil {
-		msg := fmt.Sprintf("invalid snapshot id: %q: %s", restore.snapshotId, err.Error())
-		fmt.Println(msg)
-		sendErrorToJs(w, msg)
-		return
+		return errors.Errorf("invalid snapshot id: %q: %s", restore.snapshotId, err.Error()), 0
 	}
 
 	res, err := restic.NewRestorer(repository, snapshotID)
 	if err != nil {
-		msg := fmt.Sprintf("creating restorer failed: %v", err.Error)
-		fmt.Println(msg)
-		sendErrorToJs(w, msg)
-		return
+		return errors.Errorf("creating restorer failed: %v", err.Error), 0
 	}
 
-	totalErrors := 0
+	warnings := 0
 	res.Error = func(dir string, node *restic.Node, err error) error {
 		fmt.Printf("ignoring error for %s: %s\n", dir, err)
-		totalErrors++
+		warnings++
 		return nil
 	}
 
@@ -248,15 +256,8 @@ func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("restoring %s to %s\n", res.Snapshot(), restore.target)
 
 	err = res.RestoreTo(context.TODO(), restore.target)
-	if totalErrors > 0 {
-		SaveFlashToCookie(w, "warn_flash", fmt.Sprintf("There were %d errors\n", totalErrors))
-	}
 
-	w.WriteHeader(http.StatusOK)
-	executeJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/snapshots?repo=%s'\"}", repo.Name)
-	w.Write([]byte(executeJs))
-
-	fmt.Printf("sucessful exit doRestoreHandler\n")
+	return err, warnings
 }
 
 type snapshotPath struct {

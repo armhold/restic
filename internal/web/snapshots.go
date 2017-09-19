@@ -12,6 +12,9 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("snapshotsHandler\n")
 	fmt.Printf("path: %q\n", r.URL.Path)
 
+	//session, _ := sessionManager.GetOrCreateSession(w, r)
+	//session.Set("current time", time.Now())
+
 	flash, err := ParseFlashes(w, r)
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())

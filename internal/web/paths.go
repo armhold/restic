@@ -30,7 +30,7 @@ func pathsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-	if ! ok {
+	if !ok {
 		// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
 		flash.Danger += fmt.Sprintf("error retrieving repo: %s", currRepoName)
 	}
@@ -58,7 +58,7 @@ func pathsHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("sucessful exit pathsHandler()\n")
 }
 
-func sortedPaths(repo *Repo) ([]string) {
+func sortedPaths(repo *Repo) []string {
 	var result []string
 
 	for k, _ := range repo.BackupPaths.Paths {

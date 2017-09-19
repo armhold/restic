@@ -1,8 +1,8 @@
 package web
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestSessions(t *testing.T) {

@@ -2,13 +2,13 @@ package web
 
 import (
 	"fmt"
-	"net/http"
-	"os/user"
-	"io/ioutil"
 	"github.com/restic/restic/internal/errors"
-	"os"
-	"path/filepath"
+	"io/ioutil"
+	"net/http"
 	"net/url"
+	"os"
+	"os/user"
+	"path/filepath"
 	"sort"
 )
 
@@ -76,7 +76,7 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 	linkToParentDir := nav.BrowseUrl() + "&amp;dir=" + url.QueryEscape(parentDir)
 
 	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-	if ! ok {
+	if !ok {
 		// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
 		flash.Danger += fmt.Sprintf("error retrieving repo: %s", currRepoName)
 	} else {
@@ -93,7 +93,7 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 	var dirLinks []dirLink
 	d := dir
 	for d != filepath.VolumeName(d) && d != "/" {
-		d = filepath.Dir(d);
+		d = filepath.Dir(d)
 		dl := dirLink{Dir: d, Link: linkToPath(d)}
 		dirLinks = append(dirLinks, dl)
 	}
@@ -167,7 +167,7 @@ func addDeletePathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	currRepoName := r.FormValue("repo")
 	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
 
-	if ! ok {
+	if !ok {
 		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", repoName))
 		return
 	}

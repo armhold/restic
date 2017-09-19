@@ -28,7 +28,7 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-	if ! ok {
+	if !ok {
 		// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
 		flash.Danger += fmt.Sprintf("error retrieving repo: %s", currRepoName)
 	}
@@ -78,7 +78,7 @@ func addDeleteExcludeAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	currRepoName := r.FormValue("repo")
 	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
 
-	if ! ok {
+	if !ok {
 		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", repoName))
 		return
 	}
@@ -109,7 +109,7 @@ func addDeleteExcludeAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(executeJs))
 }
 
-func sortedExcludes(repo *Repo) ([]string) {
+func sortedExcludes(repo *Repo) []string {
 	result := repo.BackupPaths.GetExcludes()
 
 	sort.Slice(result, func(i, j int) bool {

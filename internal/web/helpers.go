@@ -1,19 +1,19 @@
 package web
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"net/url"
 	"time"
-	"fmt"
 )
 
 // misc rails-style template helpers
 
 var Helpers = template.FuncMap{
-	"HomePath":     homePath,
-	"RepoPath":     repoUrl,
-	"FormatTime":   FormatTime,
+	"HomePath":   homePath,
+	"RepoPath":   repoUrl,
+	"FormatTime": FormatTime,
 }
 
 func homePath() string {
@@ -75,8 +75,6 @@ func (n *Navigation) RestoreUrl(repo, snapshotId string) string {
 	restoreUrl.RawQuery = q.Encode()
 	return restoreUrl.String()
 }
-
-
 
 func (n *Navigation) CssForTab(tab string) string {
 	if n.req.URL.Path[1:] == tab {

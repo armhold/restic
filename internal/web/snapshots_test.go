@@ -1,8 +1,8 @@
 package web
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
 func TestSplitSubdirs(t *testing.T) {

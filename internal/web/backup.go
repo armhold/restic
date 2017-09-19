@@ -1,18 +1,18 @@
 package web
 
 import (
-	"fmt"
-	"net/http"
-	"path/filepath"
-	"github.com/restic/restic/internal/archiver"
-	"github.com/restic/restic/internal/restic"
-	"github.com/restic/restic/internal/errors"
-	"os"
-	"github.com/restic/restic/internal/fs"
 	"context"
+	"fmt"
+	"github.com/restic/restic/internal/archiver"
+	"github.com/restic/restic/internal/errors"
 	"github.com/restic/restic/internal/filter"
-	"time"
+	"github.com/restic/restic/internal/fs"
+	"github.com/restic/restic/internal/restic"
+	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 func backupHandler(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +37,7 @@ func backupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-	if ! ok {
+	if !ok {
 		// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
 		flash.Danger += fmt.Sprintf("error retrieving repo: %s", currRepoName)
 	}
@@ -79,7 +79,7 @@ func runBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	if ! ok {
+	if !ok {
 		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", currRepoName))
 		return
 	}

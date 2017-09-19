@@ -13,13 +13,13 @@ import (
 // Config contains all the persistent configuration for the repos managed by the web interface
 type Config struct {
 	Repos    []*Repo `json:"Repos"`
-	Filepath string `json:"-"`
+	Filepath string  `json:"-"`
 }
 
 type Repo struct {
-	Name        string      `json:"Name"`     // "local repo"
-	Path        string      `json:"Path"`     //  "b2:bucket-Name/Path"
-	Password    string      `json:"Password"` // TODO: encrypt?
+	Name        string       `json:"Name"`     // "local repo"
+	Path        string       `json:"Path"`     //  "b2:bucket-Name/Path"
+	Password    string       `json:"Password"` // TODO: encrypt?
 	BackupPaths *BackupPaths `json:"BackupPaths"`
 }
 
@@ -46,8 +46,8 @@ func (b *BackupPaths) GetExcludes() (result []string) {
 
 func NewRepo(name, path, password string) *Repo {
 	return &Repo{Name: name,
-		Path: path,
-		Password: password,
+		Path:        path,
+		Password:    password,
 		BackupPaths: NewBackupPaths(),
 	}
 }

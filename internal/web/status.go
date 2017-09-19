@@ -1,11 +1,11 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
-	"encoding/json"
 )
 
 var (
@@ -95,8 +95,8 @@ func UpdateStatus(s BackupStatus) {
 	count := 0
 
 Loop:
-// loop in case there are multiple clients waiting concurrently; we'll send the same status to each of them.
-// when no clients are waiting, then we break
+	// loop in case there are multiple clients waiting concurrently; we'll send the same status to each of them.
+	// when no clients are waiting, then we break
 
 	for {
 		select {

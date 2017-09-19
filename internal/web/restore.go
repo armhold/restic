@@ -1,17 +1,17 @@
 package web
 
 import (
-	"github.com/restic/restic/internal/restic"
-	"path/filepath"
-	"net/url"
-	"net/http"
-	"fmt"
-	"strings"
-	"time"
 	"context"
-	"github.com/restic/restic/internal/filter"
+	"fmt"
 	"github.com/restic/restic/internal/errors"
+	"github.com/restic/restic/internal/filter"
+	"github.com/restic/restic/internal/restic"
+	"net/http"
+	"net/url"
+	"path/filepath"
+	"strings"
 	"sync"
+	"time"
 )
 
 func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +49,7 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-	if ! ok {
+	if !ok {
 		msg := fmt.Sprintf("error retrieving repo: %s", currRepoName)
 		fmt.Println(msg)
 		SaveFlashToCookie(w, "danger_flash", msg)
@@ -92,7 +92,7 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	var dirLinks []dirLink
 	d := dir
 	for d != filepath.VolumeName(d) && d != "/" {
-		d = filepath.Dir(d);
+		d = filepath.Dir(d)
 		dl := dirLink{Dir: d, Link: linkToPath(d)}
 		dirLinks = append(dirLinks, dl)
 	}
@@ -179,7 +179,7 @@ func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	ok, formErrors := restore.Validate()
-	if ! ok {
+	if !ok {
 		fmt.Println(formErrors)
 		sendErrorMapToJs(w, formErrors)
 		return
@@ -212,7 +212,7 @@ func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
 // returns error (fatal if non-nil), and count of warnings. Warnings may occur e.g. setting ownership bits, etc.
 func doRestore(restore restore, selectedPaths []string) (error, int) {
 	repo, ok := findCurrRepoByName(restore.repo, WebConfig.Repos)
-	if ! ok {
+	if !ok {
 		return errors.Errorf("error retrieving repo: %s", restore.repo), 0
 	}
 
@@ -243,7 +243,6 @@ func doRestore(restore restore, selectedPaths []string) (error, int) {
 		warnings++
 		return nil
 	}
-
 
 	res.SelectFilter = func(item string, dstpath string, node *restic.Node) (bool, bool) {
 		matched, childMayMatch, err := filter.List(selectedPaths, item)
@@ -307,7 +306,7 @@ func addRemoveRestorePathAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	entry := restoreEntryFromForm(r)
 	ok, errMap := entry.Validate()
-	if ! ok {
+	if !ok {
 		sendErrorMapToJs(w, errMap)
 		return
 	}
@@ -350,7 +349,7 @@ func getIncludedPathsMapFromSession(w http.ResponseWriter, r *http.Request) *syn
 	var includedPaths *sync.Map
 
 	ip, ok := session.Get("included_paths")
-	if ! ok {
+	if !ok {
 		includedPaths = &sync.Map{}
 		session.Set("included_paths", includedPaths)
 		fmt.Printf("created new includedPaths map\n")
@@ -428,7 +427,7 @@ func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*s
 			}
 		}
 
-		if ! found {
+		if !found {
 			return result, fmt.Errorf("failed to find %s in snapshot", d)
 		}
 	}

@@ -1,18 +1,18 @@
 package web
 
 import (
-	"io"
 	"crypto/rand"
 	"encoding/base64"
-	"sync"
 	"fmt"
-	"net/url"
+	"io"
 	"net/http"
+	"net/url"
+	"sync"
 	"time"
 )
 
 const (
-	cookieName = "RESTIC_SESSION_ID"
+	cookieName  = "RESTIC_SESSION_ID"
 	maxLifeTime = time.Hour / time.Second // time in seconds before client-side expiration. TODO: server-side GC of stale cookies
 )
 

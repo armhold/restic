@@ -1,11 +1,11 @@
 package web
 
 import (
+	"context"
 	"fmt"
 	"github.com/restic/restic/internal/restic"
 	"net/http"
 	"strings"
-	"context"
 )
 
 func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
@@ -121,7 +121,7 @@ func deleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	currRepo, ok := findCurrRepoByName(d.repo, WebConfig.Repos)
 
-	if ! ok {
+	if !ok {
 		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", d.repo))
 		return
 	}
@@ -142,7 +142,7 @@ func deleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(redirectJs))
 }
 
-func removeSnapshot(repo *Repo, snapId string) (error) {
+func removeSnapshot(repo *Repo, snapId string) error {
 	r, err := OpenRepository(repo.Path, repo.Password)
 	if err != nil {
 		return err

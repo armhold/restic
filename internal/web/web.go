@@ -1,18 +1,18 @@
 package web
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
-	"encoding/json"
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
 )
 
 var (
-	WebConfig Config
-	templates *template.Template
+	WebConfig      Config
+	templates      *template.Template
 	sessionManager Manager
 )
 
@@ -20,7 +20,7 @@ func init() {
 
 	// get path to templates dir relative to this source file
 	_, filename, _, ok := runtime.Caller(0)
-	if ! ok {
+	if !ok {
 		panic("unable to get path to web.go")
 	}
 

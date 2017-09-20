@@ -26,10 +26,7 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#" data-toggle="modal" data-target="#addRepoModal">NEW Repo</a>
                 </li>
-
-                <div class="dropdown-divider"></div>
             </ul>
-
         </nav>
 
         <main class="col-sm-9 ml-sm-auto col-md-10 pt-3" role="main">
@@ -56,10 +53,6 @@
                     <a class="nav-link {{.Nav.CssForTab "browse"}}" href="{{.Nav.BrowseUrl}}">Browse</a>
                 </li>
             </ul>
-            {{end}}
-
-            {{ if eq .Nav.Tab "paths"}}
-            {{template "paths" . }}
             {{end}}
 
             {{ if eq .Nav.Tab "excludes"}}

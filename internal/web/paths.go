@@ -51,7 +51,7 @@ func pathsHandler(w http.ResponseWriter, r *http.Request) {
 		Paths:        sortedPaths(repo),
 	}
 
-	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
+	if err := templates.ExecuteTemplate(w, "paths.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
 

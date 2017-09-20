@@ -41,7 +41,7 @@ func scheduleHandler(w http.ResponseWriter, r *http.Request) {
 		Nav:          &Navigation{req: r, Tab: "schedule"},
 	}
 
-	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
+	if err := templates.ExecuteTemplate(w, "schedule.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
 

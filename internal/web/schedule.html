@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+{{template "header" . }}
+<body>
+
+{{template "nav" . }}
+
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-sm-3 col-md-2 d-none d-sm-block bg-light sidebar">
+            <ul class="nav nav-pills flex-column">
+
+                {{if .Repos}}
+                {{range .Repos}}
+                <li class="nav-item">
+                    <a class="nav-link {{call $.Css_class .Name}}" href="{{RepoPath .}}">{{.Name}}</a>
+                </li>
+                {{end}}
+
+                {{else}}
+                <li class="nav-item">
+                    <span class="nav-link">No repos yet.</span>
+                </li>
+                {{end}}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-toggle="modal" data-target="#addRepoModal">NEW Repo</a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="col-sm-9 ml-sm-auto col-md-10 pt-3" role="main">
+            {{template "flash" .Flash }}
+
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.BackupUrl}}">Backup</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.SnapshotsUrl}}">Snapshots</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.PathsUrl}}">Paths</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.ExcludesUrl}}">Exclusions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{.Nav.ScheduleUrl}}">Schedule</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.BrowseUrl}}">Browse</a>
+                </li>
+            </ul>
+
+            <br/>
+            <span>
+                TODO: backup schedule for "{{.CurrRepoName}}".
+            </span>
+            <br/>
+            <br/>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Sun</th>
+                        <th>Mon</th>
+                        <th>Tue</th>
+                        <th>Wed</th>
+                        <th>Thu</th>
+                        <th>Fri</th>
+                        <th>Sat</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+
+                    <tr>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                        <td>--</td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+            {{template "add_repo_modal"}}
+        </main>
+    </div>
+</div>
+{{template "footer" . }}
+</body>
+</html>

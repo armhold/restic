@@ -29,43 +29,45 @@
 </div>
 
 <br/>
-<div class="table-responsive">
-    <table class="table table-sm table-striped restic-selection-table">
-        <tbody>
+<div class="row">
+    <div class="col-md-8">
+        <table class="table table-sm table-striped restic-selection-table">
+            <tbody>
 
-        {{range $i, $f := .Files}}
-        <tr>
-            <td>
-                <code>
-                {{if $f.IsDir}}
-                <a href="{{call $.LinkToFileInDir .Name}}">{{$f.Name}}</a>
-                {{else}}
-                {{$f.Name}}
-                {{end}}
-                </code>
-            </td>
+            {{range $i, $f := .Files}}
+            <tr>
+                <td>
+                    <code>
+                    {{if $f.IsDir}}
+                    <a href="{{call $.LinkToFileInDir .Name}}">{{$f.Name}}</a>
+                    {{else}}
+                    {{$f.Name}}
+                    {{end}}
+                    </code>
+                </td>
 
-            <td>
-                <div class="container">
-                    <div class="checkbox-round">
-                        <input type="checkbox" id="checkbox-{{$i}}"
-                               data-repo="{{$.CurrRepoName}}"
-                               data-dir="{{$.Dir}}"
-                               data-path="{{$f.Name}}"
-                               title="{{$f.Name}}"
-                               {{if call $.IsSelected $.Dir $f.Name}}
-                               checked
-                               {{end}}
-                        />
-                        <label for="checkbox-{{$i}}"></label>
+                <td>
+                    <div class="container">
+                        <div class="checkbox-round">
+                            <input type="checkbox" id="checkbox-{{$i}}"
+                                   data-repo="{{$.CurrRepoName}}"
+                                   data-dir="{{$.Dir}}"
+                                   data-path="{{$f.Name}}"
+                                   title="{{$f.Name}}"
+                                   {{if call $.IsSelected $.Dir $f.Name}}
+                                   checked
+                                   {{end}}
+                            />
+                            <label for="checkbox-{{$i}}"></label>
+                        </div>
                     </div>
-                </div>
-            </td>
-        </tr>
-        {{end}}
+                </td>
+            </tr>
+            {{end}}
 
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>

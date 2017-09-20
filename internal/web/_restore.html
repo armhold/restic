@@ -1,5 +1,7 @@
 {{define "restore"}}
 
+<br/>
+
 <!--TODO: dropdown copied from _browse.html-->
 <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
     <div class="btn-group mr-2" role="group" aria-label="First group">
@@ -33,43 +35,44 @@
 </div>
 <br/>
 
-<div class="table-responsive">
-    <table class="table table-sm table-striped restic-selection-table">
-        <tbody>
+<div class="row">
+    <div class="col-md-8">
+        <table class="table table-sm table-striped restic-selection-table">
+            <tbody>
+            {{range $i, $f := .Files}}
+            <tr>
+                <td>
+                    <code>
+                        {{if $f.IsDir}}
+                        <a href="{{call $.LinkToFileInDir .Name}}">{{$f.Name}}</a>
+                        {{else}}
+                        {{$f.Name}}
+                        {{end}}
+                    </code>
+                </td>
 
-        {{range $i, $f := .Files}}
-        <tr>
-            <td>
-                <code>
-                    {{if $f.IsDir}}
-                    <a href="{{call $.LinkToFileInDir .Name}}">{{$f.Name}}</a>
-                    {{else}}
-                    {{$f.Name}}
-                    {{end}}
-                </code>
-            </td>
-
-            <td>
-                <div class="container">
-                    <div class="checkbox-round">
-                        <input type="checkbox" id="checkbox-{{$i}}"
-                               data-dir="{{$.Dir}}"
-                               data-name="{{$f.Name}}"
-                               title="{{$f.Name}}"
-                               {{if call $.IsSelected $.Dir $f.Name}}
-                               checked
-                               {{end}}
-                        />
-                        <label for="checkbox-{{$i}}"></label>
+                <td>
+                    <div class="container">
+                        <div class="checkbox-round">
+                            <input type="checkbox" id="checkbox-{{$i}}"
+                                   data-dir="{{$.Dir}}"
+                                   data-name="{{$f.Name}}"
+                                   title="{{$f.Name}}"
+                                   {{if call $.IsSelected $.Dir $f.Name}}
+                                   checked
+                                   {{end}}
+                            />
+                            <label for="checkbox-{{$i}}"></label>
+                        </div>
                     </div>
-                </div>
-            </td>
+                </td>
 
-        </tr>
-        {{end}}
+            </tr>
+            {{end}}
 
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 

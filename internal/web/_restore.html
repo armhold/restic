@@ -4,7 +4,7 @@
 <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
     <div class="btn-group mr-2" role="group" aria-label="First group">
         <div class="dropdown show">
-            <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <span class="fa fa-folder"></span> {{.Dir}}
             </a>
 
@@ -17,7 +17,7 @@
     </div>
 
     <div class="btn-group mr-2" role="group">
-        <a class="btn btn-outline-danger" href="#">Cancel Restore</a>
+        <a class="btn btn-secondary" href="#">Cancel Restore</a>
     </div>
 
     <div class="btn-group mr-2" role="group">
@@ -25,13 +25,13 @@
             <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
             <input type="hidden" name="snapshotId" value="{{$.SnapshotId}}">
             <input type="hidden" name="target" value="">
-            <a id="begin-restore-button" class="btn btn-success" href="#"
+            <a id="begin-restore-button" class="btn btn-primary" href="#"
                data-toggle="modal" data-target="#restoreModal"
                title="after adding files, click to begin restore">Begin Restore</a>
         </form>
     </div>
 </div>
-
+<br/>
 
 <div class="table-responsive">
     <table class="table table-sm table-striped restic-selection-table">

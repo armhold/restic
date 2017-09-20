@@ -40,10 +40,10 @@
                     <a class="nav-link" href="{{.Nav.SnapshotsUrl}}">Snapshots</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="{{.Nav.PathsUrl}}">Paths</a>
+                    <a class="nav-link" href="{{.Nav.PathsUrl}}">Paths</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{.Nav.ExcludesUrl}}">Exclusions</a>
+                    <a class="nav-link active" href="{{.Nav.ExcludesUrl}}">Exclusions</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{.Nav.ScheduleUrl}}">Schedule</a>
@@ -53,50 +53,43 @@
                 </li>
             </ul>
 
-            <br/>
-            <span>
-    The following paths will be included in the backups for "{{.CurrRepoName}}".
-            </span>
-            <br/>
-            <br/>
-
-            <div class="errors" aria-hidden="true" style="display: none;">
-                <ul class="errors alert alert-danger">
-
-                </ul>
-            </div>
-
             <div class="table-responsive">
-                <table class="table table-sm table-striped">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Exclusion</th>
+                    </tr>
+                    </thead>
                     <tbody>
 
                     <tr>
                         <td>&nbsp;</td>
                         <td>
-                            <a class="btn btn-success" href="#" data-toggle="modal" data-target="#addPathModal">Add a Path</a>
+                            <a class="btn btn-success" href="#" data-toggle="modal" data-target="#addExcludeModal">Add an Exclusion</a>
                         </td>
                     </tr>
 
-                    {{ range $i, $f := .Paths}}
+                    {{ range $i, $f := .Excludes}}
                     <tr>
                         <td><code>{{.}}</code></td>
                         <td>
                             <!-- ajax will specify method="DELETE" -->
-                            <form action="/addpath" method="post">
+                            <form action="/addexclude" method="post">
                                 <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
-                                <input type="hidden" name="dir" value="{{.}}">
-                                <button type="submit" class="btn btn-outline-danger delete-path">Remove</button>
+                                <input type="hidden" name="exclude" value="{{.}}">
+                                <button type="submit" class="btn btn-outline-danger delete-exclude">Remove</button>
                             </form>
                         </td>
                     </tr>
                     {{end}}
+
                     </tbody>
                 </table>
             </div>
 
             <script>
                 $(function () {
-                    $('.delete-path').click(function(e) {
+                    $('.delete-exclude').click(function (e) {
                         e.preventDefault();
 
                         var form = $(this).closest('form');
@@ -109,9 +102,9 @@
 
                         $.ajax({
                             type: "DELETE",
-                            url: "/addpath?" + $(form).serialize(),
+                            url: "/addexclude?" + $(form).serialize(),
                             // can't use 'data:' with delete; params must appear in URL
-                            success: function(response) {
+                            success: function (response) {
                                 $(errorsUl).empty();
                                 $(errorsDiv).hide();
 
@@ -121,14 +114,14 @@
                                 // TODO: animate change rather than reload
                                 window.location.href = window.location.href;
                             },
-                            error: function(xhr, status, error) {
+                            error: function (xhr, status, error) {
                                 console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
                                 console.log('error: got xhr.responseText: ' + xhr.responseText);
                                 console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
 
                                 // clear previous errors, if any
                                 $(errorsUl).empty();
-                                $.each(xhr.responseJSON, function( key, value ) {
+                                $.each(xhr.responseJSON, function (key, value) {
                                     li = '<li>' + value + '</li>'; //showing only the first error.
                                     $(errorsUl).append(li);
                                 });
@@ -140,7 +133,7 @@
                 });
             </script>
 
-            {{template "add_path_modal" . }}
+            {{template "add_exclude_modal" . }}
             {{template "add_repo_modal"}}
 
         </main>
@@ -149,7 +142,6 @@
 {{template "footer" . }}
 </body>
 </html>
-
 
 
 

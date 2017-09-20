@@ -50,7 +50,7 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 		Excludes:     sortedExcludes(repo),
 	}
 
-	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
+	if err := templates.ExecuteTemplate(w, "excludes.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
 

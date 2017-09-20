@@ -55,10 +55,6 @@
             </ul>
             {{end}}
 
-            {{ if eq .Nav.Tab "excludes"}}
-            {{template "excludes" . }}
-            {{end}}
-
             {{ if eq .Nav.Tab "schedule"}}
             {{template "schedule" . }}
             {{end}}

@@ -58,14 +58,6 @@
             </ul>
             {{end}}
 
-            {{ if eq .Nav.Tab "backup"}}
-            {{template "backup" . }}
-            {{end}}
-
-            {{ if eq .Nav.Tab "snapshots"}}
-            {{template "snapshots" . }}
-            {{end}}
-
             {{ if eq .Nav.Tab "paths"}}
             {{template "paths" . }}
             {{end}}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+{{template "header" . }}
+<body>
+
+{{template "nav" . }}
+
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-sm-3 col-md-2 d-none d-sm-block bg-light sidebar">
+            <ul class="nav nav-pills flex-column">
+
+                {{if .Repos}}
+                {{range .Repos}}
+                <li class="nav-item">
+                    <a class="nav-link {{call $.Css_class .Name}}" href="{{RepoPath .}}">{{.Name}}</a>
+                </li>
+                {{end}}
+
+                {{else}}
+                <li class="nav-item">
+                    <span class="nav-link">No repos yet.</span>
+                </li>
+                {{end}}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-toggle="modal" data-target="#addRepoModal">NEW Repo</a>
+                </li>
+
+                <div class="dropdown-divider"></div>
+            </ul>
+
+        </nav>
+
+        <main class="col-sm-9 ml-sm-auto col-md-10 pt-3" role="main">
+            {{template "flash" .Flash }}
+
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.BackupUrl}}">Backup</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{.Nav.SnapshotsUrl}}">Snapshots</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.PathsUrl}}">Paths</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.ExcludesUrl}}">Exclusions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.ScheduleUrl}}">Schedule</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.BrowseUrl}}">Browse</a>
+                </li>
+            </ul>
+
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Restore</th>
+                        <th>Delete</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    {{if .Snapshots}}
+                    {{range .Snapshots}}
+                    <tr>
+                        <td>{{.ID.Str}}</td>
+                        <td>{{.Time | FormatTime}}</td>
+                        <td>
+                            <a href="{{$.Nav.RestoreUrl $.CurrRepoName .ID.Str}}" class="btn btn-info">Restore</a>
+                        </td>
+                        <td>
+                            <form action="/deletesnapshot" method="post">
+                                <input type="hidden" name="repo" value="{{$.CurrRepoName}}">
+                                <input type="hidden" name="snapshotId" value="{{.ID.Str}}">
+                                <button type="button" class="btn btn-outline-danger delete-snapshot" data-toggle="modal" data-target="#deleteSnapshotModal">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {{end}}
+                    {{else}}
+                    <tr><td colspan="4">
+                        No snapshots yet.
+                    </td></tr>
+                    {{end}}
+
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal fade" id="deleteSnapshotModal" tabindex="-1" role="dialog" aria-labelledby="deleteSnapshotModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteSnapshotModalLabel">Delete a Snapshot</h5>
+
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+
+                            <div class="modal-errors" aria-hidden="true" style="display: none;">
+                                <ul class="modal-errors alert alert-danger">
+
+                                </ul>
+                            </div>
+
+                            <div>
+                                Are you sure you want to delete the snaphot <span id="snap-to-be-deleted"></span>?
+                            </div>
+
+                            <form id="add-exclude-form" action="/deletesnapshot" method="delete">
+                                <div class="form-group">
+                                    <input type="hidden" name="repo" value="{{.CurrRepoName}}">
+                                </div>
+                            </form>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="delete-snapshot-submit">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{template "add_repo_modal"}}
+
+            <script>
+
+                $(function () {
+                    var form;
+
+                    // button that brings up the modal
+                    $('.delete-snapshot').click(function (e) {
+                        e.preventDefault();
+
+                        // remember form so it can be submitted if user clicks "OK" in modal
+                        form = $(this).closest('form');
+
+                        // update snap id in modal
+                        var snapshotId = $(form).find('input[name="snapshotId"]').attr('value');
+                        $('#snap-to-be-deleted').text(snapshotId);
+                        console.log('delete: ' + snapshotId);
+                    });
+
+                    // OK button in modal
+                    $('#delete-snapshot-submit').click(function (e) {
+                        e.preventDefault();
+
+                        var modal = $('#deleteSnapshotModal');
+                        var errorsDiv = $(modal).find('.modal-errors')[0];
+                        var errorsUl = $(modal).find('ul.modal-errors')[0];
+
+                        $.ajax({
+                            type: "POST",
+                            url: "/deletesnapshot",
+                            data: $(form).serialize(),
+                            success: function (response) {
+                                modal.modal('hide');
+                                $(errorsUl).empty();
+                                $(errorsDiv).hide();
+
+                                eval(response.on_success);
+                            },
+                            error: function (xhr, status, error) {
+                                // no real error handling here- actual errors will be displayed in flash after redirect
+
+                                console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
+                                console.log('error: got xhr.responseText: ' + xhr.responseText);
+                                console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
+                            }
+                        });
+                        return false;
+                    });
+                });
+
+            </script>
+
+        </main>
+    </div>
+</div>
+{{template "footer" . }}
+</body>
+</html>
+
+
+

@@ -129,7 +129,7 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 		SnapSelected:    true,
 	}
 
-	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
+	if err := templates.ExecuteTemplate(w, "restore.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
 

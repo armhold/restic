@@ -126,7 +126,7 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		ParentDirLinks:  dirLinks,
 	}
 
-	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
+	if err := templates.ExecuteTemplate(w, "browse.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
 

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+{{template "header" . }}
+<body>
+
+{{template "nav" . }}
+
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-sm-3 col-md-2 d-none d-sm-block bg-light sidebar">
+            <ul class="nav nav-pills flex-column">
+
+                {{if .Repos}}
+                {{range .Repos}}
+                <li class="nav-item">
+                    <a class="nav-link {{call $.Css_class .Name}}" href="{{RepoPath .}}">{{.Name}}</a>
+                </li>
+                {{end}}
+
+                {{else}}
+                <li class="nav-item">
+                    <span class="nav-link">No repos yet.</span>
+                </li>
+                {{end}}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-toggle="modal" data-target="#addRepoModal">NEW Repo</a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="col-sm-9 ml-sm-auto col-md-10 pt-3" role="main">
+            {{template "flash" .Flash }}
+
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.BackupUrl}}">Backup</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.SnapshotsUrl}}">Snapshots</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.PathsUrl}}">Paths</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.ExcludesUrl}}">Exclusions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.ScheduleUrl}}">Schedule</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{.Nav.BrowseUrl}}">Browse</a>
+                </li>
+            </ul>
+
+            <br/>
+            <span>Restore in progress.</span>
+            <br/>
+            <br/>
+
+            <!--TODO: dropdown copied from browse.html-->
+            <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+
+                <div class="btn-group mr-2" role="group">
+                    <a class="btn btn-secondary" href="#">Cancel Restore</a>
+                </div>
+
+            </div>
+            <br/>
+
+
+
+            <div class="modal fade" id="restoreModal" tabindex="-1" role="dialog" aria-labelledby="restoreModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="restoreModalLabel">Restore a File or Directory</h5>
+
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+
+                            <div class="alert alert-danger fade show" role="alert" style="display: none;">
+                                <strong id="ajax-error">placeholder!</strong>
+                            </div>
+
+                            <div>
+                                <h6>Restoring: <code id="filename-to-be-restored"></code></h6>
+                            </div>
+
+                            <form id="confirm-restore-form" action="/restore" method="post">
+                                <div class="form-group">
+                                    <label for="target" class="form-control-label">Choose a directory to restore the file(s) to:</label>
+                                    <input type="text" class="form-control" id="target" name="target" autocomplete="off">
+                                    <input type="hidden" name="repo" value="{{.CurrRepoName}}">
+                                </div>
+                            </form>
+
+                            <div>
+                                <small class="form-text text-muted">
+                                    Enter a path where the files will be restored. New directories will be created if necessary.
+                                </small>
+                            </div>
+
+
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-success" id="restore-submit">Restore</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{template "add_repo_modal"}}
+        </main>
+    </div>
+</div>
+{{template "footer" . }}
+</body>
+</html>

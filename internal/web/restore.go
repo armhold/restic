@@ -211,6 +211,14 @@ func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
 
 // returns error (fatal if non-nil), and count of warnings. Warnings may occur e.g. setting ownership bits, etc.
 func doRestore(restore restore, selectedPaths []string) (error, int) {
+	rip := GetRestoreInProgressInstance()
+	defer rip.End()
+
+	ctx, err := rip.Begin()
+	if err != nil {
+		return err, 0
+	}
+
 	repo, ok := findCurrRepoByName(restore.repo, WebConfig.Repos)
 	if !ok {
 		return errors.Errorf("error retrieving repo: %s", restore.repo), 0
@@ -255,7 +263,7 @@ func doRestore(restore restore, selectedPaths []string) (error, int) {
 
 	fmt.Printf("restoring %s to %s\n", res.Snapshot(), restore.target)
 
-	err = res.RestoreTo(context.TODO(), restore.target)
+	err = res.RestoreTo(ctx, restore.target)
 
 	return err, warnings
 }

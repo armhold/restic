@@ -13,7 +13,7 @@
                 {{if .Repos}}
                 {{range .Repos}}
                 <li class="nav-item">
-                    <a class="nav-link {{call $.Css_class .Name}}" href="{{RepoPath .}}">{{.Name}}</a>
+                    <a class="nav-link" href="{{RepoPath .}}">{{.Name}}</a>
                 </li>
                 {{end}}
 
@@ -58,67 +58,97 @@
             <br/>
             <br/>
 
-            <!--TODO: dropdown copied from browse.html-->
             <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-
                 <div class="btn-group mr-2" role="group">
-                    <a class="btn btn-secondary" href="#">Cancel Restore</a>
+                    <a id="stop-restore-button" class="btn btn-secondary" href="#" data-toggle="modal" data-target="#confirmStopRestoreModal" >Stop Restore</a>
                 </div>
-
             </div>
             <br/>
-
-
-
-            <div class="modal fade" id="restoreModal" tabindex="-1" role="dialog" aria-labelledby="restoreModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="restoreModalLabel">Restore a File or Directory</h5>
-
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-
-                            <div class="alert alert-danger fade show" role="alert" style="display: none;">
-                                <strong id="ajax-error">placeholder!</strong>
-                            </div>
-
-                            <div>
-                                <h6>Restoring: <code id="filename-to-be-restored"></code></h6>
-                            </div>
-
-                            <form id="confirm-restore-form" action="/restore" method="post">
-                                <div class="form-group">
-                                    <label for="target" class="form-control-label">Choose a directory to restore the file(s) to:</label>
-                                    <input type="text" class="form-control" id="target" name="target" autocomplete="off">
-                                    <input type="hidden" name="repo" value="{{.CurrRepoName}}">
-                                </div>
-                            </form>
-
-                            <div>
-                                <small class="form-text text-muted">
-                                    Enter a path where the files will be restored. New directories will be created if necessary.
-                                </small>
-                            </div>
-
-
-
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-success" id="restore-submit">Restore</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             {{template "add_repo_modal"}}
         </main>
     </div>
 </div>
+
+<div class="modal fade" id="confirmStopRestoreModal" tabindex="-1" role="dialog" aria-labelledby="confirmStopRestoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Stop Restore</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="modal-errors" aria-hidden="true" style="display: none;">
+                    <ul class="modal-errors alert alert-danger">
+
+                    </ul>
+                </div>
+
+                <div>
+                    Are you sure you want to stop the restore?
+                </div>
+
+                <form id="add-repo-form" action="/stop_restore" method="post">
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="confirm-button">Stop Restore</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $(function () {
+        var form;
+
+        // button that brings up the modal
+        $('#stop-restore-button').click(function (e) {
+            e.preventDefault();
+
+            // remember form so it can be submitted if user clicks "OK" in modal
+            form = $(this).closest('form');
+        });
+
+        // OK button in modal
+        $('#confirm-button').click(function (e) {
+            e.preventDefault();
+
+            var modal = $('#confirmStopRestoreModal');
+            var errorsDiv = $(modal).find('.modal-errors')[0];
+            var errorsUl = $(modal).find('ul.modal-errors')[0];
+
+            $.ajax({
+                type: "POST",
+                url: "/stop_restore",
+                data: $(form).serialize(),
+                success: function (response) {
+                    modal.modal('hide');
+                    $(errorsUl).empty();
+                    $(errorsDiv).hide();
+
+                    eval(response.on_success);
+                },
+                error: function (xhr, status, error) {
+                    // no real error handling here- actual errors will be displayed in flash after redirect
+
+                    console.log('got xhr: ' + xhr + ', status: ' + status + ', error: ' + error);
+                    console.log('error: got xhr.responseText: ' + xhr.responseText);
+                    console.log('error: got xhr.responseJSON: ' + xhr.responseJSON);
+                }
+            });
+            return false;
+        });
+    });
+
+</script>
+
 {{template "footer" . }}
 </body>
 </html>

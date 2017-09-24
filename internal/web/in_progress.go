@@ -60,23 +60,6 @@ func inProgressHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: code repeated in show_repos.go
-	currRepoName := r.FormValue("repo")
-	cssClassForRepo := func(repoName string) string {
-		// TODO: names might have spaces. Use id, or urlencode
-		if repoName == currRepoName {
-			return "active"
-		} else {
-			return ""
-		}
-	}
-
-	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-	if !ok {
-		// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
-		flash.Danger += fmt.Sprintf("error retrieving repo: %s", currRepoName)
-	}
-
 	data := struct {
 		Repos        []*Repo
 		CurrRepoName string
@@ -86,11 +69,8 @@ func inProgressHandler(w http.ResponseWriter, r *http.Request) {
 		Paths        []string
 	}{
 		Repos:        WebConfig.Repos,
-		CurrRepoName: currRepoName,
 		Flash:        flash,
-		Css_class:    cssClassForRepo,
 		Nav:          &Navigation{req: r, Tab: "backup"},
-		Paths:        sortedPaths(repo),
 	}
 
 	if err := templates.ExecuteTemplate(w, "in_progress.html", data); err != nil {
@@ -109,31 +89,25 @@ func inProgressAjaxHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currRepoName := r.FormValue("repo")
-	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-
 	w.Header().Set("Content-Type", "application/json")
 
-	if !ok {
-		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", currRepoName))
+	w.WriteHeader(http.StatusOK)
+	executeJs := fmt.Sprintf("{\"on_success\": \"console.log('ok');\"}")
+	w.Write([]byte(executeJs))
+}
+
+func stopRestoreAjaxHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("stopRestoreAjaxHandler\n")
+
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Printf("error parsing form: %s\n", err.Error())
 		return
 	}
 
-	go func() {
-		err := runBackup(repo)
-
-		bs := BackupStatus{RepoName: currRepoName, PercentDone: 100}
-
-		if err != nil {
-			bs.Error = fmt.Sprintf("%s: backup failed: %s", currRepoName, err.Error())
-		} else {
-			bs.StatusMsg = fmt.Sprintf("%s: backup complete", currRepoName)
-		}
-
-		UpdateStatusBlocking(bs)
-	}()
+	w.Header().Set("Content-Type", "application/json")
 
 	w.WriteHeader(http.StatusOK)
-	executeJs := fmt.Sprintf("{\"on_success\": \"backup started for %s\"}", currRepoName)
+	executeJs := fmt.Sprintf("{\"on_success\": \"console.log('ok');\"}")
 	w.Write([]byte(executeJs))
 }

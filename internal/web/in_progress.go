@@ -22,9 +22,14 @@ type RestoreInProgress struct {
 	lock       sync.Mutex
 }
 
+
+func noRestoreRunning() {
+	fmt.Printf("no restore runnong, nothing to cancel\n")
+}
+
 func GetRestoreInProgressInstance() *RestoreInProgress {
 	once.Do(func() {
-		instance = &RestoreInProgress{}
+		instance = &RestoreInProgress{CancelFunc: noRestoreRunning}
 	})
 	return instance
 }
@@ -39,7 +44,14 @@ func (r *RestoreInProgress) Begin() (context.Context, error) {
 
 	r.running = true
 
-	r.Ctx, r.CancelFunc = context.WithCancel(context.TODO())
+	ctx, cancel := context.WithCancel(context.TODO())
+
+	r.Ctx = ctx
+	r.CancelFunc = func() {
+		fmt.Printf("Cancelling restore...\n")
+		cancel()
+	}
+
 	return r.Ctx, nil
 }
 
@@ -48,6 +60,7 @@ func (r *RestoreInProgress) End() {
 	defer r.lock.Unlock()
 
 	r.running = false
+	r.CancelFunc = noRestoreRunning
 }
 
 func inProgressHandler(w http.ResponseWriter, r *http.Request) {
@@ -68,9 +81,9 @@ func inProgressHandler(w http.ResponseWriter, r *http.Request) {
 		Nav          *Navigation
 		Paths        []string
 	}{
-		Repos:        WebConfig.Repos,
-		Flash:        flash,
-		Nav:          &Navigation{req: r, Tab: "backup"},
+		Repos: WebConfig.Repos,
+		Flash: flash,
+		Nav:   &Navigation{req: r, Tab: "backup"},
 	}
 
 	if err := templates.ExecuteTemplate(w, "in_progress.html", data); err != nil {
@@ -106,6 +119,8 @@ func stopRestoreAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+
+	GetRestoreInProgressInstance().CancelFunc()
 
 	w.WriteHeader(http.StatusOK)
 	executeJs := fmt.Sprintf("{\"on_success\": \"console.log('ok');\"}")

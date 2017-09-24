@@ -231,7 +231,7 @@ func doRestore(restore restore, selectedPaths []string) (error, int) {
 		return errors.Errorf("error opening repo: %s", err.Error()), 0
 	}
 
-	if err = repository.LoadIndex(context.TODO()); err != nil {
+	if err = repository.LoadIndex(ctx); err != nil {
 		return errors.Errorf("error loading index: %s", err.Error()), 0
 	}
 

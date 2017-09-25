@@ -18,6 +18,9 @@ import (
 	"github.com/restic/restic/internal/restic"
 	"io/ioutil"
 	"os"
+	"os/signal"
+	"syscall"
+	"fmt"
 )
 
 // TODO: rename this file
@@ -168,7 +171,7 @@ func open(s string, opts options.Options) (restic.Backend, error) {
 	case "local":
 		be, err = local.Open(cfg.(local.Config))
 	case "sftp":
-		be, err = sftp.Open(cfg.(sftp.Config))
+		be, err = sftp.Open(cfg.(sftp.Config), SuspendSignalHandler, TODO_InstallSignalHandler)
 	case "s3":
 		be, err = s3.Open(cfg.(s3.Config))
 	case "gs":
@@ -224,3 +227,14 @@ func OpenRepository(path, password string) (*repository.Repository, error) {
 
 	return s, nil
 }
+
+// InstallSignalHandler listens for SIGINT and triggers the cleanup handlers.
+func TODO_InstallSignalHandler() {
+	fmt.Printf("TODO_InstallSignalHandler\n")
+}
+
+// SuspendSignalHandler removes the signal handler for SIGINT.
+func SuspendSignalHandler() {
+	signal.Reset(syscall.SIGINT)
+}
+

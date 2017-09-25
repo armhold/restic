@@ -171,8 +171,8 @@ func (d *restore) Validate() (ok bool, errors FormErrors) {
 	return len(errors) == 0, errors
 }
 
-func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("doRestoreHandler\n")
+func doRestoreAjaxHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("doRestoreAjaxHandler\n")
 
 	restore := restoreFromForm(r)
 
@@ -206,7 +206,7 @@ func doRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	executeJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/snapshots?repo=%s'\"}", restore.repo)
 	w.Write([]byte(executeJs))
 
-	fmt.Printf("sucessful exit doRestoreHandler\n")
+	fmt.Printf("sucessful exit doRestoreAjaxHandler\n")
 }
 
 // returns error (fatal if non-nil), and count of warnings. Warnings may occur e.g. setting ownership bits, etc.

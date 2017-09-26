@@ -9,18 +9,20 @@ import (
 )
 
 var (
-	lpchan = make(chan chan *BackupStatus)
+	lpchan = make(chan chan *StatusUpdate)
 )
 
 func init() {
-	//go runProducer()
+	//go runBackupSimulator()
+	//go runRestoreSimulator()
 }
 
 // long-polling status updates
 
-type BackupStatus struct {
+type StatusUpdate struct {
 	RepoName      string `json:"RepoName"`
 	PercentDone   int    `json:"PercentDone"`
+	Type          string `json:"Type"` // "BACKUP" or "RESTORE"
 	StatusMsg     string `json:"StatusMsg"`
 	Indeterminate bool   `json:"Indeterminate"`
 	Error         string `json:"Error"`
@@ -37,7 +39,7 @@ func statusAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("statusAjaxHandler waiting for request...\n")
 
-	myRequestChan := make(chan *BackupStatus)
+	myRequestChan := make(chan *StatusUpdate)
 
 	select {
 
@@ -62,15 +64,15 @@ func statusAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("sent update to client: %v\n", status)
 }
 
-func runProducer() {
-	fmt.Printf("runProducer initial sleep...")
+func runBackupSimulator() {
+	fmt.Printf("runBackupSimulator initial sleep...")
 	time.Sleep(time.Second * 5)
-	fmt.Printf("runProducer running...")
+	fmt.Printf("runBackupSimulator running...")
 
 	// forever loop from 0..100
 	for {
 		for i := 0; i <= 100; i++ {
-			status := BackupStatus{RepoName: "local1", PercentDone: i}
+			status := StatusUpdate{Type: "BACKUP", RepoName: "local1", PercentDone: i}
 			if i < 25 {
 				status.Indeterminate = true
 				status.StatusMsg = "scanning"
@@ -85,18 +87,41 @@ func runProducer() {
 			}
 			UpdateStatus(status)
 
-			fmt.Printf("runProducer: %d\n", i)
+			fmt.Printf("runBackupSimulator: %d\n", i)
 			time.Sleep(time.Millisecond * 200)
 		}
 	}
 }
 
-func UpdateStatus(s BackupStatus) {
+func runRestoreSimulator() {
+	fmt.Printf("runRestoreSimulator initial sleep...")
+	time.Sleep(time.Second * 5)
+	fmt.Printf("runRestoreSimulator running...")
+
+	for i := 0; i <= 100; i++ {
+		status := StatusUpdate{Type: "RESTORE", RepoName: "local1", PercentDone: i, Indeterminate: true}
+		if i < 25 {
+			status.StatusMsg = "scanning"
+		} else {
+			status.StatusMsg = "running"
+		}
+
+		UpdateStatus(status)
+
+		fmt.Printf("runRestoreSimulator: %d\n", i)
+		time.Sleep(time.Millisecond * 500)
+	}
+
+	status := StatusUpdate{Type: "RESTORE", RepoName: "local1", Indeterminate: false}
+	UpdateStatusBlocking(status)
+}
+
+func UpdateStatus(s StatusUpdate) {
 	count := 0
 
 Loop:
-	// loop in case there are multiple clients waiting concurrently; we'll send the same status to each of them.
-	// when no clients are waiting, then we break
+// loop in case there are multiple clients waiting concurrently; we'll send the same status to each of them.
+// when no clients are waiting, then we break
 
 	for {
 		select {
@@ -115,7 +140,7 @@ Loop:
 }
 
 // blocks the caller until a client consumes the status
-func UpdateStatusBlocking(s BackupStatus) {
+func UpdateStatusBlocking(s StatusUpdate) {
 	clientchan := <-lpchan
 	clientchan <- &s
 

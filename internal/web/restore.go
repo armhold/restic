@@ -189,21 +189,24 @@ func doRestoreAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("selectedPaths: %#v\n", selectedPaths)
 
-	err, warnings := doRestore(restore, selectedPaths)
-	if err != nil {
-		fmt.Println(err)
-		sendErrorToJs(w, err.Error())
-		return
-	}
+	go func() {
+		bs := StatusUpdate{Type: "RESTORE", RepoName: restore.repo, PercentDone: 100, Indeterminate: false}
 
-	if warnings > 0 {
-		SaveFlashToCookie(w, "warn_flash", fmt.Sprintf("There were %d errors\n", warnings))
-	}
+		err, warnings := doRestore(restore, selectedPaths)
+		if err != nil {
+			fmt.Println(err)
+			bs.Error = fmt.Sprintf("%s: restore failed: %s", restore.repo, err.Error())
+		} else {
+			bs.StatusMsg = fmt.Sprintf("%s: restore completed with %d warnings", restore.repo, warnings)
+		}
 
-	SaveFlashToCookie(w, "success_flash", fmt.Sprintf("Restore successful; files saved to %s", restore.target))
+		time.Sleep(2000)
+		UpdateStatusBlocking(bs)
+		fmt.Printf("return from UpdateStatusBlocking: %#v\n", bs)
+	}()
 
 	w.WriteHeader(http.StatusOK)
-	executeJs := fmt.Sprintf("{\"on_success\": \"window.location.href='/snapshots?repo=%s'\"}", restore.repo)
+	executeJs := fmt.Sprintf("{\"on_success\": \"console.log('restore started');\"}")
 	w.Write([]byte(executeJs))
 
 	fmt.Printf("sucessful exit doRestoreAjaxHandler\n")
@@ -217,6 +220,10 @@ func doRestore(restore restore, selectedPaths []string) (error, int) {
 	ctx, err := rip.Begin()
 	if err != nil {
 		return err, 0
+	}
+
+	if true {
+		return errors.New("oopsie"), 0
 	}
 
 	repo, ok := findCurrRepoByName(restore.repo, WebConfig.Repos)
@@ -264,7 +271,6 @@ func doRestore(restore restore, selectedPaths []string) (error, int) {
 	fmt.Printf("restoring %s to %s\n", res.Snapshot(), restore.target)
 
 	err = res.RestoreTo(ctx, restore.target)
-
 	return err, warnings
 }
 

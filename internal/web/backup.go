@@ -87,7 +87,7 @@ func runBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		err := runBackup(repo)
 
-		bs := BackupStatus{RepoName: currRepoName, PercentDone: 100}
+		bs := StatusUpdate{Type: "BACKUP", RepoName: currRepoName, PercentDone: 100}
 
 		if err != nil {
 			bs.Error = fmt.Sprintf("%s: backup failed: %s", currRepoName, err.Error())
@@ -285,7 +285,7 @@ func newArchiveProgress(repoName string, quiet bool, todo restic.Stat) *restic.P
 
 		// TODO: don't seem to get called often when run under "fresh", maybe because it's no longer
 		// running connected to a terminal.
-		bs := BackupStatus{RepoName: repoName, PercentDone: percent, StatusMsg: "", Indeterminate: false}
+		bs := StatusUpdate{Type: "BACKUP", RepoName: repoName, PercentDone: percent, StatusMsg: "", Indeterminate: false}
 		UpdateStatus(bs)
 		fmt.Printf("updated: %v\n", bs)
 	}
@@ -306,7 +306,7 @@ func newScanProgress(repoName string) *restic.Progress {
 	p := restic.NewProgress()
 
 	p.OnStart = func() {
-		bs := BackupStatus{RepoName: repoName, PercentDone: 100, StatusMsg: "Scanning", Indeterminate: true}
+		bs := StatusUpdate{Type: "BACKUP", RepoName: repoName, PercentDone: 100, StatusMsg: "Scanning", Indeterminate: true}
 		UpdateStatus(bs)
 	}
 

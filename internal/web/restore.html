@@ -53,6 +53,63 @@
                 </li>
             </ul>
 
+            <div id="progress-container">
+            </div>
+
+            {{template "show_ajax_errors" . }}
+            {{template "update_progress_bar" . }}
+
+            <script>
+                var timeout = 60000; // milliseconds
+
+                function doPoll() {
+                    console.log('doing poll...');
+                    $.ajax({
+                        url: "/status?timeout=" + timeout,
+                        timeout: timeout,
+                        success: function (response) {
+                            console.log('restore poll success ' + JSON.stringify(response));
+                            if (response === "") {
+                                // long-poll timeout on server end, no status to update
+                                console.log("long poll timeout on server, carry on");
+                            } else {
+                                if (response['Type'] === 'RESTORE') {
+                                    var repo = response['RepoName'];
+                                    var percentDone = response["PercentDone"];
+                                    var percentDoneString = percentDone + '%';
+                                    var statusMsg = response['StatusMsg'];
+                                    var indeterminate = response['Indeterminate'];
+                                    var error = response['Error'];
+
+                                    updateOrCreateProgressBar(repo, percentDone, percentDoneString, statusMsg, indeterminate, error);
+                                }
+                            }
+
+                            setTimeout(doPoll, 500);
+                        },
+                        error: function (xhr, status, error) {
+                            console.log('restore poll error, xhr: ' + JSON.stringify(xhr) + ', status: ' + JSON.stringify(status) + ', error: ' + JSON.stringify(error));
+
+                            if (status === "timeout") {
+                                // long-poll timeout on client end, no status to update
+                                console.log("long poll timeout on client, carry on");
+                            } else {
+                                showAjaxErrors(xhr. status, error);
+                            }
+
+                            setTimeout(doPoll, 2000);
+                        }
+                    });
+                }
+
+                $(document).ready(function(){
+                    doPoll();
+                    console.log('restore poll started...');
+                });
+
+            </script>
+
+
             <br/>
             <span>Select files/directories to be included in the restore, then click "Begin Restore" to start.</span>
             <br/>
@@ -215,9 +272,7 @@
                         return false;
                     });
                 });
-            </script>
 
-            <script>
                 $(function () {
                     var modal = $('#restoreModal');
                     var target = $(modal).find('input[name="target"]');

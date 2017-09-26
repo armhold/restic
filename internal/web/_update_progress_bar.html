@@ -1,0 +1,46 @@
+{{define "update_progress_bar"}}
+
+<script>
+
+    function updateOrCreateProgressBar(repo, percentDone, percentDoneString, statusMsg, indeterminate, error) {
+        console.log("updateOrCreateProgressBar: " + statusMsg);
+
+        // TODO: ensure repo names have no spaces, can always serve as ids
+        var pbarId = 'progress-bar-' + repo;
+        var statusSpanId = 'status-msg-' + repo;
+        var pbar = $('#' + pbarId);
+        if (pbar.length === 0) {
+            console.log("did not find " + pbarId);
+
+            var container = $('#progress-container');
+            $(container).append($('<div><span>' + repo + '</span></div><div><span id="' + statusSpanId + '"></span></div>'));
+            var holder = $('<div class="progress"></div><br/>');
+
+            pbar = $('<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>');
+            $(pbar).attr('id', pbarId);
+
+            $(holder).append(pbar);
+            $(container).append(holder);
+        }
+
+        if (error !== "") {
+            $('#' + statusSpanId).text("");
+            $(pbar).removeClass('progress-bar-striped progress-bar-animated');
+            $(pbar).addClass('bg-danger');
+            $(pbar).attr('aria-valuenow', percentDone).css('width', '100%').text(error);
+        } else {
+            if (indeterminate) {
+                $('#' + statusSpanId).text("");
+                $(pbar).addClass('progress-bar-striped progress-bar-animated');
+                $(pbar).attr('aria-valuenow', percentDone).css('width', '100%').text(statusMsg);
+            } else {
+                $('#' + statusSpanId).text("");
+                $(pbar).removeClass('progress-bar-striped progress-bar-animated');
+                $(pbar).attr('aria-valuenow', percentDone).css('width', percentDoneString).text(statusMsg + ": " + percentDoneString);
+            }
+        }
+    }
+
+
+</script>
+{{end}}

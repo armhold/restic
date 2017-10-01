@@ -56,9 +56,17 @@ func defaultCacheDir() (string, error) {
 	var err error
 	switch runtime.GOOS {
 	case "darwin":
-		cachedir, err = darwinCacheDir()
+		if os.Getenv("XDG_CACHE_HOME") != "" {
+			cachedir, err = xdgCacheDir()
+		} else {
+			cachedir, err = darwinCacheDir()
+		}
 	case "windows":
-		cachedir, err = windowsCacheDir()
+		if os.Getenv("XDG_CACHE_HOME") != "" {
+			cachedir, err = xdgCacheDir()
+		} else {
+			cachedir, err = windowsCacheDir()
+		}
 	default:
 		// Default to XDG for Linux and any other OSes.
 		cachedir, err = xdgCacheDir()

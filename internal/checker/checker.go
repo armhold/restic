@@ -5,17 +5,20 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
-	"os"
+	//"os"
 	"sync"
 
 	"github.com/restic/restic/internal/errors"
-	"github.com/restic/restic/internal/fs"
+	//"github.com/restic/restic/internal/fs"
 	"github.com/restic/restic/internal/hashing"
 	"github.com/restic/restic/internal/restic"
 
 	"github.com/restic/restic/internal/debug"
 	"github.com/restic/restic/internal/pack"
 	"github.com/restic/restic/internal/repository"
+	//"os"
+	//"github.com/restic/restic/internal/fs"
+	"bytes"
 )
 
 // Checker runs various checks on a repository. It is advisable to create an
@@ -668,18 +671,20 @@ func checkPack(ctx context.Context, r restic.Repository, id restic.ID) error {
 		return err
 	}
 
-	packfile, err := fs.TempFile("", "restic-temp-check-")
-	if err != nil {
-		return errors.Wrap(err, "TempFile")
-	}
+	//packfile, err := fs.TempFile("", "restic-temp-check-")
+	//if err != nil {
+	//	return errors.Wrap(err, "TempFile")
+	//}
 
-	defer func() {
-		packfile.Close()
-		os.Remove(packfile.Name())
-	}()
+	//defer func() {
+	//	packfile.Close()
+	//	os.Remove(packfile.Name())
+	//}()
 
 	hrd := hashing.NewReader(rd, sha256.New())
-	size, err := io.Copy(packfile, hrd)
+	//size, err := io.Copy(packfile, hrd)
+	byteBuffer := new(bytes.Buffer)
+	size, err := byteBuffer.ReadFrom(hrd)
 	if err != nil {
 		return errors.Wrap(err, "Copy")
 	}
@@ -696,7 +701,9 @@ func checkPack(ctx context.Context, r restic.Repository, id restic.ID) error {
 		return errors.Errorf("Pack ID does not match, want %v, got %v", id.Str(), hash.Str())
 	}
 
-	blobs, err := pack.List(r.Key(), packfile, size)
+	br := bytes.NewReader(byteBuffer.Bytes())
+	blobs, err := pack.List(r.Key(), br, size)
+	//blobs, err := pack.List(r.Key(), packfile, size)
 	if err != nil {
 		return err
 	}
@@ -712,12 +719,14 @@ func checkPack(ctx context.Context, r restic.Repository, id restic.ID) error {
 		}
 		buf = buf[:blob.Length]
 
-		_, err := packfile.Seek(int64(blob.Offset), 0)
+		//_, err := packfile.Seek(int64(blob.Offset), 0)
+		_, err := br.Seek(int64(blob.Offset), 0)
 		if err != nil {
 			return errors.Errorf("Seek(%v): %v", blob.Offset, err)
 		}
 
-		_, err = io.ReadFull(packfile, buf)
+		//_, err = io.ReadFull(packfile, buf)
+		_, err = io.ReadFull(br, buf)
 		if err != nil {
 			debug.Log("  error loading blob %v: %v", blob.ID.Str(), err)
 			errs = append(errs, errors.Errorf("blob %v: %v", i, err))

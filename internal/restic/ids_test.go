@@ -53,3 +53,47 @@ func TestUniqIDs(t *testing.T) {
 		}
 	}
 }
+
+func makeIDs() IDs {
+	var result IDs
+
+	for i := 0; i < 1000; i++ {
+		id := &ID{}
+		for j := 0; j < len(id); j++ {
+			id[j] = byte(j)
+		}
+
+		result = append(result, *id)
+	}
+
+	return result
+}
+
+func BenchmarkAddressable(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		ids := makeIDs()
+		count := 0
+
+		for i := 0; i < len(ids); i++ {
+			for j, b := range ids[i] {
+				// dummy op
+				count += int(b) + j
+			}
+		}
+	}
+}
+
+
+func BenchmarkNonAddressable(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		ids := makeIDs()
+		count := 0
+
+		for i := 0; i < len(ids); i++ {
+			for j, b := range &ids[i] {
+				// dummy op
+				count += int(b) + j
+			}
+		}
+	}
+}

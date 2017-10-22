@@ -97,3 +97,17 @@ func BenchmarkNonAddressable(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkNonAddressableSliced(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		ids := makeIDs()
+		count := 0
+
+		for i := 0; i < len(ids); i++ {
+			for j, b := range ids[i][:] {
+				// dummy op
+				count += int(b) + j
+			}
+		}
+	}
+}

@@ -28,7 +28,7 @@ func init() {
 }
 
 func RunWeb(bindHost string, bindPort int, repo restic.Repository) error {
-	http.HandleFunc("/", panicRecover(rootHandler))
+	http.HandleFunc("/", panicRecover(snapshotsHandler))
 	//http.HandleFunc("/addrepo", panicRecover(addRepoAjaxHandler))
 	//http.HandleFunc("/addpath", panicRecover(addDeletePathAjaxHandler))
 	//http.HandleFunc("/addexclude", panicRecover(addDeleteExcludeAjaxHandler))

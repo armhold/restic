@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/restic/restic/internal/web"
+	"github.com/spf13/cobra"
 )
 
 var cmdWeb = &cobra.Command{

@@ -1,11 +1,11 @@
 package web
 
 import (
-	"net/http"
-	"fmt"
-	"sync"
 	"context"
+	"fmt"
 	"github.com/restic/restic/internal/errors"
+	"net/http"
+	"sync"
 )
 
 var (
@@ -21,7 +21,6 @@ type RestoreInProgress struct {
 	CancelFunc context.CancelFunc
 	lock       sync.Mutex
 }
-
 
 func noRestoreRunning() {
 	fmt.Printf("no restore runnong, nothing to cancel\n")

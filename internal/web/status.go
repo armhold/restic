@@ -120,8 +120,8 @@ func UpdateStatus(s StatusUpdate) {
 	count := 0
 
 Loop:
-// loop in case there are multiple clients waiting concurrently; we'll send the same status to each of them.
-// when no clients are waiting, then we break
+	// loop in case there are multiple clients waiting concurrently; we'll send the same status to each of them.
+	// when no clients are waiting, then we break
 
 	for {
 		select {

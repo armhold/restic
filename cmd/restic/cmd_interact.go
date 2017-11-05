@@ -48,7 +48,6 @@ type directory struct {
 	Tree *restic.Tree
 }
 
-
 // path user has currently navigated down
 var dirStack []directory
 
@@ -240,7 +239,7 @@ func loadSnapshot(args string) {
 	screenPrintf("load snapshot id: %s", snapId)
 }
 
-func compareToSnapshot(repo *repository.Repository, compareToSnapshotId string) (error) {
+func compareToSnapshot(repo *repository.Repository, compareToSnapshotId string) error {
 	screenPrintf("compare current snapshot to %s", compareToSnapshotId)
 
 	snapID, err := restic.FindSnapshot(repo, compareToSnapshotId)
@@ -249,7 +248,6 @@ func compareToSnapshot(repo *repository.Repository, compareToSnapshotId string) 
 	}
 
 	Verbosef("found snapshot: %v\r\n", snapID)
-
 
 	compareToSnapshot, err := restic.LoadSnapshot(context.TODO(), repo, snapID)
 	if err != nil {
@@ -460,7 +458,6 @@ func formatNodeInteractive(prefix string, n *restic.Node, long bool) string {
 		}
 	}
 
-
 	if !long {
 		result := filepath.Join(prefix, n.Name)
 
@@ -476,7 +473,7 @@ func formatNodeInteractive(prefix string, n *restic.Node, long bool) string {
 			n.Mode, n.UID, n.GID, n.Size, n.ModTime.Format(TimeFormat), filepath.Join(prefix, n.Name))
 	case "dir":
 		return fmt.Sprintf("%s %5d %5d %6d %s %s",
-			n.Mode|os.ModeDir, n.UID, n.GID, n.Size, n.ModTime.Format(TimeFormat), filepath.Join(prefix, n.Name) + changeString)
+			n.Mode|os.ModeDir, n.UID, n.GID, n.Size, n.ModTime.Format(TimeFormat), filepath.Join(prefix, n.Name)+changeString)
 
 	case "symlink":
 		return fmt.Sprintf("%s %5d %5d %6d %s %s -> %s",

@@ -35,7 +35,6 @@ type CompareOptions struct {
 
 var compareOptions CompareOptions
 
-
 // comparison between two snapshots
 type comparison struct {
 	snap1, snap2 *restic.Snapshot
@@ -128,7 +127,7 @@ func runCompare(opts CompareOptions, gopts GlobalOptions, args []string) error {
 	return nil
 }
 
-func (c *comparison) BuildComparison(repo *repository.Repository) (error) {
+func (c *comparison) BuildComparison(repo *repository.Repository) error {
 	c.map1 = make(map[string]uint64)
 	c.map2 = make(map[string]uint64)
 
@@ -165,7 +164,7 @@ func (c *comparison) printTrees() {
 	}
 }
 
-func (c* comparison) ComparePath(path string) (change uint64, sign string, present bool) {
+func (c *comparison) ComparePath(path string) (change uint64, sign string, present bool) {
 	size1, ok1 := c.map1[path]
 	size2, ok2 := c.map2[path]
 

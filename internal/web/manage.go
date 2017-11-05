@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"github.com/restic/restic/internal/backend/azure"
 	"github.com/restic/restic/internal/backend/b2"
 	"github.com/restic/restic/internal/backend/gs"
@@ -20,7 +21,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"fmt"
 )
 
 // TODO: rename this file
@@ -237,4 +237,3 @@ func TODO_InstallSignalHandler() {
 func SuspendSignalHandler() {
 	signal.Reset(syscall.SIGINT)
 }
-

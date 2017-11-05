@@ -13,7 +13,7 @@ The "web" command starts up a web server for running backups, restores, etc.
 `,
 	DisableAutoGenTag: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return web.RunWeb(webOptions.bindHost, webOptions.port)
+		return runWeb(webOptions, globalOptions, args)
 	},
 }
 
@@ -31,4 +31,26 @@ func init() {
 	flags := cmdWeb.Flags()
 	flags.StringVarP(&webOptions.bindHost, "host", "H", "localhost", "hostname to bind to")
 	flags.IntVar(&webOptions.port, "port", 8080, "port to bind to")
+}
+
+func runWeb(opts WebOptions, gopts GlobalOptions, args []string) error {
+	repo, err := OpenRepository(gopts)
+	if err != nil {
+		return err
+	}
+
+	if !gopts.NoLock {
+		lock, err := lockRepo(repo)
+		defer unlockRepo(lock)
+		if err != nil {
+			return err
+		}
+	}
+
+	//ctx, cancel := context.WithCancel(gopts.ctx)
+	//defer cancel()
+
+	web.RunWeb(opts.bindHost, opts.port, repo)
+
+	return nil
 }

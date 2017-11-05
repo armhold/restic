@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"path/filepath"
-	"runtime"
 	"runtime/debug"
 )
 
@@ -17,15 +17,9 @@ var (
 )
 
 func init() {
-
-	// get path to templates dir relative to this source file
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		panic("unable to get path to web.go")
-	}
-
-	dir := filepath.Dir(filename)
-	path := filepath.Join(dir, "*.html")
+	templatesDir := os.Getenv("GOPATH") + "/src/github.com/restic/restic/internal/web"
+	path := filepath.Join(templatesDir, "*.html")
+	fmt.Printf("attempting to load html templates from: %s\n", templatesDir)
 
 	// to pass FuncMap, order is important.
 	// See: https://stackoverflow.com/questions/17843311/template-and-custom-function-panic-function-not-defined

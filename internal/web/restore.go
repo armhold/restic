@@ -17,6 +17,9 @@ import (
 func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("navigateRestoreHandler\n")
 
+	repo := getRepo()
+	defer releaseRepo()
+
 	flash, err := ParseFlashes(w, r)
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
@@ -48,15 +51,6 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-	if !ok {
-		msg := fmt.Sprintf("error retrieving repo: %s", currRepoName)
-		fmt.Println(msg)
-		SaveFlashToCookie(w, "danger_flash", msg)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
 	fmt.Printf("list files in snapshot: %s under dir: %s\n", snapshotId, dir)
 	files, err := listFilesUnderDirInSnapshot(repo, snapshotId, dir)
 	if err != nil {
@@ -67,7 +61,7 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	nav := &Navigation{req: r, Tab: "restore"}
 
 	linkToPath := func(path string) string {
-		return fmt.Sprintf("/nav?repo=%s&amp;snapshotId=%s&amp;dir=%s", url.QueryEscape(currRepoName), url.QueryEscape(snapshotId), url.QueryEscape(path))
+		return fmt.Sprintf("/nav?snapshotId=%s&amp;dir=%s", url.QueryEscape(snapshotId), url.QueryEscape(path))
 	}
 
 	linkToFileInDir := func(file string) string {
@@ -380,34 +374,24 @@ type snapshotPath struct {
 	IsDir bool
 }
 
-func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*snapshotPath, error) {
+func listFilesUnderDirInSnapshot(repo restic.Repository, snapshotIDString, dir string) ([]*snapshotPath, error) {
 	var result []*snapshotPath
 
 	start := time.Now()
-
-	r, err := OpenRepository(repo.Path, repo.Password)
-	if err != nil {
-		return result, err
-	}
-	fmt.Printf("OpenRepository took %s\n", time.Since(start))
-
-	// TODO: lock repo here?
-
-	start = time.Now()
-	if err = r.LoadIndex(context.TODO()); err != nil {
+	if err := repo.LoadIndex(context.TODO()); err != nil {
 		return result, err
 	}
 	fmt.Printf("LoadIndex took %s\n", time.Since(start))
 
 	start = time.Now()
-	snapshotID, err := restic.FindSnapshot(r, snapshotIDString)
+	snapshotID, err := restic.FindSnapshot(repo, snapshotIDString)
 	if err != nil {
 		return result, fmt.Errorf("invalid id %q: %v", snapshotIDString, err)
 	}
 	fmt.Printf("FindSnapshot took %s\n", time.Since(start))
 
 	start = time.Now()
-	currSnapshot, err := restic.LoadSnapshot(context.TODO(), r, snapshotID)
+	currSnapshot, err := restic.LoadSnapshot(context.TODO(), repo, snapshotID)
 	if err != nil {
 		return result, fmt.Errorf("could not load snapshot %q: %v\n", snapshotID, err)
 	}
@@ -417,7 +401,7 @@ func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*s
 
 	fmt.Printf("dir is: \"%s\"\n", dir)
 
-	tree, err := r.LoadTree(context.TODO(), *currSnapshot.Tree)
+	tree, err := repo.LoadTree(context.TODO(), *currSnapshot.Tree)
 	if err != nil {
 		return result, err
 	}
@@ -429,7 +413,7 @@ func listFilesUnderDirInSnapshot(repo *Repo, snapshotIDString, dir string) ([]*s
 			if n.Type == "dir" && n.Subtree != nil && n.Name == d {
 				start := time.Now()
 
-				tree, err = r.LoadTree(context.TODO(), *n.Subtree)
+				tree, err = repo.LoadTree(context.TODO(), *n.Subtree)
 				if err != nil {
 					return result, err
 				}

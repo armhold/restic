@@ -83,15 +83,10 @@ func findCurrRepoByName(name string, repos []*Repo) (*Repo, bool) {
 	return &Repo{}, false
 }
 
-func listSnapshots(repo *Repo) (restic.Snapshots, error) {
+func listSnapshots(repo restic.Repository) (restic.Snapshots, error) {
 	var snaps restic.Snapshots
 
-	r, err := OpenRepository(repo.Path, repo.Password)
-	if err != nil {
-		return snaps, err
-	}
-
-	snaps = restic.FindFilteredSnapshots(context.TODO(), r, "", []restic.TagList{}, []string{})
+	snaps = restic.FindFilteredSnapshots(context.TODO(), repo, "", []restic.TagList{}, []string{})
 	sort.Sort(snaps)
 
 	return snaps, nil

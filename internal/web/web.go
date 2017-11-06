@@ -9,12 +9,17 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"sync"
 )
 
 var (
 	WebConfig      Config
 	templates      *template.Template
 	sessionManager Manager
+
+	// sharedRepo to be accessed by handlers only via getRepo() and releaseRepo()
+	sharedRepoMutex sync.Mutex
+	sharedRepo      restic.Repository
 )
 
 func init() {
@@ -27,7 +32,22 @@ func init() {
 	templates = template.Must(template.New("").Funcs(Helpers).ParseGlob(path))
 }
 
-func RunWeb(bindHost string, bindPort int, repo restic.Repository) error {
+func getRepo() restic.Repository {
+	sharedRepoMutex.Lock()
+	fmt.Printf("getRepo\n")
+
+	return sharedRepo
+}
+
+func releaseRepo() {
+	sharedRepoMutex.Unlock()
+
+	fmt.Printf("releaseRepo\n")
+}
+
+func RunWeb(bindHost string, bindPort int, r restic.Repository) error {
+	sharedRepo = r
+
 	http.HandleFunc("/", panicRecover(snapshotsHandler))
 	//http.HandleFunc("/addrepo", panicRecover(addRepoAjaxHandler))
 	//http.HandleFunc("/addpath", panicRecover(addDeletePathAjaxHandler))
@@ -40,7 +60,7 @@ func RunWeb(bindHost string, bindPort int, repo restic.Repository) error {
 	//http.HandleFunc("/browse", panicRecover(browseHandler))
 	//http.HandleFunc("/runbackup", panicRecover(runBackupAjaxHandler))
 	//http.HandleFunc("/status", panicRecover(statusAjaxHandler))
-	//http.HandleFunc("/nav", panicRecover(navigateRestoreHandler))
+	http.HandleFunc("/nav", panicRecover(navigateRestoreHandler))
 	//http.HandleFunc("/restore", panicRecover(doRestoreAjaxHandler))
 	//http.HandleFunc("/deletesnapshot", panicRecover(deleteSnapshotAjaxHandler))
 	//http.HandleFunc("/addrestorepath", panicRecover(addRemoveRestorePathAjaxHandler))

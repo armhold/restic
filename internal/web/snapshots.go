@@ -33,16 +33,16 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var snaps restic.Snapshots
-	repo, ok := findCurrRepoByName(currRepoName, WebConfig.Repos)
-	if ok {
-		snaps, err = listSnapshots(repo)
-		if err != nil {
-			fmt.Printf("listSnapshots: %s\n", err.Error())
+	repo := getRepo()
+	defer releaseRepo()
 
-			// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
-			flash.Danger += fmt.Sprintf("error listing snapshots: %s", err)
-		}
+	var snaps restic.Snapshots
+	snaps, err = listSnapshots(repo)
+	if err != nil {
+		fmt.Printf("listSnapshots: %s\n", err.Error())
+
+		// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
+		flash.Danger += fmt.Sprintf("error listing snapshots: %s", err)
 	}
 
 	data := struct {

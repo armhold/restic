@@ -54,7 +54,7 @@ func excludeHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("sucessful exit excludesHandler()\n")
+	fmt.Printf("successful exit excludesHandler()\n")
 }
 
 // add/remove exclusion to/from the backup list

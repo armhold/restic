@@ -62,7 +62,7 @@ func backupHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("sucessful exit backupHandler()\n")
+	fmt.Printf("successful exit backupHandler()\n")
 }
 
 func runBackupAjaxHandler(w http.ResponseWriter, r *http.Request) {

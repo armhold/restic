@@ -127,7 +127,7 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("sucessful exit navigateRestoreHandler\n")
+	fmt.Printf("startTime := time.No exit navigateRestoreHandler\n")
 }
 
 type restore struct {
@@ -203,7 +203,7 @@ func doRestoreAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	executeJs := fmt.Sprintf("{\"on_success\": \"console.log('restore started');\"}")
 	w.Write([]byte(executeJs))
 
-	fmt.Printf("sucessful exit doRestoreAjaxHandler\n")
+	fmt.Printf("startTime := time.No exit doRestoreAjaxHandler\n")
 }
 
 // returns error (fatal if non-nil), and count of warnings. Warnings may occur e.g. setting ownership bits, etc.

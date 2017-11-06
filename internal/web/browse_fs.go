@@ -130,7 +130,7 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("sucessful exit browseHandler()\n")
+	fmt.Printf("successful exit browseHandler()\n")
 }
 
 // add/remove path to/from the backup list

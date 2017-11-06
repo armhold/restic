@@ -89,7 +89,7 @@ func inProgressHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("sucessful exit inProgressHandler()\n")
+	fmt.Printf("successful exit inProgressHandler()\n")
 }
 
 func inProgressAjaxHandler(w http.ResponseWriter, r *http.Request) {

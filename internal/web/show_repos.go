@@ -69,7 +69,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("sucessful exit rootHandler()\n")
+	fmt.Printf("successful exit rootHandler()\n")
 }
 
 func findCurrRepoByName(name string, repos []*Repo) (*Repo, bool) {

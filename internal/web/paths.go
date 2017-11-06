@@ -55,7 +55,7 @@ func pathsHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("sucessful exit pathsHandler()\n")
+	fmt.Printf("successful exit pathsHandler()\n")
 }
 
 func sortedPaths(repo *Repo) []string {

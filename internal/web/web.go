@@ -3,7 +3,7 @@ package web
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/restic/restic/internal/restic"
+	"github.com/restic/restic/internal/repository"
 	"html/template"
 	"net/http"
 	"os"
@@ -19,7 +19,7 @@ var (
 
 	// sharedRepo to be accessed by handlers only via getRepo() and releaseRepo()
 	sharedRepoMutex sync.Mutex
-	sharedRepo      restic.Repository
+	sharedRepo      *repository.Repository
 )
 
 func init() {
@@ -34,7 +34,7 @@ func init() {
 
 type FormErrors map[string]string
 
-func getRepo() restic.Repository {
+func getRepo() *repository.Repository {
 	sharedRepoMutex.Lock()
 	fmt.Printf("getRepo\n")
 
@@ -48,7 +48,7 @@ func releaseRepo() {
 }
 
 // r should be a repository with index pre-loaded
-func RunWeb(bindHost string, bindPort int, r restic.Repository) error {
+func RunWeb(bindHost string, bindPort int, r *repository.Repository) error {
 	sharedRepo = r
 
 	http.HandleFunc("/", panicRecover(snapshotsHandler))

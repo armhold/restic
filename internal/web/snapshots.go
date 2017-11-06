@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
 	"net/http"
 	"strings"
@@ -102,6 +103,9 @@ func (d *deleteSnapshot) Validate() (ok bool, errors FormErrors) {
 func deleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("deleteSnapshotAjaxHandler\n")
 
+	repo := getRepo()
+	defer releaseRepo()
+
 	err := r.ParseForm()
 	if err != nil {
 		fmt.Printf("error parsing form: %s\n", err.Error())
@@ -119,14 +123,12 @@ func deleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	currRepo, ok := findCurrRepoByName(d.repo, WebConfig.Repos)
-
 	if !ok {
 		sendErrorToJs(w, fmt.Sprintf("could not find repo: %s", d.repo))
 		return
 	}
 
-	err = removeSnapshot(currRepo, d.snapshotId)
+	err = removeSnapshot(repo, d.snapshotId)
 
 	if err != nil {
 		msg := fmt.Sprintf("Error deleting snapshot: %s", err)
@@ -142,23 +144,18 @@ func deleteSnapshotAjaxHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(redirectJs))
 }
 
-func removeSnapshot(repo *Repo, snapId string) error {
-	r, err := OpenRepository(repo.Path, repo.Password)
-	if err != nil {
-		return err
-	}
-
-	lock, err := lockRepoExclusive(r)
+func removeSnapshot(repo *repository.Repository, snapId string) error {
+	lock, err := lockRepoExclusive(repo)
 	defer unlockRepo(lock)
 	if err != nil {
 		return err
 	}
 
-	id, err := restic.FindSnapshot(r, snapId)
+	id, err := restic.FindSnapshot(repo, snapId)
 	if err != nil {
 		return err
 	}
 
 	h := restic.Handle{Type: restic.SnapshotFile, Name: id.String()}
-	return r.Backend().Remove(context.TODO(), h)
+	return repo.Backend().Remove(context.TODO(), h)
 }

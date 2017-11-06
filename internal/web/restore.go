@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/restic/restic/internal/errors"
 	"github.com/restic/restic/internal/filter"
+	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
 	"net/http"
 	"net/url"
@@ -374,7 +375,7 @@ type snapshotPath struct {
 	IsDir bool
 }
 
-func listFilesUnderDirInSnapshot(repo restic.Repository, snapshotIDString, dir string) ([]*snapshotPath, error) {
+func listFilesUnderDirInSnapshot(repo *repository.Repository, snapshotIDString, dir string) ([]*snapshotPath, error) {
 	var result []*snapshotPath
 
 	start := time.Now()

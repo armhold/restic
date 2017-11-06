@@ -73,14 +73,12 @@ func inProgressHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Repos        []*Repo
 		CurrRepoName string
 		Flash        Flash
 		Css_class    func(repoName string) string
 		Nav          *Navigation
 		Paths        []string
 	}{
-		Repos: WebConfig.Repos,
 		Flash: flash,
 		Nav:   &Navigation{req: r, Tab: "backup"},
 	}

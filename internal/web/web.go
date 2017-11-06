@@ -13,7 +13,6 @@ import (
 )
 
 var (
-	WebConfig      Config
 	templates      *template.Template
 	sessionManager Manager
 
@@ -52,15 +51,6 @@ func RunWeb(bindHost string, bindPort int, r *repository.Repository) error {
 	sharedRepo = r
 
 	http.HandleFunc("/", panicRecover(snapshotsHandler))
-	//http.HandleFunc("/addpath", panicRecover(addDeletePathAjaxHandler))
-	//http.HandleFunc("/addexclude", panicRecover(addDeleteExcludeAjaxHandler))
-	//http.HandleFunc("/snapshots", panicRecover(snapshotsHandler))
-	//http.HandleFunc("/paths", panicRecover(pathsHandler))
-	//http.HandleFunc("/excludes", panicRecover(excludeHandler))
-	//http.HandleFunc("/schedule", panicRecover(scheduleHandler))
-	//http.HandleFunc("/backup", panicRecover(backupHandler))
-	//http.HandleFunc("/browse", panicRecover(browseHandler))
-	//http.HandleFunc("/runbackup", panicRecover(runBackupAjaxHandler))
 	http.HandleFunc("/status", panicRecover(statusAjaxHandler))
 	http.HandleFunc("/nav", panicRecover(navigateRestoreHandler))
 	//http.HandleFunc("/restore", panicRecover(doRestoreAjaxHandler))

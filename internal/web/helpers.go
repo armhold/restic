@@ -12,16 +12,11 @@ import (
 
 var Helpers = template.FuncMap{
 	"HomePath":   homePath,
-	"RepoPath":   repoUrl,
 	"FormatTime": FormatTime,
 }
 
 func homePath() string {
 	return "/"
-}
-
-func repoUrl(repo Repo) string {
-	return SnapshotsUrl()
 }
 
 type Navigation struct {

@@ -6,12 +6,16 @@ import (
 	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
 	"net/http"
+	"sort"
 	"strings"
 )
 
 func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("snapshotsHandler\n")
 	fmt.Printf("path: %q\n", r.URL.Path)
+
+	repo := getRepo()
+	defer releaseRepo()
 
 	//session, _ := sessionManager.GetOrCreateSession(w, r)
 	//session.Set("current time", time.Now())
@@ -34,9 +38,6 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	repo := getRepo()
-	defer releaseRepo()
-
 	var snaps restic.Snapshots
 	snaps, err = listSnapshots(repo)
 	if err != nil {
@@ -47,7 +48,6 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Repos        []*Repo
 		CurrRepoName string
 		Flash        Flash
 		Css_class    func(repoName string) string
@@ -55,7 +55,6 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 		Nav          *Navigation
 		SnapSelected bool
 	}{
-		Repos:        WebConfig.Repos,
 		CurrRepoName: currRepoName,
 		Flash:        flash,
 		Css_class:    cssClassForRepo,
@@ -158,4 +157,13 @@ func removeSnapshot(repo *repository.Repository, snapId string) error {
 
 	h := restic.Handle{Type: restic.SnapshotFile, Name: id.String()}
 	return repo.Backend().Remove(context.TODO(), h)
+}
+
+func listSnapshots(repo restic.Repository) (restic.Snapshots, error) {
+	var snaps restic.Snapshots
+
+	snaps = restic.FindFilteredSnapshots(context.TODO(), repo, "", []restic.TagList{}, []string{})
+	sort.Sort(snaps)
+
+	return snaps, nil
 }

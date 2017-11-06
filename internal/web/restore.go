@@ -15,6 +15,12 @@ import (
 	"time"
 )
 
+// for rendering parent dir links in template dropdown
+type dirLink struct {
+	Dir  string
+	Link string
+}
+
 func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("navigateRestoreHandler\n")
 
@@ -93,7 +99,6 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Repos           []*Repo
 		CurrRepoName    string
 		Flash           Flash
 		Css_class       func(repoName string) string
@@ -108,7 +113,6 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 		SnapshotId      string
 		SnapSelected    bool
 	}{
-		Repos:           WebConfig.Repos,
 		CurrRepoName:    currRepoName,
 		Flash:           flash,
 		Css_class:       cssClassForRepo,
@@ -212,6 +216,9 @@ func doRestore(restore restore, selectedPaths []string) (error, int) {
 	rip := GetRestoreInProgressInstance()
 	defer rip.End()
 
+	repo := getRepo()
+	defer releaseRepo()
+
 	ctx, err := rip.Begin()
 	if err != nil {
 		return err, 0
@@ -221,28 +228,14 @@ func doRestore(restore restore, selectedPaths []string) (error, int) {
 		return errors.New("oopsie"), 0
 	}
 
-	repo, ok := findCurrRepoByName(restore.repo, WebConfig.Repos)
-	if !ok {
-		return errors.Errorf("error retrieving repo: %s", restore.repo), 0
-	}
-
 	fmt.Printf("do restore: %#v\n", restore)
 
-	repository, err := OpenRepository(repo.Path, repo.Password)
-	if err != nil {
-		return errors.Errorf("error opening repo: %s", err.Error()), 0
-	}
-
-	if err = repository.LoadIndex(ctx); err != nil {
-		return errors.Errorf("error loading index: %s", err.Error()), 0
-	}
-
-	snapshotID, err := restic.FindSnapshot(repository, restore.snapshotId)
+	snapshotID, err := restic.FindSnapshot(repo, restore.snapshotId)
 	if err != nil {
 		return errors.Errorf("invalid snapshot id: %q: %s", restore.snapshotId, err.Error()), 0
 	}
 
-	res, err := restic.NewRestorer(repository, snapshotID)
+	res, err := restic.NewRestorer(repo, snapshotID)
 	if err != nil {
 		return errors.Errorf("creating restorer failed: %v", err.Error), 0
 	}

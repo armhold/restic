@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"github.com/restic/restic/internal/web"
 	"github.com/spf13/cobra"
+	"time"
 )
 
 var cmdWeb = &cobra.Command{
@@ -47,8 +50,15 @@ func runWeb(opts WebOptions, gopts GlobalOptions, args []string) error {
 		}
 	}
 
-	//ctx, cancel := context.WithCancel(gopts.ctx)
-	//defer cancel()
+	// pre-load the index before sending repo to RunWeb()
+	start := time.Now()
+	ctx, cancel := context.WithCancel(gopts.ctx)
+	err = repo.LoadIndex(ctx)
+	cancel()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("LoadIndex took %s\n", time.Since(start))
 
 	web.RunWeb(opts.bindHost, opts.port, repo)
 

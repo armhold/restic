@@ -21,7 +21,7 @@ func homePath() string {
 }
 
 func repoUrl(repo Repo) string {
-	return SnapshotsUrl(repo.Name)
+	return SnapshotsUrl()
 }
 
 type Navigation struct {
@@ -29,36 +29,34 @@ type Navigation struct {
 	Tab string
 }
 
-func SnapshotsUrl(repo string) string {
-	return "/snapshots?repo=" + repo
+func SnapshotsUrl() string {
+	return "/snapshots"
 }
 
-// return url to snapshots tab, while preserving current repo id
+// return url to snapshots tab
 func (n *Navigation) SnapshotsUrl() string {
-	return SnapshotsUrl(n.req.FormValue("repo"))
+	return SnapshotsUrl()
 }
 
-// return url to paths tab, while preserving current repo id
+// return url to paths tab
 func (n *Navigation) PathsUrl() string {
-	return "/paths?repo=" + n.req.FormValue("repo")
+	return "/paths"
 }
 
-// return url to excludes tab, while preserving current repo id
 func (n *Navigation) ExcludesUrl() string {
-	return "/excludes?repo=" + n.req.FormValue("repo")
+	return "/excludes"
 }
 
-// return url to schedule tab, while preserving current repo id
 func (n *Navigation) ScheduleUrl() string {
-	return "/schedule?repo=" + n.req.FormValue("repo")
+	return "/schedule"
 }
 
 func (n *Navigation) BackupUrl() string {
-	return "/backup?repo=" + n.req.FormValue("repo")
+	return "/backup"
 }
 
 func (n *Navigation) BrowseUrl() string {
-	return "/browse?repo=" + n.req.FormValue("repo")
+	return "/browse"
 }
 
 func (n *Navigation) RestoreUrl(repo, snapshotId string) string {
@@ -70,7 +68,6 @@ func (n *Navigation) RestoreUrl(repo, snapshotId string) string {
 	}
 
 	q := restoreUrl.Query()
-	q.Set("repo", repo)
 	q.Set("snapshotId", snapshotId)
 	restoreUrl.RawQuery = q.Encode()
 	return restoreUrl.String()

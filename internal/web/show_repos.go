@@ -44,7 +44,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 			repo = WebConfig.Repos[0].Name
 		}
 
-		toUrl := SnapshotsUrl(repo)
+		toUrl := SnapshotsUrl()
 		http.Redirect(w, r, toUrl, http.StatusSeeOther)
 		fmt.Printf("redirecting from root to %s\n", toUrl)
 

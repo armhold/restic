@@ -378,12 +378,6 @@ func listFilesUnderDirInSnapshot(repo restic.Repository, snapshotIDString, dir s
 	var result []*snapshotPath
 
 	start := time.Now()
-	if err := repo.LoadIndex(context.TODO()); err != nil {
-		return result, err
-	}
-	fmt.Printf("LoadIndex took %s\n", time.Since(start))
-
-	start = time.Now()
 	snapshotID, err := restic.FindSnapshot(repo, snapshotIDString)
 	if err != nil {
 		return result, fmt.Errorf("invalid id %q: %v", snapshotIDString, err)

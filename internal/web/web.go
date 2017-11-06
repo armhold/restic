@@ -32,6 +32,8 @@ func init() {
 	templates = template.Must(template.New("").Funcs(Helpers).ParseGlob(path))
 }
 
+type FormErrors map[string]string
+
 func getRepo() restic.Repository {
 	sharedRepoMutex.Lock()
 	fmt.Printf("getRepo\n")
@@ -45,11 +47,11 @@ func releaseRepo() {
 	fmt.Printf("releaseRepo\n")
 }
 
+// r should be a repository with index pre-loaded
 func RunWeb(bindHost string, bindPort int, r restic.Repository) error {
 	sharedRepo = r
 
 	http.HandleFunc("/", panicRecover(snapshotsHandler))
-	//http.HandleFunc("/addrepo", panicRecover(addRepoAjaxHandler))
 	//http.HandleFunc("/addpath", panicRecover(addDeletePathAjaxHandler))
 	//http.HandleFunc("/addexclude", panicRecover(addDeleteExcludeAjaxHandler))
 	//http.HandleFunc("/snapshots", panicRecover(snapshotsHandler))
@@ -59,7 +61,7 @@ func RunWeb(bindHost string, bindPort int, r restic.Repository) error {
 	//http.HandleFunc("/backup", panicRecover(backupHandler))
 	//http.HandleFunc("/browse", panicRecover(browseHandler))
 	//http.HandleFunc("/runbackup", panicRecover(runBackupAjaxHandler))
-	//http.HandleFunc("/status", panicRecover(statusAjaxHandler))
+	http.HandleFunc("/status", panicRecover(statusAjaxHandler))
 	http.HandleFunc("/nav", panicRecover(navigateRestoreHandler))
 	//http.HandleFunc("/restore", panicRecover(doRestoreAjaxHandler))
 	//http.HandleFunc("/deletesnapshot", panicRecover(deleteSnapshotAjaxHandler))

@@ -55,7 +55,7 @@ func (n *Navigation) BrowseUrl() string {
 }
 
 func (n *Navigation) RestoreUrl(repo, snapshotId string) string {
-	restoreUrl, err := url.Parse("/nav")
+	restoreUrl, err := url.Parse("/snaps")
 	if err != nil {
 		// TODO: better way to handle errors in a helper func
 		fmt.Println(err)

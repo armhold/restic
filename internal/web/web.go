@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strings"
 	"sync"
 )
 
@@ -46,13 +47,25 @@ func releaseRepo() {
 	fmt.Printf("releaseRepo\n")
 }
 
+func getSnapshotId(r *http.Request) string {
+	parts := strings.Split(r.URL.Path, "/")
+
+	//fmt.Printf("parts: %v\n", parts)
+
+	if len(parts) >= 2 {
+		return parts[1]
+	}
+
+	return ""
+}
+
 // r should be a repository with index pre-loaded
 func RunWeb(bindHost string, bindPort int, r *repository.Repository) error {
 	sharedRepo = r
 
-	http.HandleFunc("/", panicRecover(snapshotsHandler))
 	http.HandleFunc("/status", panicRecover(statusAjaxHandler))
-	http.HandleFunc("/nav", panicRecover(navigateRestoreHandler))
+	http.HandleFunc("/snaps", panicRecover(navigateSnapshotHandler))
+
 	//http.HandleFunc("/restore", panicRecover(doRestoreAjaxHandler))
 	//http.HandleFunc("/deletesnapshot", panicRecover(deleteSnapshotAjaxHandler))
 	//http.HandleFunc("/addrestorepath", panicRecover(addRemoveRestorePathAjaxHandler))
@@ -63,6 +76,8 @@ func RunWeb(bindHost string, bindPort int, r *repository.Repository) error {
 	// static assets
 	fs := JustFilesFilesystem{http.Dir("assets")}
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(fs)))
+
+	http.HandleFunc("/", panicRecover(listSnapshotsHandler))
 
 	addr := fmt.Sprintf("%s:%d", bindHost, bindPort)
 

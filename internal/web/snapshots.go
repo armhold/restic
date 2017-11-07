@@ -10,8 +10,8 @@ import (
 	"strings"
 )
 
-func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("snapshotsHandler\n")
+func listSnapshotsHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("listSnapshotsHandler\n")
 	fmt.Printf("path: %q\n", r.URL.Path)
 
 	repo := getRepo()
@@ -67,7 +67,7 @@ func snapshotsHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("successful exit snapshotsHandler()\n")
+	fmt.Printf("successful exit listSnapshotsHandler()\n")
 }
 
 type deleteSnapshot struct {

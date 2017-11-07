@@ -21,8 +21,8 @@ type dirLink struct {
 	Link string
 }
 
-func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("navigateRestoreHandler\n")
+func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("navigateSnapshotHandler\n")
 
 	repo := getRepo()
 	defer releaseRepo()
@@ -68,7 +68,7 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 	nav := &Navigation{req: r, Tab: "restore"}
 
 	linkToPath := func(path string) string {
-		return fmt.Sprintf("/nav?snapshotId=%s&amp;dir=%s", url.QueryEscape(snapshotId), url.QueryEscape(path))
+		return fmt.Sprintf("/snaps?snapshotId=%s&amp;dir=%s", url.QueryEscape(snapshotId), url.QueryEscape(path))
 	}
 
 	linkToFileInDir := func(file string) string {
@@ -132,7 +132,7 @@ func navigateRestoreHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("startTime := time.No exit navigateRestoreHandler\n")
+	fmt.Printf("startTime := time.No exit navigateSnapshotHandler\n")
 }
 
 type restore struct {

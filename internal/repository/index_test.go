@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"fmt"
 	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
 	rtest "github.com/restic/restic/internal/test"
@@ -54,7 +55,11 @@ func TestIndexSerialize(t *testing.T) {
 	err := idx.Encode(wr)
 	rtest.OK(t, err)
 
-	idx2, err := repository.DecodeIndex(wr.Bytes())
+	fmt.Printf("stream: %s\n", string(wr.Bytes()))
+
+	//idx2, err := repository.DecodeIndex(wr.Bytes())
+	idx2, err := repository.DecodeIndexStreaming(bytes.NewReader(wr.Bytes()))
+
 	rtest.OK(t, err)
 	rtest.Assert(t, idx2 != nil,
 		"nil returned for decoded index")

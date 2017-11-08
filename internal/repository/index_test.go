@@ -8,35 +8,53 @@ import (
 	"github.com/restic/restic/internal/restic"
 	rtest "github.com/restic/restic/internal/test"
 	//"os"
+	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"os"
 )
 
 func BenchmarkDecodeIndexStreamingBig(b *testing.B) {
-	b.ResetTimer()
+	fmt.Printf("running BenchmarkDecodeIndexStreamingBig\n")
+	//b.ResetTimer()
 
-	f, err := os.Open("big_index.json")
+	f, err := os.Open("big_index.json.gz")
 	if err != nil {
 		b.Fatalf("error opening big_index.json: %v", err)
 	}
 
-	defer f.Close()
+	rd, err := gzip.NewReader(f)
+	if err != nil {
+		b.Fatalf("error unzipping stream: %v", err)
+	}
 
-	_, err = repository.DecodeIndexStreaming(f)
+	_, err = repository.DecodeIndexStreaming(rd)
 	if err != nil {
 		b.Fatalf("error decoding big_index.json: %v", err)
 	}
-
+	rd.Close()
+	f.Close()
 	b.ReportAllocs()
 }
 
 func BenchmarkDecodeIndexBig(b *testing.B) {
-	b.ResetTimer()
+	fmt.Printf("running BenchmarkDecodeIndexBig\n")
 
-	bytes, err := ioutil.ReadFile("big_index.json")
+	//b.ResetTimer()
+
+	f, err := os.Open("big_index.json.gz")
 	if err != nil {
 		b.Fatalf("error opening big_index.json: %v", err)
+	}
+
+	rd, err := gzip.NewReader(f)
+	if err != nil {
+		b.Fatalf("error unzipping stream: %v", err)
+	}
+
+	bytes, err := ioutil.ReadAll(rd)
+	if err != nil {
+		b.Fatalf("error reading from unzipped stream: %v", err)
 	}
 
 	_, err = repository.DecodeIndex(bytes)
@@ -44,18 +62,20 @@ func BenchmarkDecodeIndexBig(b *testing.B) {
 		b.Fatalf("error decoding big_index.json: %v", err)
 	}
 
+	rd.Close()
+	f.Close()
 	b.ReportAllocs()
 }
 
 func TestIndexSerialize(t *testing.T) {
+	fmt.Printf("running TestIndexSerialize\n")
+
 	type testEntry struct {
 		id             restic.ID
 		pack           restic.ID
 		tpe            restic.BlobType
 		offset, length uint
 	}
-
-	fmt.Printf("hello!\n")
 
 	tests := []testEntry{}
 

@@ -28,10 +28,13 @@ func BenchmarkDecodeIndexStreamingBig(b *testing.B) {
 		b.Fatalf("error unzipping stream: %v", err)
 	}
 
-	_, err = repository.DecodeIndexStreaming(rd)
+	index, err := repository.DecodeIndexStreaming(rd)
 	if err != nil {
 		b.Fatalf("error decoding big_index.json: %v", err)
 	}
+
+	fmt.Printf("index has %d packs\n", index.Count(restic.DataBlob))
+
 	rd.Close()
 	f.Close()
 	b.ReportAllocs()
@@ -57,10 +60,12 @@ func BenchmarkDecodeIndexBig(b *testing.B) {
 		b.Fatalf("error reading from unzipped stream: %v", err)
 	}
 
-	_, err = repository.DecodeIndex(bytes)
+	index, err := repository.DecodeIndex(bytes)
 	if err != nil {
 		b.Fatalf("error decoding big_index.json: %v", err)
 	}
+
+	fmt.Printf("index has %d packs\n", index.Count(restic.DataBlob))
 
 	rd.Close()
 	f.Close()

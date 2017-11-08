@@ -14,9 +14,57 @@ import (
 	"os"
 )
 
+func TestGenerateBigIndex(t *testing.T) {
+	idx := repository.NewIndex()
+
+	// create 50 packs with 20 blobs each
+	for i := 0; i < 200000; i++ {
+		packID := restic.NewRandomID()
+
+		pos := uint(0)
+		for j := 0; j < 20; j++ {
+			id := restic.NewRandomID()
+			length := uint(i*100 + j)
+			idx.Store(restic.PackedBlob{
+				Blob: restic.Blob{
+					Type:   restic.DataBlob,
+					ID:     id,
+					Offset: pos,
+					Length: length,
+				},
+				PackID: packID,
+			})
+
+			pos += length
+		}
+	}
+
+	wr := bytes.NewBuffer(nil)
+	err := idx.Encode(wr)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	f, err := os.Create("big_index.json.gz")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := gzip.NewWriter(f)
+
+	// Write bytes in compressed form to the file.
+	w.Write(wr.Bytes())
+
+	// Close the file.
+	w.Close()
+
+	fmt.Printf("updated big_index.json.gz\n")
+}
+
 func BenchmarkDecodeIndexStreamingBig(b *testing.B) {
 	fmt.Printf("running BenchmarkDecodeIndexStreamingBig\n")
-	//b.ResetTimer()
+	b.ResetTimer()
 
 	f, err := os.Open("big_index.json.gz")
 	if err != nil {
@@ -37,7 +85,7 @@ func BenchmarkDecodeIndexStreamingBig(b *testing.B) {
 
 	rd.Close()
 	f.Close()
-	b.ReportAllocs()
+	//b.ReportAllocs()
 }
 
 func BenchmarkDecodeIndexBig(b *testing.B) {
@@ -60,6 +108,8 @@ func BenchmarkDecodeIndexBig(b *testing.B) {
 		b.Fatalf("error reading from unzipped stream: %v", err)
 	}
 
+	fmt.Printf("read a total of %d bytes\n", len(bytes))
+
 	index, err := repository.DecodeIndex(bytes)
 	if err != nil {
 		b.Fatalf("error decoding big_index.json: %v", err)
@@ -69,7 +119,7 @@ func BenchmarkDecodeIndexBig(b *testing.B) {
 
 	rd.Close()
 	f.Close()
-	b.ReportAllocs()
+	//b.ReportAllocs()
 }
 
 func TestIndexSerialize(t *testing.T) {

@@ -4,11 +4,48 @@ import (
 	"bytes"
 	"testing"
 
-	"fmt"
 	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
 	rtest "github.com/restic/restic/internal/test"
+	//"os"
+	"fmt"
+	"io/ioutil"
+	"os"
 )
+
+func BenchmarkDecodeIndexStreamingBig(b *testing.B) {
+	b.ResetTimer()
+
+	f, err := os.Open("big_index.json")
+	if err != nil {
+		b.Fatalf("error opening big_index.json: %v", err)
+	}
+
+	defer f.Close()
+
+	_, err = repository.DecodeIndexStreaming(f)
+	if err != nil {
+		b.Fatalf("error decoding big_index.json: %v", err)
+	}
+
+	b.ReportAllocs()
+}
+
+func BenchmarkDecodeIndexBig(b *testing.B) {
+	b.ResetTimer()
+
+	bytes, err := ioutil.ReadFile("big_index.json")
+	if err != nil {
+		b.Fatalf("error opening big_index.json: %v", err)
+	}
+
+	_, err = repository.DecodeIndex(bytes)
+	if err != nil {
+		b.Fatalf("error decoding big_index.json: %v", err)
+	}
+
+	b.ReportAllocs()
+}
 
 func TestIndexSerialize(t *testing.T) {
 	type testEntry struct {
@@ -17,6 +54,9 @@ func TestIndexSerialize(t *testing.T) {
 		tpe            restic.BlobType
 		offset, length uint
 	}
+
+	fmt.Printf("hello!\n")
+
 	tests := []testEntry{}
 
 	idx := repository.NewIndex()
@@ -55,10 +95,7 @@ func TestIndexSerialize(t *testing.T) {
 	err := idx.Encode(wr)
 	rtest.OK(t, err)
 
-	fmt.Printf("stream: %s\n", string(wr.Bytes()))
-
-	//idx2, err := repository.DecodeIndex(wr.Bytes())
-	idx2, err := repository.DecodeIndexStreaming(bytes.NewReader(wr.Bytes()))
+	idx2, err := repository.DecodeIndex(wr.Bytes())
 
 	rtest.OK(t, err)
 	rtest.Assert(t, idx2 != nil,

@@ -491,7 +491,7 @@ func DecodeIndexStreaming(rd io.Reader) (idx *Index, err error) {
 	}
 
 	// read closing bracket
-	t, err = dec.Token()
+	_, err = dec.Token()
 	if err != nil {
 		return nil, err
 	}

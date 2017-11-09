@@ -466,28 +466,75 @@ func DecodeIndexStreaming(rd io.Reader) (idx *Index, err error) {
 	// read open bracket
 	t, err := dec.Token()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
 	}
-	t, err = dec.Token()
-	if err != nil {
-		return nil, err
-	}
-	t, err = dec.Token()
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("next token: %v\n", t)
+	fmt.Printf("token1: %v\n", t)
 
-	// while the array contains values
 	for dec.More() {
-		var pack packJSON
-		// decode an array value (packJSON)
-		err := dec.Decode(&pack)
+		t, err = dec.Token()
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
 		}
+		fmt.Printf("token4: %v\n", t)
 
-		idxJSON.Packs = append(idxJSON.Packs, &pack)
+		switch t {
+
+		case "supersedes":
+			// opening bracket
+			t, err := dec.Token()
+			if err != nil {
+				return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
+			}
+			fmt.Printf("token: %v\n", t)
+
+			var supercedes restic.IDs
+
+			for dec.More() {
+				var id restic.ID
+				err = dec.Decode(&id)
+				if err != nil {
+					return nil, err
+				}
+				supercedes = append(supercedes, id)
+			}
+
+			idxJSON.Supersedes = supercedes
+
+			// close bracket
+			t, err = dec.Token()
+			if err != nil {
+				return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
+			}
+			fmt.Printf("token9: %v\n", t)
+
+		case "packs":
+			// opening bracket
+			t, err := dec.Token()
+			if err != nil {
+				return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
+			}
+			fmt.Printf("token5: %v\n", t)
+
+			for dec.More() {
+				var pack packJSON
+				// decode an array value (packJSON)
+				err = dec.Decode(&pack)
+				if err != nil {
+					return nil, err
+				}
+
+				idxJSON.Packs = append(idxJSON.Packs, &pack)
+			}
+			// close bracket
+			t, err = dec.Token()
+			if err != nil {
+				return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
+			}
+			fmt.Printf("token9: %v\n", t)
+
+		default:
+			return nil, errors.Errorf("unexpected token: %v", t)
+		}
 	}
 
 	// read closing bracket

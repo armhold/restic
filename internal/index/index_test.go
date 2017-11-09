@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"bytes"
 	"github.com/restic/restic/internal/checker"
 	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
@@ -400,5 +401,41 @@ func TestIndexLoadDocReference(t *testing.T) {
 
 	if l.Length != 123 {
 		t.Errorf("wrong length, want %d, got %v", 123, l.Length)
+	}
+}
+
+func TestLoadIndexJSONStreaming(t *testing.T) {
+	rd := bytes.NewReader(docExample)
+
+	indexJSON, err := loadIndexJSONStreaming(rd)
+	if err != nil {
+		t.Error(err)
+	}
+
+	supersedesId, err := restic.ParseID("ed54ae36197f4745ebc4b54d10e0f623eaaaedd03013eb7ae90df881b7781452")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(indexJSON.Supersedes) != 1 {
+		t.Errorf("expected 1 element in Supercedes, got: %d", len(indexJSON.Supersedes))
+	}
+
+	if indexJSON.Supersedes[0] != supersedesId {
+		t.Errorf("expected: %v, got: %v", supersedesId, indexJSON.Supersedes[0])
+	}
+
+	if len(indexJSON.Packs) != 1 {
+		t.Errorf("expected 1 element in Packs, got: %d", len(indexJSON.Packs))
+	}
+
+	packId, err := restic.ParseID("73d04e6125cf3c28a299cc2f3cca3b78ceac396e4fcf9575e34536b26782413c")
+	if err != nil {
+		t.Error(err)
+	}
+
+	pack := indexJSON.Packs[0]
+	if pack.ID != packId {
+		t.Errorf("expected: %v, got: %v", packId, pack.ID)
 	}
 }

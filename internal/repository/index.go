@@ -7,11 +7,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/restic/restic/internal/debug"
 	"github.com/restic/restic/internal/errors"
 	"github.com/restic/restic/internal/restic"
-
-	"fmt"
-	"github.com/restic/restic/internal/debug"
 )
 
 // Index holds a lookup table for id -> pack.
@@ -456,129 +454,6 @@ func isErrOldIndex(err error) bool {
 
 // ErrOldIndexFormat means an index with the old format was detected.
 var ErrOldIndexFormat = errors.New("index has old format")
-
-func DecodeIndexStreaming(rd io.Reader) (idx *Index, err error) {
-	debug.Log("Start decoding index streaming")
-	idxJSON := &jsonIndex{}
-
-	dec := json.NewDecoder(rd)
-
-	// read open bracket
-	t, err := dec.Token()
-	if err != nil {
-		return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
-	}
-	fmt.Printf("token1: %v\n", t)
-
-	for dec.More() {
-		t, err = dec.Token()
-		if err != nil {
-			return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
-		}
-		fmt.Printf("token4: %v\n", t)
-
-		switch t {
-
-		case "supersedes":
-			// opening bracket
-			t, err := dec.Token()
-			if err != nil {
-				return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
-			}
-			fmt.Printf("token: %v\n", t)
-
-			var supercedes restic.IDs
-
-			for dec.More() {
-				var id restic.ID
-				err = dec.Decode(&id)
-				if err != nil {
-					return nil, err
-				}
-				supercedes = append(supercedes, id)
-			}
-
-			idxJSON.Supersedes = supercedes
-
-			// close bracket
-			t, err = dec.Token()
-			if err != nil {
-				return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
-			}
-			fmt.Printf("token9: %v\n", t)
-
-		case "packs":
-			// opening bracket
-			t, err := dec.Token()
-			if err != nil {
-				return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
-			}
-			fmt.Printf("token5: %v\n", t)
-
-			for dec.More() {
-				var pack packJSON
-				// decode an array value (packJSON)
-				err = dec.Decode(&pack)
-				if err != nil {
-					return nil, err
-				}
-
-				idxJSON.Packs = append(idxJSON.Packs, &pack)
-			}
-			// close bracket
-			t, err = dec.Token()
-			if err != nil {
-				return nil, errors.Wrapf(err, "%+v, token: %v", err, t)
-			}
-			fmt.Printf("token9: %v\n", t)
-
-		default:
-			return nil, errors.Errorf("unexpected token: %v", t)
-		}
-	}
-
-	// read closing bracket
-	_, err = dec.Token()
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: check for old format
-	// TODO: check for idxJSON.Supersedes
-
-	idx = NewIndex()
-	for _, pack := range idxJSON.Packs {
-		var data, tree bool
-
-		for _, blob := range pack.Blobs {
-			idx.store(restic.PackedBlob{
-				Blob: restic.Blob{
-					Type:   blob.Type,
-					ID:     blob.ID,
-					Offset: blob.Offset,
-					Length: blob.Length,
-				},
-				PackID: pack.ID,
-			})
-
-			switch blob.Type {
-			case restic.DataBlob:
-				data = true
-			case restic.TreeBlob:
-				tree = true
-			}
-		}
-
-		if !data && tree {
-			idx.treePacks = append(idx.treePacks, pack.ID)
-		}
-	}
-	idx.supersedes = idxJSON.Supersedes
-	idx.final = true
-
-	debug.Log("done")
-	return idx, nil
-}
 
 // DecodeIndex loads and unserializes an index from rd.
 func DecodeIndex(buf []byte) (idx *Index, err error) {

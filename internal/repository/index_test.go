@@ -7,30 +7,25 @@ import (
 	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
 	rtest "github.com/restic/restic/internal/test"
-	//"os"
-	"fmt"
 )
 
 func TestIndexSerialize(t *testing.T) {
-	fmt.Printf("running TestIndexSerialize\n")
-
 	type testEntry struct {
 		id             restic.ID
 		pack           restic.ID
 		tpe            restic.BlobType
 		offset, length uint
 	}
-
 	tests := []testEntry{}
 
 	idx := repository.NewIndex()
 
 	// create 50 packs with 20 blobs each
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 50; i++ {
 		packID := restic.NewRandomID()
 
 		pos := uint(0)
-		for j := 0; j < 2; j++ {
+		for j := 0; j < 20; j++ {
 			id := restic.NewRandomID()
 			length := uint(i*100 + j)
 			idx.Store(restic.PackedBlob{
@@ -55,17 +50,11 @@ func TestIndexSerialize(t *testing.T) {
 		}
 	}
 
-	idx.AddToSupersedes(restic.ID{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2}, restic.ID{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2})
-
 	wr := bytes.NewBuffer(nil)
 	err := idx.Encode(wr)
-
-	fmt.Printf("index: %v\n", wr.String())
-
 	rtest.OK(t, err)
 
 	idx2, err := repository.DecodeIndex(wr.Bytes())
-
 	rtest.OK(t, err)
 	rtest.Assert(t, idx2 != nil,
 		"nil returned for decoded index")

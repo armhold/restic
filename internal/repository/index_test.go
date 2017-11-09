@@ -14,7 +14,7 @@ import (
 	"os"
 )
 
-func TestGenerateBigIndex(t *testing.T) {
+func GenerateBigIndex(t *testing.T) {
 	idx := repository.NewIndex()
 
 	// create 50 packs with 20 blobs each

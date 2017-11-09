@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
+	"time"
 )
 
 func GenerateBigIndex(t *testing.T) {
@@ -62,8 +64,21 @@ func GenerateBigIndex(t *testing.T) {
 	fmt.Printf("updated big_index.json.gz\n")
 }
 
+func runMemoryLogger() {
+	go func() {
+		for {
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+			fmt.Printf("\nAlloc = %v\nTotalAlloc = %v\nSys = %v\nNumGC = %v\nHeapInUse = %v\n\n", m.Alloc/1024, m.TotalAlloc/1024, m.Sys/1024, m.NumGC, m.HeapInuse/1024)
+			time.Sleep(500 * time.Millisecond)
+		}
+	}()
+}
+
 // run like: GODEBUG=memprofilerate=1 go test -run=^$ -bench=^BenchmarkDecodeIndexStreamingBig$ -memprofile mem.prof && go tool pprof -top -cum mem.prof
 func BenchmarkDecodeIndexStreamingBig(b *testing.B) {
+	runMemoryLogger()
+
 	fmt.Printf("running BenchmarkDecodeIndexStreamingBig\n")
 	b.ResetTimer()
 
@@ -90,6 +105,8 @@ func BenchmarkDecodeIndexStreamingBig(b *testing.B) {
 }
 
 func BenchmarkDecodeIndexBig(b *testing.B) {
+	runMemoryLogger()
+
 	fmt.Printf("running BenchmarkDecodeIndexBig\n")
 
 	//b.ResetTimer()

@@ -62,6 +62,7 @@ func GenerateBigIndex(t *testing.T) {
 	fmt.Printf("updated big_index.json.gz\n")
 }
 
+// run like: GODEBUG=memprofilerate=1 go test -run=^$ -bench=^BenchmarkDecodeIndexStreamingBig$ -memprofile mem.prof && go tool pprof -top -cum mem.prof
 func BenchmarkDecodeIndexStreamingBig(b *testing.B) {
 	fmt.Printf("running BenchmarkDecodeIndexStreamingBig\n")
 	b.ResetTimer()

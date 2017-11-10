@@ -8,10 +8,12 @@ import (
 
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/restic/restic/internal/checker"
 	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
 	"github.com/restic/restic/internal/test"
+	"runtime"
 )
 
 var (
@@ -495,7 +497,9 @@ func TestLoadIndexJSONStreaming(t *testing.T) {
 }
 
 func TestLoadGiantIndex(t *testing.T) {
-	count := 1000000
+	checkMemory()
+
+	count := 2000000
 	bigJSON := giantIndexJSON(count)
 
 	var indexJSON indexJSON
@@ -507,7 +511,9 @@ func TestLoadGiantIndex(t *testing.T) {
 }
 
 func TestLoadGiantIndexStreaming(t *testing.T) {
-	count := 1000000
+	checkMemory()
+
+	count := 2000000
 	bigJSON := giantIndexJSON(count)
 	rd := bytes.NewReader([]byte(bigJSON))
 
@@ -519,4 +525,23 @@ func TestLoadGiantIndexStreaming(t *testing.T) {
 	if len(indexJSON.Packs) != count {
 		t.Errorf("expected %d packs, got: %d", count, len(indexJSON.Packs))
 	}
+}
+
+func checkMemory() {
+	go func() {
+		var mem runtime.MemStats
+		for {
+			runtime.ReadMemStats(&mem)
+			fmt.Printf("Alloc      %.3f MiB\n", float64(mem.Alloc)/(1<<20))
+			fmt.Printf("TotalAlloc %.3f MiB\n", float64(mem.TotalAlloc)/(1<<20))
+			fmt.Printf("HeapAlloc  %.3f MiB\n", float64(mem.HeapAlloc)/(1<<20))
+			fmt.Printf("HeapSys    %.3f MiB\n", float64(mem.HeapSys)/(1<<20))
+			fmt.Printf("HeapInuse  %.3f MiB\n", float64(mem.HeapInuse)/(1<<20))
+			fmt.Printf("HeapIdle   %.3f MiB\n", float64(mem.HeapIdle)/(1<<20))
+			fmt.Println()
+			time.Sleep(1000 * time.Millisecond)
+		}
+
+	}()
+
 }

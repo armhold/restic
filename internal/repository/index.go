@@ -7,9 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/restic/restic/internal/debug"
 	"github.com/restic/restic/internal/errors"
 	"github.com/restic/restic/internal/restic"
+
+	"github.com/restic/restic/internal/debug"
 )
 
 // Index holds a lookup table for id -> pack.

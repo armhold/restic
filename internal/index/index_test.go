@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"bytes"
+	"encoding/json"
 	"github.com/restic/restic/internal/checker"
 	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
@@ -400,17 +401,20 @@ func giantIndexJSON(count int) string {
   ]
 }
 `
-	packs := ""
+	var buffer bytes.Buffer
+	buffer.WriteString(head)
+
 	sep := ""
 	for i := 0; i < count; i++ {
 		// re-use same pack+blobs... technically not a valid index
-		packs += sep
-		packs += pack
-
+		buffer.WriteString(sep)
+		buffer.WriteString(pack)
 		sep = "    ,"
 	}
 
-	return head + packs + tail
+	buffer.WriteString(tail)
+
+	return buffer.String()
 }
 
 func TestIndexLoadDocReference(t *testing.T) {
@@ -490,8 +494,20 @@ func TestLoadIndexJSONStreaming(t *testing.T) {
 	}
 }
 
+func TestLoadGiantIndex(t *testing.T) {
+	count := 1000000
+	bigJSON := giantIndexJSON(count)
+
+	var indexJSON indexJSON
+	json.Unmarshal([]byte(bigJSON), &indexJSON)
+
+	if len(indexJSON.Packs) != count {
+		t.Errorf("expected %d packs, got: %d", count, len(indexJSON.Packs))
+	}
+}
+
 func TestLoadGiantIndexStreaming(t *testing.T) {
-	count := 10000
+	count := 1000000
 	bigJSON := giantIndexJSON(count)
 	rd := bytes.NewReader([]byte(bigJSON))
 

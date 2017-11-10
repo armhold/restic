@@ -363,6 +363,56 @@ var docExample = []byte(`
 }
 `)
 
+func giantIndexJSON(count int) string {
+	head := `
+{
+  "supersedes": [
+	"ed54ae36197f4745ebc4b54d10e0f623eaaaedd03013eb7ae90df881b7781452"
+  ],
+  "packs": [
+`
+	pack := `
+	{
+	  "id": "73d04e6125cf3c28a299cc2f3cca3b78ceac396e4fcf9575e34536b26782413c",
+	  "blobs": [
+		{
+		  "id": "3ec79977ef0cf5de7b08cd12b874cd0f62bbaf7f07f3497a5b1bbcc8cb39b1ce",
+		  "type": "data",
+		  "offset": 0,
+		  "length": 25
+		},
+	    {
+		  "id": "9ccb846e60d90d4eb915848add7aa7ea1e4bbabfc60e573db9f7bfb2789afbae",
+		  "type": "tree",
+		  "offset": 38,
+		  "length": 100
+		},
+		{
+		  "id": "d3dc577b4ffd38cc4b32122cabf8655a0223ed22edfd93b353dc0c3f2b0fdf66",
+		  "type": "data",
+		  "offset": 150,
+		  "length": 123
+		}
+	  ]
+   }
+`
+	tail := `
+  ]
+}
+`
+	packs := ""
+	sep := ""
+	for i := 0; i < count; i++ {
+		// re-use same pack+blobs... technically not a valid index
+		packs += sep
+		packs += pack
+
+		sep = "    ,"
+	}
+
+	return head + packs + tail
+}
+
 func TestIndexLoadDocReference(t *testing.T) {
 	repo, cleanup := repository.TestRepository(t)
 	defer cleanup()
@@ -409,33 +459,48 @@ func TestLoadIndexJSONStreaming(t *testing.T) {
 
 	indexJSON, err := loadIndexJSONStreaming(rd)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	supersedesId, err := restic.ParseID("ed54ae36197f4745ebc4b54d10e0f623eaaaedd03013eb7ae90df881b7781452")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if len(indexJSON.Supersedes) != 1 {
-		t.Errorf("expected 1 element in Supercedes, got: %d", len(indexJSON.Supersedes))
+		t.Fatalf("expected 1 element in Supercedes, got: %d", len(indexJSON.Supersedes))
 	}
 
 	if indexJSON.Supersedes[0] != supersedesId {
-		t.Errorf("expected: %v, got: %v", supersedesId, indexJSON.Supersedes[0])
+		t.Fatalf("expected: %v, got: %v", supersedesId, indexJSON.Supersedes[0])
 	}
 
 	if len(indexJSON.Packs) != 1 {
-		t.Errorf("expected 1 element in Packs, got: %d", len(indexJSON.Packs))
+		t.Fatalf("expected 1 element in Packs, got: %d", len(indexJSON.Packs))
 	}
 
 	packId, err := restic.ParseID("73d04e6125cf3c28a299cc2f3cca3b78ceac396e4fcf9575e34536b26782413c")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	pack := indexJSON.Packs[0]
 	if pack.ID != packId {
-		t.Errorf("expected: %v, got: %v", packId, pack.ID)
+		t.Fatalf("expected: %v, got: %v", packId, pack.ID)
+	}
+}
+
+func TestLoadGiantIndexStreaming(t *testing.T) {
+	count := 10000
+	bigJSON := giantIndexJSON(count)
+	rd := bytes.NewReader([]byte(bigJSON))
+
+	indexJSON, err := loadIndexJSONStreaming(rd)
+	if err != nil {
+		t.Fatalf("error streaming bigJSON: %v", err)
+	}
+
+	if len(indexJSON.Packs) != count {
+		t.Errorf("expected %d packs, got: %d", count, len(indexJSON.Packs))
 	}
 }

@@ -408,9 +408,8 @@ func TestIndexLoadDocReference(t *testing.T) {
 	}
 }
 
-// an io.Reader implementation that produces a streamable Index json
-//
-type jsonIndexReader struct {
+// a memory-efficient way to produce large Index JSON strings for testing, consumable via the io.Reader interface.
+type jsonIndexProducer struct {
 	buf          bytes.Buffer
 	packsCount   int
 	packsWritten int
@@ -421,11 +420,11 @@ type jsonIndexReader struct {
 	sep        string
 }
 
-func NewJsonIndexReader(packsCount int) *jsonIndexReader {
-	return &jsonIndexReader{packsCount: packsCount}
+func NewJsonIndexProducer(packsCount int) *jsonIndexProducer {
+	return &jsonIndexProducer{packsCount: packsCount}
 }
 
-func (j *jsonIndexReader) Read(p []byte) (int, error) {
+func (j *jsonIndexProducer) Read(p []byte) (int, error) {
 	if !j.inited {
 		j.buf.WriteString(HEAD)
 		j.inited = true
@@ -505,7 +504,6 @@ const TAIL = `
 `
 
 func checkIndexJson(indexJSON *indexJSON, expectedPackCount int, t *testing.T) {
-
 	supersedesId, err := restic.ParseID("ed54ae36197f4745ebc4b54d10e0f623eaaaedd03013eb7ae90df881b7781452")
 	if err != nil {
 		t.Fatal(err)
@@ -534,10 +532,11 @@ func checkIndexJson(indexJSON *indexJSON, expectedPackCount int, t *testing.T) {
 	}
 }
 
+// quick test w/ just 10 packs
 func TestLoadIndexJSONStreaming(t *testing.T) {
-	rd := NewJsonIndexReader(10)
-
-	indexJSON, err := loadIndexJSONStreaming(rd)
+	rd := NewJsonIndexProducer(10)
+	streamer := NewJsonStreamer(rd)
+	indexJSON, err := streamer.LoadIndex()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -547,11 +546,12 @@ func TestLoadIndexJSONStreaming(t *testing.T) {
 
 const giantPackCount = 2000000
 
-// test performance of current index code which users json.Unmarshal
+// test performance of current index code which uses json.Unmarshal
 func TestLoadGiantIndexUnmarshal(t *testing.T) {
 	runMemoryLogger()
 
-	rd := NewJsonIndexReader(giantPackCount)
+	// get an in-memory json string we can pass to the unmarshaler
+	rd := NewJsonIndexProducer(giantPackCount)
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rd)
 	jsonString := buf.String()
@@ -559,25 +559,22 @@ func TestLoadGiantIndexUnmarshal(t *testing.T) {
 	var indexJSON indexJSON
 	json.Unmarshal([]byte(jsonString), &indexJSON)
 
-	if len(indexJSON.Packs) != giantPackCount {
-		t.Errorf("expected %d packs, got: %d", giantPackCount, len(indexJSON.Packs))
-	}
+	checkIndexJson(&indexJSON, giantPackCount, t)
 }
 
 // test performance using new streaming json parser
 func TestLoadGiantIndexStreaming(t *testing.T) {
 	runMemoryLogger()
 
-	rd := NewJsonIndexReader(giantPackCount)
+	rd := NewJsonIndexProducer(giantPackCount)
+	streamer := NewJsonStreamer(rd)
 
-	indexJSON, err := loadIndexJSONStreaming(rd)
+	indexJSON, err := streamer.LoadIndex()
 	if err != nil {
-		t.Fatalf("error streaming bigJSON: %v", err)
+		t.Fatalf("error streaming the Index: %v", err)
 	}
 
-	if len(indexJSON.Packs) != giantPackCount {
-		t.Errorf("expected %d packs, got: %d", giantPackCount, len(indexJSON.Packs))
-	}
+	checkIndexJson(indexJSON, giantPackCount, t)
 }
 
 func runMemoryLogger() {

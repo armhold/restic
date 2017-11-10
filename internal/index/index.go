@@ -12,9 +12,7 @@ import (
 	"github.com/restic/restic/internal/restic"
 	"github.com/restic/restic/internal/worker"
 
-	"encoding/json"
 	"github.com/restic/restic/internal/errors"
-	"io"
 )
 
 // Pack contains information about the contents of a pack.
@@ -91,88 +89,6 @@ type blobJSON struct {
 type indexJSON struct {
 	Supersedes restic.IDs  `json:"supersedes,omitempty"`
 	Packs      []*packJSON `json:"packs"`
-}
-
-func loadIndexJSONStreaming(rd io.Reader) (*indexJSON, error) {
-	debug.Log("Start decoding index streaming")
-	idxJSON := &indexJSON{}
-
-	dec := json.NewDecoder(rd)
-
-	// read open bracket
-	t, err := dec.Token()
-	if err != nil {
-		return nil, errors.Wrapf(err, "%+v, expected open bracket: %v", err, t)
-	}
-
-	for dec.More() {
-		t, err = dec.Token()
-		if err != nil {
-			return nil, errors.Wrapf(err, "%+v, token: %v (expected \"supersedes\" or \"packs\"", err, t)
-		}
-
-		switch t {
-
-		case "supersedes":
-			// opening bracket
-			t, err := dec.Token()
-			if err != nil {
-				return nil, errors.Wrapf(err, "error processing supersedes: %+v, token: %v", err, t)
-			}
-
-			var supercedes restic.IDs
-
-			for dec.More() {
-				var id restic.ID
-				err = dec.Decode(&id)
-				if err != nil {
-					return nil, err
-				}
-				supercedes = append(supercedes, id)
-			}
-
-			idxJSON.Supersedes = supercedes
-
-			// close bracket
-			t, err = dec.Token()
-			if err != nil {
-				return nil, errors.Wrapf(err, "%+v, expected close bracket: %v", err, t)
-			}
-
-		case "packs":
-			// opening bracket
-			t, err := dec.Token()
-			if err != nil {
-				return nil, errors.Wrapf(err, "error processing packs: %+v, token: %v", err, t)
-			}
-
-			for dec.More() {
-				var pack packJSON
-				err = dec.Decode(&pack)
-				if err != nil {
-					return nil, err
-				}
-
-				idxJSON.Packs = append(idxJSON.Packs, &pack)
-			}
-			// close bracket
-			t, err = dec.Token()
-			if err != nil {
-				return nil, errors.Wrapf(err, "%+v, expected close bracket: %v", err, t)
-			}
-
-		default:
-			return nil, errors.Errorf("unexpected token: %v", t)
-		}
-	}
-
-	// read closing bracket
-	_, err = dec.Token()
-	if err != nil {
-		return nil, errors.Wrapf(err, "%+v, expected close bracket: %v", err, t)
-	}
-
-	return idxJSON, nil
 }
 
 func loadIndexJSON(ctx context.Context, repo restic.Repository, id restic.ID) (*indexJSON, error) {

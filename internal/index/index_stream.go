@@ -10,7 +10,6 @@ import (
 
 // loads an Index from a stream of JSON text. Index is built gradually so that the entire JSON string
 // does not need to be read into RAM all at once.
-//
 type indexJsonStreamer struct {
 	rd      io.Reader
 	idxJson *indexJSON
@@ -26,50 +25,7 @@ func NewJsonStreamer(rd io.Reader) *indexJsonStreamer {
 		dec:     json.NewDecoder(rd)}
 }
 
-func (j *indexJsonStreamer) readBracket() {
-	if j.err != nil {
-		return
-	}
-
-	t, err := j.dec.Token()
-
-	if err != nil {
-		j.err = errors.Wrapf(err, "%+v, expected bracket: %v", err, t)
-	}
-
-	j.token = t
-}
-
-// next token should be either "supersedes" or "packs"
-func (j *indexJsonStreamer) readToken() {
-	if j.err != nil {
-		return
-	}
-
-	t, err := j.dec.Token()
-
-	if err != nil {
-		j.err = errors.Wrapf(err, "%+v, token: %v (expected \"supersedes\" or \"packs\"", err, t)
-	}
-
-	j.token = t
-}
-
-func (j *indexJsonStreamer) decodeNextValue(d interface{}) {
-	if j.err != nil {
-		return
-	}
-
-	err := j.dec.Decode(d)
-	if err != nil {
-		j.err = err
-	}
-}
-
-func (j *indexJsonStreamer) hasMore() bool {
-	return j.err == nil && j.dec.More()
-}
-
+// build an Index gradually by processing one token at a time from the underlying json stream.
 func (j *indexJsonStreamer) LoadIndex() (*indexJSON, error) {
 	debug.Log("Start decoding index streaming")
 
@@ -118,4 +74,48 @@ func (j *indexJsonStreamer) LoadIndex() (*indexJSON, error) {
 	j.readBracket()
 
 	return j.idxJson, j.err
+}
+
+func (j *indexJsonStreamer) readBracket() {
+	if j.err != nil {
+		return
+	}
+
+	t, err := j.dec.Token()
+
+	if err != nil {
+		j.err = errors.Wrapf(err, "%+v, expected bracket: %v", err, t)
+	}
+
+	j.token = t
+}
+
+// next token should be either "supersedes" or "packs"
+func (j *indexJsonStreamer) readToken() {
+	if j.err != nil {
+		return
+	}
+
+	t, err := j.dec.Token()
+
+	if err != nil {
+		j.err = errors.Wrapf(err, "%+v, token: %v (expected \"supersedes\" or \"packs\"", err, t)
+	}
+
+	j.token = t
+}
+
+func (j *indexJsonStreamer) decodeNextValue(d interface{}) {
+	if j.err != nil {
+		return
+	}
+
+	err := j.dec.Decode(d)
+	if err != nil {
+		j.err = err
+	}
+}
+
+func (j *indexJsonStreamer) hasMore() bool {
+	return j.err == nil && j.dec.More()
 }

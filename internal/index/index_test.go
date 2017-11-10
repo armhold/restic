@@ -414,23 +414,21 @@ type jsonIndexProducer struct {
 	packsCount   int
 	packsWritten int
 
-	inited     bool
 	headerDone bool
 	packsDone  bool
 	sep        string
 }
 
 func NewJsonIndexProducer(packsCount int) *jsonIndexProducer {
-	return &jsonIndexProducer{packsCount: packsCount}
+	result := &jsonIndexProducer{packsCount: packsCount}
+	result.buf.WriteString(jsonHead)
+
+	return result
 }
 
 func (j *jsonIndexProducer) Read(p []byte) (int, error) {
-	if !j.inited {
-		j.buf.WriteString(HEAD)
-		j.inited = true
-	}
-
 	n, err := j.buf.Read(p)
+
 	if err == io.EOF {
 		if !j.headerDone {
 			j.headerDone = true
@@ -438,18 +436,18 @@ func (j *jsonIndexProducer) Read(p []byte) (int, error) {
 
 			// re-use same pack+blobs... technically not a valid index
 			j.buf.WriteString(j.sep)
-			j.buf.WriteString(PACK)
+			j.buf.WriteString(jsonPack)
 			j.sep = "    ,"
 			j.packsWritten++
 		} else if !j.packsDone {
 			if j.packsWritten == j.packsCount {
 				j.packsDone = true
 				j.buf.Reset()
-				j.buf.WriteString(TAIL)
+				j.buf.WriteString(jsonTail)
 			} else {
 				j.buf.Reset()
 				j.buf.WriteString(j.sep)
-				j.buf.WriteString(PACK)
+				j.buf.WriteString(jsonPack)
 				j.packsWritten++
 			}
 		}
@@ -464,7 +462,7 @@ func (j *jsonIndexProducer) Read(p []byte) (int, error) {
 	return n, err
 }
 
-const HEAD = `
+const jsonHead = `
 {
   "supersedes": [
 	"ed54ae36197f4745ebc4b54d10e0f623eaaaedd03013eb7ae90df881b7781452"
@@ -472,7 +470,7 @@ const HEAD = `
   "packs": [
 `
 
-const PACK = `
+const jsonPack = `
 	{
 	  "id": "73d04e6125cf3c28a299cc2f3cca3b78ceac396e4fcf9575e34536b26782413c",
 	  "blobs": [
@@ -498,7 +496,7 @@ const PACK = `
    }
 `
 
-const TAIL = `
+const jsonTail = `
   ]
 }
 `
@@ -550,7 +548,7 @@ const giantPackCount = 2000000
 func TestLoadGiantIndexUnmarshal(t *testing.T) {
 	runMemoryLogger()
 
-	// get an in-memory json string we can pass to the unmarshaler
+	// get an in-memory json string we can pass to Unmarshal()
 	rd := NewJsonIndexProducer(giantPackCount)
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rd)

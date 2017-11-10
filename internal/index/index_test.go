@@ -504,13 +504,7 @@ const TAIL = `
 }
 `
 
-func TestLoadIndexJSONStreaming(t *testing.T) {
-	rd := NewJsonIndexReader(10)
-
-	indexJSON, err := loadIndexJSONStreaming(rd)
-	if err != nil {
-		t.Fatal(err)
-	}
+func checkIndexJson(indexJSON *indexJSON, expectedPackCount int, t *testing.T) {
 
 	supersedesId, err := restic.ParseID("ed54ae36197f4745ebc4b54d10e0f623eaaaedd03013eb7ae90df881b7781452")
 	if err != nil {
@@ -525,8 +519,8 @@ func TestLoadIndexJSONStreaming(t *testing.T) {
 		t.Fatalf("expected: %v, got: %v", supersedesId, indexJSON.Supersedes[0])
 	}
 
-	if len(indexJSON.Packs) != 10 {
-		t.Fatalf("expected 1 element in Packs, got: %d", len(indexJSON.Packs))
+	if len(indexJSON.Packs) != expectedPackCount {
+		t.Fatalf("expected %d elements in Packs, got: %d", expectedPackCount, len(indexJSON.Packs))
 	}
 
 	packId, err := restic.ParseID("73d04e6125cf3c28a299cc2f3cca3b78ceac396e4fcf9575e34536b26782413c")
@@ -540,24 +534,37 @@ func TestLoadIndexJSONStreaming(t *testing.T) {
 	}
 }
 
+func TestLoadIndexJSONStreaming(t *testing.T) {
+	rd := NewJsonIndexReader(10)
+
+	indexJSON, err := loadIndexJSONStreaming(rd)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	checkIndexJson(indexJSON, 10, t)
+}
+
 const giantPackCount = 2000000
 
-func TestLoadGiantIndex(t *testing.T) {
+// test performance of current index code which users json.Unmarshal
+func TestLoadGiantIndexUnmarshal(t *testing.T) {
 	runMemoryLogger()
 
 	rd := NewJsonIndexReader(giantPackCount)
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rd)
-	bigJSON := buf.String()
+	jsonString := buf.String()
 
 	var indexJSON indexJSON
-	json.Unmarshal([]byte(bigJSON), &indexJSON)
+	json.Unmarshal([]byte(jsonString), &indexJSON)
 
 	if len(indexJSON.Packs) != giantPackCount {
 		t.Errorf("expected %d packs, got: %d", giantPackCount, len(indexJSON.Packs))
 	}
 }
 
+// test performance using new streaming json parser
 func TestLoadGiantIndexStreaming(t *testing.T) {
 	runMemoryLogger()
 
@@ -580,12 +587,8 @@ func runMemoryLogger() {
 			MB := float64(1 << 20)
 
 			runtime.ReadMemStats(&mem)
-			//fmt.Printf("Alloc      %.3f MiB\n", float64(mem.Alloc)/MB)
-			//fmt.Printf("TotalAlloc %.3f MiB\n", float64(mem.TotalAlloc)/MB)
-			//fmt.Printf("HeapAlloc  %.3f MiB\n", float64(mem.HeapAlloc)/MB)
 			fmt.Printf("HeapSys    %.3f MiB\n", float64(mem.HeapSys)/MB)
 			fmt.Printf("HeapInuse  %.3f MiB\n", float64(mem.HeapInuse)/MB)
-			//fmt.Printf("HeapIdle   %.3f MiB\n", float64(mem.HeapIdle)/MB)
 			fmt.Println()
 			time.Sleep(1000 * time.Millisecond)
 		}

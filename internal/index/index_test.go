@@ -6,10 +6,15 @@ import (
 	"testing"
 	"time"
 
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/restic/restic/internal/checker"
 	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
 	"github.com/restic/restic/internal/test"
+	"io"
+	"runtime"
 )
 
 var (
@@ -401,4 +406,186 @@ func TestIndexLoadDocReference(t *testing.T) {
 	if l.Length != 123 {
 		t.Errorf("wrong length, want %d, got %v", 123, l.Length)
 	}
+}
+
+// a memory-efficient way to produce large Index JSON strings for testing, consumable via the io.Reader interface.
+type jsonIndexProducer struct {
+	buf          bytes.Buffer
+	packsCount   int
+	packsWritten int
+
+	headerDone bool
+	packsDone  bool
+	sep        string
+}
+
+func NewJsonIndexProducer(packsCount int) *jsonIndexProducer {
+	result := &jsonIndexProducer{packsCount: packsCount}
+	result.buf.WriteString(jsonHead)
+
+	return result
+}
+
+func (j *jsonIndexProducer) Read(p []byte) (int, error) {
+	n, err := j.buf.Read(p)
+
+	if err == io.EOF {
+		if !j.headerDone {
+			j.headerDone = true
+			j.buf.Reset()
+
+			// re-use same pack+blobs... technically not a valid index
+			j.buf.WriteString(j.sep)
+			j.buf.WriteString(jsonPack)
+			j.sep = "    ,"
+			j.packsWritten++
+		} else if !j.packsDone {
+			if j.packsWritten == j.packsCount {
+				j.packsDone = true
+				j.buf.Reset()
+				j.buf.WriteString(jsonTail)
+			} else {
+				j.buf.Reset()
+				j.buf.WriteString(j.sep)
+				j.buf.WriteString(jsonPack)
+				j.packsWritten++
+			}
+		}
+
+		if n < len(p) {
+			c, err2 := j.buf.Read(p[n:])
+			n += c
+			err = err2
+		}
+	}
+
+	return n, err
+}
+
+const jsonHead = `
+{
+  "supersedes": [
+	"ed54ae36197f4745ebc4b54d10e0f623eaaaedd03013eb7ae90df881b7781452"
+  ],
+  "packs": [
+`
+
+const jsonPack = `
+	{
+	  "id": "73d04e6125cf3c28a299cc2f3cca3b78ceac396e4fcf9575e34536b26782413c",
+	  "blobs": [
+		{
+		  "id": "3ec79977ef0cf5de7b08cd12b874cd0f62bbaf7f07f3497a5b1bbcc8cb39b1ce",
+		  "type": "data",
+		  "offset": 0,
+		  "length": 25
+		},
+	    {
+		  "id": "9ccb846e60d90d4eb915848add7aa7ea1e4bbabfc60e573db9f7bfb2789afbae",
+		  "type": "tree",
+		  "offset": 38,
+		  "length": 100
+		},
+		{
+		  "id": "d3dc577b4ffd38cc4b32122cabf8655a0223ed22edfd93b353dc0c3f2b0fdf66",
+		  "type": "data",
+		  "offset": 150,
+		  "length": 123
+		}
+	  ]
+   }
+`
+
+const jsonTail = `
+  ]
+}
+`
+
+func checkIndexJson(indexJSON *indexJSON, expectedPackCount int, t *testing.T) {
+	supersedesId, err := restic.ParseID("ed54ae36197f4745ebc4b54d10e0f623eaaaedd03013eb7ae90df881b7781452")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(indexJSON.Supersedes) != 1 {
+		t.Fatalf("expected 1 element in Supercedes, got: %d", len(indexJSON.Supersedes))
+	}
+
+	if indexJSON.Supersedes[0] != supersedesId {
+		t.Fatalf("expected: %v, got: %v", supersedesId, indexJSON.Supersedes[0])
+	}
+
+	if len(indexJSON.Packs) != expectedPackCount {
+		t.Fatalf("expected %d elements in Packs, got: %d", expectedPackCount, len(indexJSON.Packs))
+	}
+
+	packId, err := restic.ParseID("73d04e6125cf3c28a299cc2f3cca3b78ceac396e4fcf9575e34536b26782413c")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pack := indexJSON.Packs[0]
+	if pack.ID != packId {
+		t.Fatalf("expected: %v, got: %v", packId, pack.ID)
+	}
+}
+
+// quick test w/ just 10 packs
+func TestLoadIndexJSONStreaming(t *testing.T) {
+	rd := NewJsonIndexProducer(10)
+	streamer := NewJsonStreamer(rd)
+	indexJSON, err := streamer.LoadIndex()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	checkIndexJson(indexJSON, 10, t)
+}
+
+const giantPackCount = 2000000
+
+// test performance of current index code which uses json.Unmarshal
+func TestLoadGiantIndexUnmarshal(t *testing.T) {
+	runMemoryLogger()
+
+	// get an in-memory json string we can pass to Unmarshal()
+	rd := NewJsonIndexProducer(giantPackCount)
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rd)
+	jsonString := buf.String()
+
+	var indexJSON indexJSON
+	json.Unmarshal([]byte(jsonString), &indexJSON)
+
+	checkIndexJson(&indexJSON, giantPackCount, t)
+}
+
+// test performance using new streaming json parser
+func TestLoadGiantIndexStreaming(t *testing.T) {
+	runMemoryLogger()
+
+	rd := NewJsonIndexProducer(giantPackCount)
+	streamer := NewJsonStreamer(rd)
+
+	indexJSON, err := streamer.LoadIndex()
+	if err != nil {
+		t.Fatalf("error streaming the Index: %v", err)
+	}
+
+	checkIndexJson(indexJSON, giantPackCount, t)
+}
+
+func runMemoryLogger() {
+	go func() {
+		var mem runtime.MemStats
+		for {
+			MB := float64(1 << 20)
+
+			runtime.ReadMemStats(&mem)
+			fmt.Printf("HeapSys    %.3f MiB\n", float64(mem.HeapSys)/MB)
+			fmt.Printf("HeapInuse  %.3f MiB\n", float64(mem.HeapInuse)/MB)
+			fmt.Println()
+			time.Sleep(1000 * time.Millisecond)
+		}
+	}()
 }

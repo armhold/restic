@@ -13,6 +13,7 @@ import (
 	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
 	"github.com/restic/restic/internal/test"
+	"io"
 	"runtime"
 )
 
@@ -366,59 +367,6 @@ var docExample = []byte(`
 }
 `)
 
-func giantIndexJSON(count int) string {
-	head := `
-{
-  "supersedes": [
-	"ed54ae36197f4745ebc4b54d10e0f623eaaaedd03013eb7ae90df881b7781452"
-  ],
-  "packs": [
-`
-	pack := `
-	{
-	  "id": "73d04e6125cf3c28a299cc2f3cca3b78ceac396e4fcf9575e34536b26782413c",
-	  "blobs": [
-		{
-		  "id": "3ec79977ef0cf5de7b08cd12b874cd0f62bbaf7f07f3497a5b1bbcc8cb39b1ce",
-		  "type": "data",
-		  "offset": 0,
-		  "length": 25
-		},
-	    {
-		  "id": "9ccb846e60d90d4eb915848add7aa7ea1e4bbabfc60e573db9f7bfb2789afbae",
-		  "type": "tree",
-		  "offset": 38,
-		  "length": 100
-		},
-		{
-		  "id": "d3dc577b4ffd38cc4b32122cabf8655a0223ed22edfd93b353dc0c3f2b0fdf66",
-		  "type": "data",
-		  "offset": 150,
-		  "length": 123
-		}
-	  ]
-   }
-`
-	tail := `
-  ]
-}
-`
-	var buffer bytes.Buffer
-	buffer.WriteString(head)
-
-	sep := ""
-	for i := 0; i < count; i++ {
-		// re-use same pack+blobs... technically not a valid index
-		buffer.WriteString(sep)
-		buffer.WriteString(pack)
-		sep = "    ,"
-	}
-
-	buffer.WriteString(tail)
-
-	return buffer.String()
-}
-
 func TestIndexLoadDocReference(t *testing.T) {
 	repo, cleanup := repository.TestRepository(t)
 	defer cleanup()
@@ -460,8 +408,104 @@ func TestIndexLoadDocReference(t *testing.T) {
 	}
 }
 
+// an io.Reader implementation that produces a streamable Index json
+//
+type jsonIndexReader struct {
+	buf          bytes.Buffer
+	packsCount   int
+	packsWritten int
+
+	inited     bool
+	headerDone bool
+	packsDone  bool
+	sep        string
+}
+
+func NewJsonIndexReader(packsCount int) *jsonIndexReader {
+	return &jsonIndexReader{packsCount: packsCount}
+}
+
+func (j *jsonIndexReader) Read(p []byte) (int, error) {
+	if !j.inited {
+		j.buf.WriteString(HEAD)
+		j.inited = true
+	}
+
+	n, err := j.buf.Read(p)
+	if err == io.EOF {
+		if !j.headerDone {
+			j.headerDone = true
+			j.buf.Reset()
+
+			// re-use same pack+blobs... technically not a valid index
+			j.buf.WriteString(j.sep)
+			j.buf.WriteString(PACK)
+			j.sep = "    ,"
+			j.packsWritten++
+		} else if !j.packsDone {
+			if j.packsWritten == j.packsCount {
+				j.packsDone = true
+				j.buf.Reset()
+				j.buf.WriteString(TAIL)
+			} else {
+				j.buf.Reset()
+				j.buf.WriteString(j.sep)
+				j.buf.WriteString(PACK)
+				j.packsWritten++
+			}
+		}
+
+		if n < len(p) {
+			c, err2 := j.buf.Read(p[n:])
+			n += c
+			err = err2
+		}
+	}
+
+	return n, err
+}
+
+const HEAD = `
+{
+  "supersedes": [
+	"ed54ae36197f4745ebc4b54d10e0f623eaaaedd03013eb7ae90df881b7781452"
+  ],
+  "packs": [
+`
+
+const PACK = `
+	{
+	  "id": "73d04e6125cf3c28a299cc2f3cca3b78ceac396e4fcf9575e34536b26782413c",
+	  "blobs": [
+		{
+		  "id": "3ec79977ef0cf5de7b08cd12b874cd0f62bbaf7f07f3497a5b1bbcc8cb39b1ce",
+		  "type": "data",
+		  "offset": 0,
+		  "length": 25
+		},
+	    {
+		  "id": "9ccb846e60d90d4eb915848add7aa7ea1e4bbabfc60e573db9f7bfb2789afbae",
+		  "type": "tree",
+		  "offset": 38,
+		  "length": 100
+		},
+		{
+		  "id": "d3dc577b4ffd38cc4b32122cabf8655a0223ed22edfd93b353dc0c3f2b0fdf66",
+		  "type": "data",
+		  "offset": 150,
+		  "length": 123
+		}
+	  ]
+   }
+`
+
+const TAIL = `
+  ]
+}
+`
+
 func TestLoadIndexJSONStreaming(t *testing.T) {
-	rd := bytes.NewReader(docExample)
+	rd := NewJsonIndexReader(10)
 
 	indexJSON, err := loadIndexJSONStreaming(rd)
 	if err != nil {
@@ -481,7 +525,7 @@ func TestLoadIndexJSONStreaming(t *testing.T) {
 		t.Fatalf("expected: %v, got: %v", supersedesId, indexJSON.Supersedes[0])
 	}
 
-	if len(indexJSON.Packs) != 1 {
+	if len(indexJSON.Packs) != 10 {
 		t.Fatalf("expected 1 element in Packs, got: %d", len(indexJSON.Packs))
 	}
 
@@ -496,52 +540,54 @@ func TestLoadIndexJSONStreaming(t *testing.T) {
 	}
 }
 
-func TestLoadGiantIndex(t *testing.T) {
-	checkMemory()
+const giantPackCount = 2000000
 
-	count := 2000000
-	bigJSON := giantIndexJSON(count)
+func TestLoadGiantIndex(t *testing.T) {
+	runMemoryLogger()
+
+	rd := NewJsonIndexReader(giantPackCount)
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rd)
+	bigJSON := buf.String()
 
 	var indexJSON indexJSON
 	json.Unmarshal([]byte(bigJSON), &indexJSON)
 
-	if len(indexJSON.Packs) != count {
-		t.Errorf("expected %d packs, got: %d", count, len(indexJSON.Packs))
+	if len(indexJSON.Packs) != giantPackCount {
+		t.Errorf("expected %d packs, got: %d", giantPackCount, len(indexJSON.Packs))
 	}
 }
 
 func TestLoadGiantIndexStreaming(t *testing.T) {
-	checkMemory()
+	runMemoryLogger()
 
-	count := 2000000
-	bigJSON := giantIndexJSON(count)
-	rd := bytes.NewReader([]byte(bigJSON))
+	rd := NewJsonIndexReader(giantPackCount)
 
 	indexJSON, err := loadIndexJSONStreaming(rd)
 	if err != nil {
 		t.Fatalf("error streaming bigJSON: %v", err)
 	}
 
-	if len(indexJSON.Packs) != count {
-		t.Errorf("expected %d packs, got: %d", count, len(indexJSON.Packs))
+	if len(indexJSON.Packs) != giantPackCount {
+		t.Errorf("expected %d packs, got: %d", giantPackCount, len(indexJSON.Packs))
 	}
 }
 
-func checkMemory() {
+func runMemoryLogger() {
 	go func() {
 		var mem runtime.MemStats
 		for {
+			MB := float64(1 << 20)
+
 			runtime.ReadMemStats(&mem)
-			fmt.Printf("Alloc      %.3f MiB\n", float64(mem.Alloc)/(1<<20))
-			fmt.Printf("TotalAlloc %.3f MiB\n", float64(mem.TotalAlloc)/(1<<20))
-			fmt.Printf("HeapAlloc  %.3f MiB\n", float64(mem.HeapAlloc)/(1<<20))
-			fmt.Printf("HeapSys    %.3f MiB\n", float64(mem.HeapSys)/(1<<20))
-			fmt.Printf("HeapInuse  %.3f MiB\n", float64(mem.HeapInuse)/(1<<20))
-			fmt.Printf("HeapIdle   %.3f MiB\n", float64(mem.HeapIdle)/(1<<20))
+			//fmt.Printf("Alloc      %.3f MiB\n", float64(mem.Alloc)/MB)
+			//fmt.Printf("TotalAlloc %.3f MiB\n", float64(mem.TotalAlloc)/MB)
+			//fmt.Printf("HeapAlloc  %.3f MiB\n", float64(mem.HeapAlloc)/MB)
+			fmt.Printf("HeapSys    %.3f MiB\n", float64(mem.HeapSys)/MB)
+			fmt.Printf("HeapInuse  %.3f MiB\n", float64(mem.HeapInuse)/MB)
+			//fmt.Printf("HeapIdle   %.3f MiB\n", float64(mem.HeapIdle)/MB)
 			fmt.Println()
 			time.Sleep(1000 * time.Millisecond)
 		}
-
 	}()
-
 }

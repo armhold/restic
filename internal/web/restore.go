@@ -76,9 +76,6 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		return linkToPath(fullPath)
 	}
 
-	parentDir := filepath.Dir(dir)
-	linkToParentDir := nav.BrowseUrl() + "&amp;dir=" + url.QueryEscape(parentDir)
-
 	includedPaths := getIncludedPathsMapFromSession(w, r)
 
 	isSelected := func(dir, path string) bool {
@@ -121,7 +118,6 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		Dir:             dir,
 		Files:           files,
 		LinkToFileInDir: linkToFileInDir,
-		LinkToParentDir: linkToParentDir,
 		IsSelected:      isSelected,
 		ParentDirLinks:  dirLinks,
 		SnapshotId:      snapshotId,

@@ -77,7 +77,7 @@ func RunWeb(bindHost string, bindPort int, r *repository.Repository) error {
 	fs := JustFilesFilesystem{http.Dir("assets")}
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(fs)))
 
-	http.HandleFunc("/", panicRecover(listSnapshotsHandler))
+	http.HandleFunc("/", panicRecover(rootHandler))
 
 	addr := fmt.Sprintf("%s:%d", bindHost, bindPort)
 

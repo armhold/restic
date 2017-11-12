@@ -10,8 +10,8 @@ import (
 	"strings"
 )
 
-func listSnapshotsHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("listSnapshotsHandler\n")
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("rootHandler\n")
 	fmt.Printf("path: %q\n", r.URL.Path)
 
 	repo := getRepo()
@@ -63,11 +63,11 @@ func listSnapshotsHandler(w http.ResponseWriter, r *http.Request) {
 		SnapSelected: false,
 	}
 
-	if err := templates.ExecuteTemplate(w, "snapshots.html", data); err != nil {
+	if err := templates.ExecuteTemplate(w, "index.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("successful exit listSnapshotsHandler()\n")
+	fmt.Printf("successful exit rootHandler()\n")
 }
 
 type deleteSnapshot struct {

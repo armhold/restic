@@ -562,6 +562,19 @@ func BenchmarkLoadGiantIndexUnmarshal(b *testing.B) {
 	}
 }
 
+// test performance of a naive dec.Decode()
+func BenchmarkLoadGiantIndexNaiveDecode(b *testing.B) {
+	var indexJSON indexJSON
+
+	for i := 0; i < b.N; i++ {
+		rd := NewJsonIndexProducer(giantPackCount)
+		dec := json.NewDecoder(rd)
+
+		dec.Decode(&indexJSON)
+		checkIndexJson(&indexJSON, giantPackCount, b)
+	}
+}
+
 // test performance using new streaming json parser
 func BenchmarkLoadGiantIndexStreaming(b *testing.B) {
 	for i := 0; i < b.N; i++ {

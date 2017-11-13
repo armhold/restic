@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -54,18 +53,20 @@ func (n *Navigation) BrowseUrl() string {
 	return "/browse"
 }
 
-func (n *Navigation) RestoreUrl(repo, snapshotId string) string {
-	restoreUrl, err := url.Parse("/snaps")
-	if err != nil {
-		// TODO: better way to handle errors in a helper func
-		fmt.Println(err)
-		return ""
-	}
-
-	q := restoreUrl.Query()
-	q.Set("snapshotId", snapshotId)
-	restoreUrl.RawQuery = q.Encode()
-	return restoreUrl.String()
+func (n *Navigation) SnapshotUrl(repo, snapshotId string) string {
+	s := fmt.Sprintf("/snaps/%s", snapshotId)
+	//u, err := url.Parse(s)
+	//if err != nil {
+	//	// TODO: better way to handle errors in a helper func
+	//	fmt.Println(err)
+	//	return ""
+	//}
+	//
+	//q := u.Query()
+	//q.Set("snapshotId", snapshotId)
+	//u.RawQuery = q.Encode()
+	//return u.String()
+	return s
 }
 
 func (n *Navigation) CssForTab(tab string) string {

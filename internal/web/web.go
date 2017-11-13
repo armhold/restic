@@ -53,7 +53,7 @@ func getSnapshotId(r *http.Request) string {
 	//fmt.Printf("parts: %v\n", parts)
 
 	if len(parts) >= 2 {
-		return parts[1]
+		return parts[len(parts)-1]
 	}
 
 	return ""
@@ -64,7 +64,7 @@ func RunWeb(bindHost string, bindPort int, r *repository.Repository) error {
 	sharedRepo = r
 
 	http.HandleFunc("/status", panicRecover(statusAjaxHandler))
-	http.HandleFunc("/snaps", panicRecover(navigateSnapshotHandler))
+	http.HandleFunc("/snaps/", panicRecover(browseHandler))
 
 	//http.HandleFunc("/restore", panicRecover(doRestoreAjaxHandler))
 	//http.HandleFunc("/deletesnapshot", panicRecover(deleteSnapshotAjaxHandler))

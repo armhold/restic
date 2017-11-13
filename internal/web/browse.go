@@ -21,8 +21,8 @@ type dirLink struct {
 	Link string
 }
 
-func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("navigateSnapshotHandler\n")
+func browseHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("browseHandler\n")
 
 	repo := getRepo()
 	defer releaseRepo()
@@ -34,7 +34,7 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	snapshotId := r.FormValue("snapshotId")
+	snapshotId := getSnapshotId(r)
 	if snapshotId == "" {
 		fmt.Printf("no snapshotId given\n")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -68,7 +68,7 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 	nav := &Navigation{req: r, Tab: "restore"}
 
 	linkToPath := func(path string) string {
-		return fmt.Sprintf("/snaps?snapshotId=%s&amp;dir=%s", url.QueryEscape(snapshotId), url.QueryEscape(path))
+		return fmt.Sprintf("/snaps/%s?dir=%s", url.QueryEscape(snapshotId), url.QueryEscape(path))
 	}
 
 	linkToFileInDir := func(file string) string {
@@ -124,11 +124,11 @@ func navigateSnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		SnapSelected:    true,
 	}
 
-	if err := templates.ExecuteTemplate(w, "restore.html", data); err != nil {
+	if err := templates.ExecuteTemplate(w, "browse.html", data); err != nil {
 		fmt.Printf("%s\n", err.Error())
 	}
 
-	fmt.Printf("startTime := time.No exit navigateSnapshotHandler\n")
+	fmt.Printf("startTime := time.No exit browseHandler\n")
 }
 
 type restore struct {
@@ -140,7 +140,8 @@ type restore struct {
 func restoreFromForm(r *http.Request) restore {
 	result := restore{}
 	result.repo = r.FormValue("repo")
-	result.snapshotId = r.FormValue("snapshotId")
+	//result.snapshotId = r.FormValue("snapshotId")
+	result.snapshotId = getSnapshotId(r)
 	result.target = r.FormValue("target")
 
 	fmt.Printf("restore: %#v\n", result)

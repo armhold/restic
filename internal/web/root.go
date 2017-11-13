@@ -41,7 +41,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	var snaps restic.Snapshots
 	snaps, err = listSnapshots(repo)
 	if err != nil {
-		fmt.Printf("listSnapshots: %s\n", err.Error())
+		fmt.Printf("rootHandler: %s\n", err.Error())
 
 		// NB: don't call SaveFlashToCookie() because we want it to render immediately here, not after redirect
 		flash.Danger += fmt.Sprintf("error listing snapshots: %s", err)

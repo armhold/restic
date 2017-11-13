@@ -44,7 +44,7 @@
                         <td>{{.ID.Str}}</td>
                         <td>{{.Time | FormatTime}}</td>
                         <td>
-                            <a href="{{$.Nav.RestoreUrl $.CurrRepoName .ID.Str}}" class="btn btn-info">Restore</a>
+                            <a href="{{$.Nav.SnapshotUrl $.CurrRepoName .ID.Str}}" class="btn btn-info">Restore</a>
                         </td>
                         <td>
                             <form action="/deletesnapshot" method="post">

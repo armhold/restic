@@ -542,20 +542,21 @@ func TestLoadIndexJSONStreaming(t *testing.T) {
 	checkIndexJson(indexJSON, 10, t)
 }
 
-const giantPackCount = 2000000
+//const giantPackCount = 2000000
+const giantPackCount = 125000 // generates a json doc ~64MiB
 
 // test performance of current index code which uses json.Unmarshal
 func BenchmarkLoadGiantIndexUnmarshal(b *testing.B) {
-	// get an in-memory json string we can pass to Unmarshal()
-	rd := NewJsonIndexProducer(giantPackCount)
-	buf, err := ioutil.ReadAll(rd)
-	if err != nil {
-		b.Fatal(err)
-	}
 	var indexJSON indexJSON
 
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		// get an in-memory json string we can pass to Unmarshal()
+		rd := NewJsonIndexProducer(giantPackCount)
+		buf, err := ioutil.ReadAll(rd)
+		if err != nil {
+			b.Fatal(err)
+		}
+
 		json.Unmarshal(buf, &indexJSON)
 		checkIndexJson(&indexJSON, giantPackCount, b)
 	}
@@ -563,10 +564,8 @@ func BenchmarkLoadGiantIndexUnmarshal(b *testing.B) {
 
 // test performance using new streaming json parser
 func BenchmarkLoadGiantIndexStreaming(b *testing.B) {
-	rd := NewJsonIndexProducer(giantPackCount)
-
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		rd := NewJsonIndexProducer(giantPackCount)
 		streamer := NewJsonStreamer(rd)
 
 		indexJSON, err := streamer.LoadIndex()

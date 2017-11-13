@@ -2,19 +2,19 @@ package index
 
 import (
 	"context"
+	"io/ioutil"
 	"math/rand"
 	"testing"
 	"time"
 
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"io"
+
 	"github.com/restic/restic/internal/checker"
 	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
 	"github.com/restic/restic/internal/test"
-	"io"
-	"runtime"
 )
 
 var (
@@ -501,7 +501,7 @@ const jsonTail = `
 }
 `
 
-func checkIndexJson(indexJSON *indexJSON, expectedPackCount int, t *testing.T) {
+func checkIndexJson(indexJSON *indexJSON, expectedPackCount int, t testing.TB) {
 	supersedesId, err := restic.ParseID("ed54ae36197f4745ebc4b54d10e0f623eaaaedd03013eb7ae90df881b7781452")
 	if err != nil {
 		t.Fatal(err)
@@ -545,47 +545,35 @@ func TestLoadIndexJSONStreaming(t *testing.T) {
 const giantPackCount = 2000000
 
 // test performance of current index code which uses json.Unmarshal
-func TestLoadGiantIndexUnmarshal(t *testing.T) {
-	runMemoryLogger()
-
+func BenchmarkLoadGiantIndexUnmarshal(b *testing.B) {
 	// get an in-memory json string we can pass to Unmarshal()
 	rd := NewJsonIndexProducer(giantPackCount)
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(rd)
-	jsonString := buf.String()
-
+	buf, err := ioutil.ReadAll(rd)
+	if err != nil {
+		b.Fatal(err)
+	}
 	var indexJSON indexJSON
-	json.Unmarshal([]byte(jsonString), &indexJSON)
 
-	checkIndexJson(&indexJSON, giantPackCount, t)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		json.Unmarshal(buf, &indexJSON)
+		checkIndexJson(&indexJSON, giantPackCount, b)
+	}
 }
 
 // test performance using new streaming json parser
-func TestLoadGiantIndexStreaming(t *testing.T) {
-	runMemoryLogger()
-
+func BenchmarkLoadGiantIndexStreaming(b *testing.B) {
 	rd := NewJsonIndexProducer(giantPackCount)
-	streamer := NewJsonStreamer(rd)
 
-	indexJSON, err := streamer.LoadIndex()
-	if err != nil {
-		t.Fatalf("error streaming the Index: %v", err)
-	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		streamer := NewJsonStreamer(rd)
 
-	checkIndexJson(indexJSON, giantPackCount, t)
-}
-
-func runMemoryLogger() {
-	go func() {
-		var mem runtime.MemStats
-		for {
-			MB := float64(1 << 20)
-
-			runtime.ReadMemStats(&mem)
-			fmt.Printf("HeapSys    %.3f MiB\n", float64(mem.HeapSys)/MB)
-			fmt.Printf("HeapInuse  %.3f MiB\n", float64(mem.HeapInuse)/MB)
-			fmt.Println()
-			time.Sleep(1000 * time.Millisecond)
+		indexJSON, err := streamer.LoadIndex()
+		if err != nil {
+			b.Fatalf("error streaming the Index: %v", err)
 		}
-	}()
+
+		checkIndexJson(indexJSON, giantPackCount, b)
+	}
 }

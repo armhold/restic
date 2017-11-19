@@ -12,6 +12,12 @@ import (
 	"io"
 )
 
+type HashingReadCloser interface {
+	io.ReadCloser
+	restic.HashChecker
+}
+
+// performs a rolling sha256 hash of the given ReadCloser.
 type sha256ReadCloser struct {
 	rc       io.ReadCloser
 	expected restic.ID
@@ -80,7 +86,7 @@ func NewCipherReader(nonce []byte, key crypto.EncryptionKey, rc io.ReadCloser) *
 	return &cipherReadCloser{Reader: sr, Closer: rc}
 }
 
-// ReadCloser that holds back the last n bytes from the stream
+// ReadCloser that holds back the last n bytes from the stream. Once EOF is reached, makes them available via Reserved().
 type ReservedReadCloser struct {
 	r *bufio.Reader
 	io.Closer
@@ -89,9 +95,7 @@ type ReservedReadCloser struct {
 }
 
 func NewReservedReadCloser(rc io.ReadCloser, n int) *ReservedReadCloser {
-	buf := bufio.NewReaderSize(rc, 32)
-
-	return &ReservedReadCloser{r: buf, Closer: rc, n: n, reserve: make([]byte, n)}
+	return &ReservedReadCloser{r: bufio.NewReader(rc), Closer: rc, n: n, reserve: make([]byte, n)}
 }
 
 func (r *ReservedReadCloser) Read(p []byte) (int, error) {
@@ -118,9 +122,4 @@ func (r *ReservedReadCloser) Read(p []byte) (int, error) {
 
 func (r *ReservedReadCloser) Reserved() []byte {
 	return r.reserve
-}
-
-type HashingReadCloser interface {
-	io.ReadCloser
-	restic.HashChecker
 }

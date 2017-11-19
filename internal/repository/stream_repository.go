@@ -58,6 +58,8 @@ func (r *ReservedReadCloser) Read(p []byte) (int, error) {
 			r.r.Discard(cutoff)
 			return cutoff, nil
 		}
+	} else {
+		r.r.Discard(len(b))
 	}
 
 	return 0, io.EOF

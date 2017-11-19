@@ -31,8 +31,8 @@ type CipherReader struct {
 
 // ReadCloser that holds back the last N bytes from the stream
 type ReservedReadCloser struct {
-	r       *bufio.Reader
-	c       io.Closer
+	r *bufio.Reader
+	io.Closer
 	n       int
 	reserve []byte
 }
@@ -40,7 +40,7 @@ type ReservedReadCloser struct {
 func NewReservedReadCloser(rc io.ReadCloser, n int) *ReservedReadCloser {
 	buf := bufio.NewReaderSize(rc, 32)
 
-	return &ReservedReadCloser{r: buf, c: rc, n: n, reserve: make([]byte, n)}
+	return &ReservedReadCloser{r: buf, Closer: rc, n: n, reserve: make([]byte, n)}
 }
 
 func (r *ReservedReadCloser) Read(p []byte) (int, error) {
@@ -61,10 +61,6 @@ func (r *ReservedReadCloser) Read(p []byte) (int, error) {
 	}
 
 	return 0, io.EOF
-}
-
-func (r *ReservedReadCloser) Close() error {
-	return r.c.Close()
 }
 
 func (r *ReservedReadCloser) Reserved() []byte {

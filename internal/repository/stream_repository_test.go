@@ -11,8 +11,8 @@ import (
 
 func TestReservedReadCloser(t *testing.T) {
 	prefixLen := 1024
-	s := "reserve0123"
-	suffix := []byte(s)
+	suffix := []byte("reserve0123")
+	suffixLen := len(suffix)
 
 	buf := make([]byte, prefixLen+len(suffix))
 	_, err := io.ReadFull(rand.Reader, buf[:prefixLen])
@@ -20,14 +20,17 @@ func TestReservedReadCloser(t *testing.T) {
 		t.FailNow()
 	}
 
-	reserveLens := []int{1, 2, 3, 15, 16, 32, 64, 64, 65, 1024, 1025}
+	copy(buf[len(buf)-suffixLen:], suffix)
 
-	for _, rl := range reserveLens {
+	bufferLengths := []int{1, 2, 3, 15, 16, 32, 64, 64, 65, 1024, 1025}
+
+	for _, bl := range bufferLengths {
 		var accum []byte
-		p := make([]byte, rl)
 
-		rd := bytes.NewReader(buf)
-		rc := NewReservedReadCloser(ioutil.NopCloser(rd), len(suffix))
+		// buffer for reads
+		p := make([]byte, bl)
+
+		rc := NewReservedReadCloser(ioutil.NopCloser(bytes.NewReader(buf)), len(suffix))
 
 		for {
 			n, err := rc.Read(p)
@@ -42,8 +45,6 @@ func TestReservedReadCloser(t *testing.T) {
 
 		if len(accum) != prefixLen {
 			t.Fatalf("len(accum) != prefixLen (%d != %d)", len(accum), prefixLen)
-		} else {
-			//fmt.Printf("success with rl: %d\n", rl)
 		}
 
 		if !reflect.DeepEqual(accum, buf[:prefixLen]) {
@@ -51,7 +52,7 @@ func TestReservedReadCloser(t *testing.T) {
 		}
 
 		if !reflect.DeepEqual(rc.Reserved(), suffix) {
-			t.Fatalf("rl: %d, expected: %+v, got: %+v", rl, suffix, rc.Reserved())
+			t.Fatalf("bl: %d, expected: %+v, got: %+v", bl, suffix, rc.Reserved())
 		}
 	}
 }

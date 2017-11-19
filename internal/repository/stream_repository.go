@@ -44,23 +44,23 @@ func NewReservedReadCloser(rc io.ReadCloser, n int) *ReservedReadCloser {
 }
 
 func (r *ReservedReadCloser) Read(p []byte) (int, error) {
-	n, err := r.r.Read(p)
+	b, peekErr := r.r.Peek(len(p) + r.n)
 
-	b, peekErr := r.r.Peek(r.n)
-	if peekErr == io.EOF {
-		diff := r.n - len(b)
-		n -= diff
-		err = peekErr
+	cutoff := len(b) - r.n
+	if cutoff > 0 {
+		copy(p, b[:cutoff])
+		copy(r.reserve, b[cutoff:])
 
-		// bleed underlying stream to EOF
-		fmt.Printf("\nr.n: %d, diff: %d, len(b): %d, n: %d\n", r.n, diff, len(b), n)
-		n2, err2 := io.ReadAtLeast(r.r, r.reserve, len(b))
-		fmt.Printf("finally read: %d, %v\n", n2, err2)
-	} else if peekErr != nil {
-		fmt.Printf("peekErr: %v\n", peekErr)
+		if peekErr == io.EOF {
+			r.r.Discard(len(b))
+			return cutoff, io.EOF
+		} else {
+			r.r.Discard(cutoff)
+			return cutoff, nil
+		}
 	}
 
-	return n, err
+	return 0, io.EOF
 }
 
 func (r *ReservedReadCloser) Close() error {

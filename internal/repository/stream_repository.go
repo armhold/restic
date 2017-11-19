@@ -22,6 +22,7 @@ type sha256HashingReadCloser struct {
 	expected restic.ID
 	hash     hash.Hash
 	closed   bool
+	count    int
 }
 
 type CipherReader struct {
@@ -95,7 +96,11 @@ func NewSha256HashingReadCloser(orig io.ReadCloser, id restic.ID) *sha256Hashing
 func (h *sha256HashingReadCloser) Read(p []byte) (int, error) {
 	n, err := h.orig.Read(p)
 	if err != nil {
-		h.hash.Write(p)
+		h.hash.Write(p[:n])
+	}
+
+	if n > 0 {
+		h.count += n
 	}
 
 	return n, err
@@ -113,10 +118,16 @@ func (h *sha256HashingReadCloser) HashWasValid() bool {
 		panic("Hash() called before reader was closed")
 	}
 
+	fmt.Printf("hasher read %d bytes\n", h.count)
 	var id restic.ID
-	h.hash.Sum(id[:])
+	sum := h.hash.Sum(nil)
+	copy(id[:], sum)
 
-	return id == h.expected
+	fmt.Printf("expected: %+v\n", h.expected[:])
+	fmt.Printf("id      : %+v\n", id[:])
+	fmt.Printf("sum     : %+v\n", sum[:])
+
+	return id.Equal(h.expected)
 }
 
 // always valid- performs no hashing (use for config files)

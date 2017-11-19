@@ -41,17 +41,17 @@ func TestReservedReadCloser(t *testing.T) {
 		}
 
 		if len(accum) != prefixLen {
-			t.Errorf("len(accum) != prefixLen (%d != %d)", len(accum), prefixLen)
+			t.Fatalf("len(accum) != prefixLen (%d != %d)", len(accum), prefixLen)
 		} else {
 			//fmt.Printf("success with rl: %d\n", rl)
 		}
 
 		if !reflect.DeepEqual(accum, buf[:prefixLen]) {
-			t.Errorf("expected: %+v, got: %+v", buf[:prefixLen], accum)
+			t.Fatalf("expected: %+v, got: %+v", buf[:prefixLen], accum)
 		}
 
 		if !reflect.DeepEqual(rc.Reserved(), suffix) {
-			t.Errorf("expected: %+v, got: %+v", suffix, rc.Reserved())
+			t.Fatalf("rl: %d, expected: %+v, got: %+v", rl, suffix, rc.Reserved())
 		}
 	}
 }

@@ -19,10 +19,10 @@ const (
 	macKeySize  = macKeySizeK + macKeySizeR // for Poly1305-AES128
 	ivSize      = aes.BlockSize
 
-	macSize = poly1305.TagSize
+	MacSize = poly1305.TagSize
 
 	// Extension is the number of bytes a plaintext is enlarged by encrypting it.
-	Extension = ivSize + macSize
+	Extension = ivSize + MacSize
 )
 
 var (
@@ -256,7 +256,7 @@ func (k *Key) NonceSize() int {
 // Overhead returns the maximum difference between the lengths of a
 // plaintext and its ciphertext.
 func (k *Key) Overhead() int {
-	return macSize
+	return MacSize
 }
 
 // sliceForAppend takes a slice and a requested number of bytes. It returns a
@@ -345,7 +345,7 @@ func (k *Key) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error
 		return nil, errors.Errorf("trying to decrypt invalid data: ciphertext too small")
 	}
 
-	l := len(ciphertext) - macSize
+	l := len(ciphertext) - MacSize
 	ct, mac := ciphertext[:l], ciphertext[l:]
 
 	// verify mac

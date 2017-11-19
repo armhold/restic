@@ -12,6 +12,7 @@ import (
 	"github.com/restic/restic/internal/errors"
 	"github.com/restic/restic/internal/repository"
 	"github.com/restic/restic/internal/restic"
+	"io"
 )
 
 var cmdCat = &cobra.Command{
@@ -81,6 +82,18 @@ func runCat(gopts GlobalOptions, args []string) error {
 		}
 
 		_, err = os.Stdout.Write(append(buf, '\n'))
+		return err
+
+	case "stream":
+		rc, hc, err := repo.LoadAndDecryptStream(context.TODO(), restic.IndexFile, id)
+		if err != nil {
+			return err
+		}
+
+		n, err := io.Copy(os.Stdout, rc)
+		rc.Close()
+		fmt.Println()
+		fmt.Printf("wrote %d bytes, hashValid: %t\n", n, hc.HashWasValid())
 		return err
 
 	case "snapshot":

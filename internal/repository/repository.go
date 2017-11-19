@@ -15,6 +15,7 @@ import (
 	"github.com/restic/restic/internal/crypto"
 	"github.com/restic/restic/internal/debug"
 	"github.com/restic/restic/internal/pack"
+	"io"
 )
 
 // Repository is used to access a repository in a backend.
@@ -86,6 +87,39 @@ func (r *Repository) LoadAndDecrypt(ctx context.Context, t restic.FileType, id r
 	}
 
 	return plaintext, nil
+}
+
+func (r *Repository) LoadAndDecryptStream(ctx context.Context, t restic.FileType, id restic.ID) (io.ReadCloser, restic.HashChecker, error) {
+	debug.Log("load stream %v with id %v", t, id.Str())
+
+	h := restic.Handle{Type: t, Name: id.String()}
+	rc, err := r.be.Load(ctx, h, 0, 0)
+
+	if err != nil {
+		debug.Log("error loading %v: %v", h, err)
+		return nil, nil, err
+	}
+
+	var hashReadCloser HashingReadCloser
+
+	if t == restic.ConfigFile {
+		hashReadCloser = &noOpHashingReadCloser{rc}
+	} else {
+		hashReadCloser = NewSha256HashingReadCloser(rc, id)
+	}
+
+	reservedReadCloser := NewReservedReadCloser(hashReadCloser, crypto.MacSize)
+
+	nonce := make([]byte, r.key.NonceSize())
+	n, err := io.ReadAtLeast(reservedReadCloser, nonce, r.key.NonceSize())
+	if err != nil || n != r.key.NonceSize() {
+		return nil, nil, errors.Wrap(err, "couldn't read nonce")
+	}
+
+	// TODO: punting on poly1305Verify() for now
+
+	cr := NewCipherReader(nonce, r.key.EncryptionKey, reservedReadCloser)
+	return cr, hashReadCloser, nil
 }
 
 // sortCachedPacks moves all cached pack files to the front of blobs.

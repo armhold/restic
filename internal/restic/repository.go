@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/restic/restic/internal/crypto"
+	"io"
 )
 
 // Repository stores data in a backend. It provides high-level functions and
@@ -36,6 +37,7 @@ type Repository interface {
 
 	LoadJSONUnpacked(context.Context, FileType, ID, interface{}) error
 	LoadAndDecrypt(context.Context, FileType, ID) ([]byte, error)
+	LoadAndDecryptStream(context.Context, FileType, ID) (io.ReadCloser, HashChecker, error)
 
 	LoadBlob(context.Context, BlobType, ID, []byte) (int, error)
 	SaveBlob(context.Context, BlobType, []byte, ID) (ID, error)
@@ -59,4 +61,8 @@ type Index interface {
 	// the context is cancelled, the background goroutine terminates. This
 	// blocks any modification of the index.
 	Each(ctx context.Context) <-chan PackedBlob
+}
+
+type HashChecker interface {
+	HashWasValid() bool
 }

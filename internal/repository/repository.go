@@ -100,15 +100,16 @@ func (r *Repository) LoadAndDecryptStream(ctx context.Context, t restic.FileType
 		return nil, nil, err
 	}
 
-	var hashReadCloser HashingReadCloser
+	var hashChecker HashingReadCloser
 
 	if t == restic.ConfigFile {
-		hashReadCloser = &noOpHashingReadCloser{rc}
+		hashChecker = NewNopHashingReadCloser(rc)
 	} else {
-		hashReadCloser = NewSha256HashingReadCloser(rc, id)
+		hashChecker = NewSha256ReadCloser(rc, id)
 	}
 
-	reservedReadCloser := NewReservedReadCloser(hashReadCloser, crypto.MacSize)
+	// mac bytes come at the end of the ciphertext stream- reserve them
+	reservedReadCloser := NewReservedReadCloser(hashChecker, crypto.MacSize)
 
 	nonce := make([]byte, r.key.NonceSize())
 	n, err := io.ReadAtLeast(reservedReadCloser, nonce, r.key.NonceSize())
@@ -116,10 +117,10 @@ func (r *Repository) LoadAndDecryptStream(ctx context.Context, t restic.FileType
 		return nil, nil, errors.Wrap(err, "couldn't read nonce")
 	}
 
-	// TODO: punting on poly1305Verify() for now
+	// TODO: streaming version of poly1305Verify() should be inserted here. punting for now.
 
 	cr := NewCipherReader(nonce, r.key.EncryptionKey, reservedReadCloser)
-	return cr, hashReadCloser, nil
+	return cr, hashChecker, nil
 }
 
 // sortCachedPacks moves all cached pack files to the front of blobs.

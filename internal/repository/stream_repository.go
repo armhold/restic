@@ -12,24 +12,75 @@ import (
 	"io"
 )
 
-type HashingReadCloser interface {
-	io.ReadCloser
-	restic.HashChecker
-}
-
-type sha256HashingReadCloser struct {
-	orig     io.ReadCloser
+type sha256ReadCloser struct {
+	rc       io.ReadCloser
 	expected restic.ID
 	hash     hash.Hash
 	closed   bool
 }
 
-type CipherReader struct {
-	r io.Reader
-	c io.Closer
+func NewSha256ReadCloser(rc io.ReadCloser, id restic.ID) *sha256ReadCloser {
+	return &sha256ReadCloser{rc: rc, expected: id, hash: sha256.New()}
 }
 
-// ReadCloser that holds back the last N bytes from the stream
+func (h *sha256ReadCloser) Read(p []byte) (int, error) {
+	n, err := h.rc.Read(p)
+
+	if n > 0 {
+		h.hash.Write(p[:n])
+	}
+
+	return n, err
+}
+
+func (h *sha256ReadCloser) Close() error {
+	h.closed = true
+	return h.rc.Close()
+}
+
+func (h *sha256ReadCloser) HashWasValid() bool {
+	if !h.closed {
+		panic("Hash() called before reader was closed")
+	}
+
+	var id restic.ID
+	sum := h.hash.Sum(nil)
+	copy(id[:], sum)
+
+	return id.Equal(h.expected)
+}
+
+// always valid- performs no hashing (use for config files)
+type nopHashingReadCloser struct {
+	io.ReadCloser
+}
+
+func NewNopHashingReadCloser(rc io.ReadCloser) *nopHashingReadCloser {
+	return &nopHashingReadCloser{ReadCloser: rc}
+}
+
+func (h *nopHashingReadCloser) HashWasValid() bool {
+	return true
+}
+
+// streams plaintext from the underlying aes-encrypted stream
+type cipherReadCloser struct {
+	io.Reader
+	io.Closer
+}
+
+func NewCipherReader(nonce []byte, key crypto.EncryptionKey, rc io.ReadCloser) *cipherReadCloser {
+	c, err := aes.NewCipher(key[:])
+	if err != nil {
+		panic(fmt.Sprintf("unable to create cipher: %v", err))
+	}
+	stream := cipher.NewCTR(c, nonce)
+	sr := &cipher.StreamReader{S: stream, R: rc}
+
+	return &cipherReadCloser{Reader: sr, Closer: rc}
+}
+
+// ReadCloser that holds back the last n bytes from the stream
 type ReservedReadCloser struct {
 	r *bufio.Reader
 	io.Closer
@@ -69,63 +120,7 @@ func (r *ReservedReadCloser) Reserved() []byte {
 	return r.reserve
 }
 
-func NewCipherReader(nonce []byte, key crypto.EncryptionKey, rc io.ReadCloser) *CipherReader {
-	c, err := aes.NewCipher(key[:])
-	if err != nil {
-		panic(fmt.Sprintf("unable to create cipher: %v", err))
-	}
-	stream := cipher.NewCTR(c, nonce)
-	sr := &cipher.StreamReader{S: stream, R: rc}
-
-	return &CipherReader{r: sr, c: rc}
-}
-
-func (c *CipherReader) Read(p []byte) (int, error) {
-	return c.r.Read(p)
-}
-
-func (c *CipherReader) Close() error {
-	return c.c.Close()
-}
-
-func NewSha256HashingReadCloser(orig io.ReadCloser, id restic.ID) *sha256HashingReadCloser {
-	return &sha256HashingReadCloser{orig: orig, expected: id, hash: sha256.New()}
-}
-
-func (h *sha256HashingReadCloser) Read(p []byte) (int, error) {
-	n, err := h.orig.Read(p)
-
-	if n > 0 {
-		h.hash.Write(p[:n])
-	}
-
-	return n, err
-}
-
-func (h *sha256HashingReadCloser) Close() error {
-	err := h.orig.Close()
-	h.closed = true
-
-	return err
-}
-
-func (h *sha256HashingReadCloser) HashWasValid() bool {
-	if !h.closed {
-		panic("Hash() called before reader was closed")
-	}
-
-	var id restic.ID
-	sum := h.hash.Sum(nil)
-	copy(id[:], sum)
-
-	return id.Equal(h.expected)
-}
-
-// always valid- performs no hashing (use for config files)
-type noOpHashingReadCloser struct {
+type HashingReadCloser interface {
 	io.ReadCloser
-}
-
-func (h *noOpHashingReadCloser) HashWasValid() bool {
-	return true
+	restic.HashChecker
 }

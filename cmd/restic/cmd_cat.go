@@ -76,25 +76,28 @@ func runCat(gopts GlobalOptions, args []string) error {
 		fmt.Println(string(buf))
 		return nil
 	case "index":
-		buf, err := repo.LoadAndDecrypt(context.TODO(), restic.IndexFile, id)
-		if err != nil {
+		if globalOptions.stream {
+			fmt.Printf("streaming\n")
+			rc, hc, err := repo.LoadAndDecryptStream(context.TODO(), restic.IndexFile, id)
+			if err != nil {
+				return err
+			}
+
+			n, err := io.Copy(os.Stdout, rc)
+			rc.Close()
+			fmt.Println()
+			fmt.Printf("wrote %d bytes, hashValid: %t\n", n, hc.HashWasValid())
+			return err
+		} else {
+			fmt.Printf("NOT streaming\n")
+			buf, err := repo.LoadAndDecrypt(context.TODO(), restic.IndexFile, id)
+			if err != nil {
+				return err
+			}
+
+			_, err = os.Stdout.Write(append(buf, '\n'))
 			return err
 		}
-
-		_, err = os.Stdout.Write(append(buf, '\n'))
-		return err
-
-	case "stream":
-		rc, hc, err := repo.LoadAndDecryptStream(context.TODO(), restic.IndexFile, id)
-		if err != nil {
-			return err
-		}
-
-		n, err := io.Copy(os.Stdout, rc)
-		rc.Close()
-		fmt.Println()
-		fmt.Printf("wrote %d bytes, hashValid: %t\n", n, hc.HashWasValid())
-		return err
 
 	case "snapshot":
 		sn := &restic.Snapshot{}

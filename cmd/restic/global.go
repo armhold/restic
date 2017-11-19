@@ -57,6 +57,7 @@ type GlobalOptions struct {
 	Options []string
 
 	extended options.Options
+	stream   bool
 }
 
 var globalOptions = GlobalOptions{
@@ -77,6 +78,7 @@ func init() {
 	f.StringVarP(&globalOptions.PasswordFile, "password-file", "p", os.Getenv("RESTIC_PASSWORD_FILE"), "read the repository password from a file (default: $RESTIC_PASSWORD_FILE)")
 	f.BoolVarP(&globalOptions.Quiet, "quiet", "q", false, "do not output comprehensive progress report")
 	f.BoolVar(&globalOptions.NoLock, "no-lock", false, "do not lock the repo, this allows some operations on read-only repos")
+	f.BoolVar(&globalOptions.stream, "stream", false, "stream data (if API available)")
 	f.BoolVarP(&globalOptions.JSON, "json", "", false, "set output mode to JSON for commands that support it")
 	f.StringVar(&globalOptions.CacheDir, "cache-dir", "", "set the cache directory")
 	f.BoolVar(&globalOptions.NoCache, "no-cache", false, "do not use a local cache")
